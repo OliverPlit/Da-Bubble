@@ -145,9 +145,25 @@ input:focus {
 }
 
 input::placeholder {
-        color: #686868;
-        font-size: 20px;
-        font-family: 'Nunito-noBold';
-        font-weight: 400 !important;
-        opacity: 1;
-    }
+  color: #686868;
+  font-size: 20px;
+  font-family: 'Nunito-noBold';
+  font-weight: 400 !important;
+  opacity: 1;
+}
+
+.button-white {
+  width: 141px;
+  height: 49px;
+  padding-top: 12px;
+  padding-right: 25px;
+  padding-bottom: 12px;
+  padding-left: 25px;
+  gap: 10px;
+  opacity: 1;
+  border-radius: 50px;
+  border-width: 1px;
+  color: #444DF2;
+  background-color: white;
+
+}
