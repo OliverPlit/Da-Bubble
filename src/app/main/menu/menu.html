@@ -8,22 +8,32 @@
             <img src="/icons/edit-square.png" alt="" class="write-message">
         </div>
 
-        <div class="header-menu-channels">
+        <div class="header-menu-channels" (click)="toggleChannels()">
             <div>
                 <img src="/icons/arrow-drop-menu.png" alt="">
                 <img src="/icons/channel.png" alt="">
                 <h3>Channels</h3>
             </div>
             <img src="/icons/add-channel.png" alt="" class="write-message" matButton (click)="openDialog()">
+
+        </div>
+        <div class="channel-list" *ngIf="showChannels">
+            <app-channels></app-channels>
         </div>
 
-        <div class="header-menu-channels">
+        <div class="header-menu-channels" (click)="toggleMessages()">
             <div>
                 <img src="/icons/arrow-drop-menu.png" alt="">
                 <img src="/icons/direct-person.png" alt="">
                 <h3>Direktnachrichten</h3>
             </div>
+
         </div>
+        <div class="channel-list"  *ngIf="showMessages">
+            <app-direct-messages></app-direct-messages>
+
+        </div>
+
 
     </mat-drawer>
 

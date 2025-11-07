@@ -19,7 +19,6 @@ export class AddChannel {
   }
 
   save() {
-    // Hier z. B. später Formular-Daten speichern
     this.dialogRef.close('saved');
   }
 }

@@ -6,8 +6,8 @@
         <img class="profile-img" src="/icons/profile-menu.png" alt="">
         <img src="/icons/dropdown-menu.png" alt="">
         <mat-menu #menu="matMenu" class="menu">
-            <button mat-menu-item>Profile</button>
-            <button mat-menu-item>Log out</button>
+            <button mat-menu-item (click)="openDialog()">Profile</button>
+            <button mat-menu-item (click)="logout()">Log out</button>
         </mat-menu>
     </div>
 </section>

@@ -1,8 +1,20 @@
-<h2 mat-dialog-title>Neuen Channel hinzufügen</h2>
-    <mat-dialog-content>
-      <p>Hier könntest du dein Formular oder Textfeld einfügen.</p>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="close()">Abbrechen</button>
-      <button mat-raised-button color="primary" (click)="save()">Speichern</button>
-    </mat-dialog-actions>
+<div class="add-channel-main">
+  <div class="add-channel-header">
+    <h2>Channel erstellen</h2>
+    <img src="/icons/close-channel.png" alt="" (click)="close()">
+  </div>
+  <p>
+    Channels dienen deinem Team zur Kommunikation. Am besten sollten sie themenbezogen sein #marketing zum Beispiel.
+  </p>
+  <div>
+    <label for="name">Channel-Name</label>
+    <input type="text" id="name" name="name" placeholder="z.B. Kooperationsprojekte" class="input-channel">
+
+    <label for="name" class="description">Beschreibung <p> (optional)</p></label>
+    <input type="text" id="name" name="name" placeholder="Dein Text hier">
+
+  </div>
+<div class="add-button">
+  <button>Erstellen</button>
+</div>
+</div>

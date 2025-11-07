@@ -1,3 +1,7 @@
+* {
+    background-color: white !important;
+}
+
 section {
     height: 100vh;
 }
@@ -19,6 +23,7 @@ section {
 
 .sidenav {
     height: 940px !important;
+    max-height: 940px !important;
 
 }
 
@@ -120,4 +125,10 @@ section {
         cursor: pointer;
         filter: invert(43%) sepia(63%) saturate(7492%) hue-rotate(229deg) brightness(97%) contrast(96%);
     }
+}
+
+.channel-list {
+  padding-left: 40px; 
+  margin-top: 4px;
+  background-color: white;
 }
