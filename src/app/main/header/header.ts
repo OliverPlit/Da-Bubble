@@ -24,7 +24,7 @@ this.dialog.open(Profile, {
 }
 
  logout() {
-    this.router.navigate(['/landing']); 
+    this.router.navigate(['']); 
   }
 }
 
