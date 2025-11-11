@@ -1,14 +1,12 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { Main } from "./main/main";
-import { LandingPage } from "./landing-page/landing-page";
 import { FirebaseApp } from '@angular/fire/app';
 import { getFirestore } from '@angular/fire/firestore';
 
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Main, LandingPage],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

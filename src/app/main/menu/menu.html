@@ -1,5 +1,5 @@
-<mat-drawer-container class="container-height" hasBackdrop="false" [class.menu-open]="drawer.opened">
-    <mat-drawer #drawer class="sidenav" mode="side">
+<mat-drawer-container class="container-height" hasBackdrop="false" [class.menu-open]="isMenuOpen">
+    <mat-drawer #drawer class="sidenav" mode="over" [(opened)]="isMenuOpen">
         <div class="header-menu">
             <div>
                 <img src="/icons/logo-menu-devspace.png" alt="">
@@ -29,20 +29,14 @@
             </div>
 
         </div>
-        <div class="channel-list"  *ngIf="showMessages">
+        <div class="channel-list" *ngIf="showMessages">
             <app-direct-messages></app-direct-messages>
 
         </div>
-
-
     </mat-drawer>
 
-    <div class="sidenav-content">
-        <button type="button" (click)="drawer.toggle()">
-            Workspace-Menü schließen
-            <img src="/icons/workspace-menu.png" alt="">
-        </button>
-
-    </div>
-
 </mat-drawer-container>
+<button type="button" class="button-menu" (click)="isMenuOpen = !isMenuOpen">
+    {{ isMenuOpen ? 'Workspace-Menü schließen' : 'Workspace-Menü öffnen' }}
+    <img [src]="isMenuOpen ? 'icons/workspace-menu.png' : 'icons/open-menu.png' " alt="">
+</button>

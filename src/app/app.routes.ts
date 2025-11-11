@@ -6,6 +6,7 @@ import { Signup } from './landing-page/signup/signup';
 import { LandingPage } from './landing-page/landing-page';
 import { ResetPassword } from './landing-page/reset-password/reset-password';
 import { Main } from './main/main';
+import { DetailPage } from './detail-page/detail-page'; 
 
 export const routes: Routes = [
   {
@@ -17,6 +18,7 @@ export const routes: Routes = [
       { path: 'impressum', component: LegalNotice },
       { path: 'datenschutz', component: PrivacyPolicy },
       { path: 'reset-password', component: ResetPassword },
+      { path: 'detail/:id', component: DetailPage },
     ],
   },
   {

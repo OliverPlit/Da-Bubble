@@ -1,3 +1,48 @@
 * {
     background-color: white;
 }
+
+
+.main-container {
+    width: 306px;
+    height: 33px;
+    display: flex;
+    padding-left: 25px;
+    gap: 15px;
+    border-radius: 30px;
+    justify-content: row;
+    align-items: center;
+    display: flex;
+    font-family: 'Nunito-noBold';
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    margin-top: -10px;
+
+}
+
+.add-container {
+    width: 306px;
+    height: 33px;
+    display: flex;
+    padding-left: 25px;
+    gap: 15px;
+    border-radius: 30px;
+    justify-content: row;
+    align-items: center;
+    display: flex;
+    font-family: 'Nunito-noBold';
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    margin-top: 20px;
+
+    &:hover {
+        cursor: pointer;
+        filter: invert(43%) sepia(63%) saturate(7492%) hue-rotate(229deg) brightness(97%) contrast(96%);
+
+    }
+
+}
