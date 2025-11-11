@@ -4,7 +4,10 @@
     overflow: hidden;
 }
 
-
+body {
+    overflow: hidden; 
+    height: 100%;  
+}
 
 section {
     height: 100vh;
@@ -88,8 +91,6 @@ section {
 
 
 
-
-
 .button-menu {
     position: relative;
     top: -400px;
@@ -117,17 +118,15 @@ section {
     &:hover {
         cursor: pointer;
         color: #797ef3;
-                    filter: invert(43%) sepia(63%) saturate(7492%) hue-rotate(229deg) brightness(97%) contrast(96%);
 
+        img {
+            filter: invert(43%) sepia(63%) saturate(7492%) hue-rotate(229deg) brightness(97%) contrast(96%);
+        }
     }
 
     img {
         transform: rotate(90deg);
 
-        &:hover {
-            filter: invert(43%) sepia(63%) saturate(7492%) hue-rotate(229deg) brightness(97%) contrast(96%);
-
-        }
 
     }
 }

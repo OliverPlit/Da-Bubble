@@ -11,5 +11,13 @@ import { Threads } from "./threads/threads";
   styleUrl: './main.scss',
 })
 export class Main {
+  showNewMessages = false;
 
+  toggleNewMessage() {
+    this.showNewMessages = !this.showNewMessages;
+  }
+
+  closeNewMessage() {
+    this.showNewMessages = false;
+  }
 }

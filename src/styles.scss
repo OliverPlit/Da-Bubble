@@ -41,7 +41,7 @@ body {
   display: flex;
   justify-content: center;
 
-  > button {
+  >button {
     display: flex;
     justify-content: center;
   }
@@ -96,6 +96,15 @@ body {
   border-bottom-left-radius: 30px !important;
   overflow: hidden;
 }
+
+
+.add-people-dialog-panel .mat-mdc-dialog-surface {
+  width: 710px !important;
+  max-width: 872px !important;
+  border-radius: 30px !important;
+  overflow: hidden;
+}
+
 
 button {
   font-family: 'Nunito';

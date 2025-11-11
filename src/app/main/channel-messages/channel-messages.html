@@ -1,4 +1,7 @@
+  <app-new-message *ngIf="showNewMessages" (close)="onClose()"></app-new-message>
+
 <section>
+
     <app-channel-messages-header></app-channel-messages-header>
     <app-thread-channel-messages></app-thread-channel-messages>
 </section>

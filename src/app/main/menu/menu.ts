@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { AddChannel } from '../menu/add-channel/add-channel';
@@ -22,13 +22,20 @@ export class Menu {
   showChannels = false;
   showMessages = false;
   isMenuOpen = false;
+  showNewMessages = false;
   private dialog = inject(MatDialog);
+    @Output() openNewMessage = new EventEmitter<void>();
+
 
   openDialog() {
     this.dialog.open(AddChannel, {
       panelClass: 'add-channel-dialog-panel'
     });
   }
+
+  onOpenNewMessage() {
+    this.openNewMessage.emit(); // sagt Parent: toggle
+ }
 
   toggleChannels() {
     this.showChannels = !this.showChannels; 

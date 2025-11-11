@@ -1,13 +1,22 @@
-import { Component } from '@angular/core';
+import { Component,Input, Output, EventEmitter } from '@angular/core';
 import { ChannelMessagesHeader } from './channel-messages-header/channel-messages-header';
 import { ThreadChannelMessages } from './thread-channel-messages/thread-channel-messages';
+import { NewMessage } from '../menu/new-message/new-message';
+import { CommonModule } from '@angular/common';
+
+
+
 
 @Component({
   selector: 'app-channel-messages',
-  imports: [ChannelMessagesHeader, ThreadChannelMessages],
+  imports: [ChannelMessagesHeader, ThreadChannelMessages, NewMessage,CommonModule],
   templateUrl: './channel-messages.html',
   styleUrl: './channel-messages.scss',
 })
 export class ChannelMessages {
+  @Input() showNewMessages = false;
+  @Output() closeNewMessage = new EventEmitter<void>();
 
-}
+  onClose() {
+    this.closeNewMessage.emit();
+  }}
