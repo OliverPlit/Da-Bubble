@@ -73,6 +73,11 @@
 
 }
 
+
+hr {
+    margin-top: 30px
+}
+
 .name-header {
     @extend %flex-space-between;
     margin-top: -10px;
@@ -97,8 +102,13 @@
     }
 }
 
+.edit-name-header {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
 .created {
-    margin-top: 30px;
+    margin-top: 20px;
 
     >p {
         font-family: 'Nunito-noBold';
@@ -138,6 +148,10 @@ label {
 
 .description {
     margin-top: 20px;
+}
+
+.edit-description {
+    margin-top: 20px !important;
 }
 
 .add-button {

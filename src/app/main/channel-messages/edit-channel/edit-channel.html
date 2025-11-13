@@ -4,36 +4,38 @@
     <img src="/icons/close-channel.png" alt="" (click)="close()">
 
   </div>
-  <div *ngIf="showInputName">
+  <div *ngIf="showInputName" class="edit-name-header">
     <div class="name-header">
       <label for="name">Channel-Name</label>
       <p (click)="saveEditName()">Speichern</p>
     </div>
-    <label for="name">Channel-Name</label>
     <input type="text" id="name" name="name" placeholder="z.B. Kooperationsprojekte" class="input-channel">
   </div>
   <div class="name-div" *ngIf="closeName">
 
     <div class="name-header">
       <label for="name">Channel-Name</label>
-      <p (click)="toggleEditName()">Bearbeiten</p>
+      <p (click)="toggleEditName()" >Bearbeiten</p>
     </div>
-    <p>#Channelname</p>
   </div>
   <div *ngIf="showInputDescription">
-    <div class="name-header">
+    <div class="name-header ">
       <label for="name" class="description">Beschreibung <p> (optional)</p></label>
 
-      <p (click)="saveEditDescription()">Speichern</p>
+      <p (click)="saveEditDescription()" class="edit-description">Speichern</p>
     </div>
     <input type="text" id="name" name="name" placeholder="Dein Text hier">
-
+    <hr>
+    <div class="created">
+      <label for="name">Erstellt von</label>
+      <p>Oliver Plit</p>
+    </div>
   </div>
   <div class="beschreibung-div" *ngIf="closeDescription">
 
     <div class="name-header">
       <label for="name" class="description">Beschreibung</label>
-      <p (click)="toggleEditDescription()">Bearbeiten</p>
+      <p (click)="toggleEditDescription()" class="edit-description">Bearbeiten</p>
     </div>
     <p>Dieser Channel ist für alles rund um #dfsdf vorgesehen. Hier kannst du zusammen mit deinem Team Meetings
       abhalten, Dokumente teilen und Entscheidungen treffen.</p>

@@ -6,15 +6,22 @@
   <p>
     Channels dienen deinem Team zur Kommunikation. Am besten sollten sie themenbezogen sein #marketing zum Beispiel.
   </p>
-  <div>
-    <label for="name">Channel-Name</label>
-    <input type="text" id="name" name="name" placeholder="z.B. Kooperationsprojekte" class="input-channel">
+  <form #channelForm="ngForm">
+    <div>
+      <label for="name">Channel-Name</label>
+      <input type="text" id="name" name="channelName" 
+      placeholder="z.B. Kooperationsprojekte" class="input-channel" 
+      ngModel required 
+      minlength="3">
 
-    <label for="name" class="description">Beschreibung <p> (optional)</p></label>
-    <input type="text" id="name" name="name" placeholder="Dein Text hier">
+      <label for="name" class="description">Beschreibung <p> (optional)</p></label>
+      <input type="text" id="description" name="name" placeholder="Dein Text hier"
+      ngModel required 
+      minlength="8">
 
-  </div>
-  <div class="add-button">
-    <button (click)="openDialogPeople()">Erstellen</button>
-  </div>
+    </div>
+    <div class="add-button">
+      <button (click)="openDialogPeople(channelForm)" [disabled]="!channelForm.valid">Erstellen</button>
+    </div>
+  </form>
 </div>

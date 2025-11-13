@@ -5,22 +5,25 @@
     </div>
     <div class="checkboxen">
         <label>
-            <input type="radio" name="option" value="option1" (change)="toggleExtraField(false)">
+            <input type="radio" name="option" value="option1" 
+            (click)="toggleExtraField(false)" [(ngModel)]="selectedOption">
             <span class="checkmark"></span>
 
             <p> Alle Mitglieder von Entwicklerteam hinzufügen</p>
         </label>
 
         <label>
-            <input type="radio" name="option" value="option2" (change)="toggleExtraField(true)">
+            <input type="radio" name="option" value="option2" 
+            (click)="toggleExtraField(true)" [(ngModel)]="selectedOption">
             <span class="checkmark"></span>
             <p> Bestimmte Leute hinzufügen</p>
         </label>
         <div *ngIf="showExtraFields">
-            <input type="text" placeholder="Name eingeben" class="input-name">
+            <input type="text" placeholder="Name eingeben" 
+            class="input-name" [(ngModel)]="inputName">
         </div>
     </div>
     <div class="button-end">
-        <button>Erstellen</button>
+        <button [disabled]="!isFormValid()" (click)="closeDialog()">Erstellen</button>
     </div>
 </div>

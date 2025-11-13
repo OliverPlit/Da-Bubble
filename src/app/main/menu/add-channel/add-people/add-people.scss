@@ -49,6 +49,10 @@
 .button-end {
     display: flex;
     justify-content: end;
+   &:disabled {
+        background-color: #5a57f5;
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 4px rgba(255, 255, 255, 0.2);
+    }
 }
 
 label {

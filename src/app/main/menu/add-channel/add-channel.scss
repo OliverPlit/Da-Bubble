@@ -1,7 +1,7 @@
 .add-channel-main {
-     width: 872px !important;
-  max-width: 872px !important;
-  border-radius: 30px !important;
+    width: 872px !important;
+    max-width: 872px !important;
+    border-radius: 30px !important;
     height: 539px;
     display: flex;
     padding: 40px;
@@ -76,6 +76,11 @@ label {
     display: flex;
     justify-content: end;
     margin-top: 20px;
+
+    >button:disabled {
+        background-color: #5a57f5;
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 4px rgba(255, 255, 255, 0.2);
+    }
 }
 
 .input-channel {
