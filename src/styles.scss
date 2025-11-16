@@ -117,6 +117,19 @@ body {
 }
 
 
+.add-members-dialog-panel .mat-mdc-dialog-surface {
+  width: 514px !important;
+  max-width: 514px !important;
+  height: auto !important;
+  max-height: none !important;
+  border-top-left-radius: 30px !important;
+  border-bottom-right-radius: 30px !important;
+  border-bottom-left-radius: 30px !important;
+  overflow: visible !important;
+}
+
+
+
 button {
   font-family: 'Nunito';
   font-size: 18px;

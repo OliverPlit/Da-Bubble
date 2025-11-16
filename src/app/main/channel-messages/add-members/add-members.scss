@@ -1,0 +1,272 @@
+$primary: #535AF1;
+$secondary: #797EF3;
+$background: #FFFFFF;
+$hoverBg: #ECEEFE;
+$line: #ADB0D9;
+$text: #000000;
+
+:host ::ng-deep .mat-mdc-dialog-container,
+:host ::ng-deep .mat-mdc-dialog-surface {
+  overflow: visible !important;
+}
+
+.add-members-dialog {
+    width: 514px !important;
+    max-width: 514px !important;
+    height: auto !important;
+    max-height: auto !important;
+    border-radius: 30px !important;
+    padding: 40px;
+    opacity: 1;
+    display: block;
+    margin: 0 auto;
+    box-sizing: border-box;
+    font-family: 'Nunito';
+}
+
+.add-members-dialog-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+
+    >.headline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    h2 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 24px;
+    }
+
+    .icon-box {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+
+        img {
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hover {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+        }
+
+        &:hover {
+            color: $primary;
+            background: $hoverBg;
+            cursor: pointer;
+
+            .hover {
+                opacity: 1;
+            }
+
+            .default {
+                opacity: 0;
+            }
+        }
+    }
+
+    >.subheading {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        user-select: none;
+
+        img {
+            width: 18px;
+            height: 18px;
+        }
+
+        span {
+            font-weight: 400;
+            font-size: 18px;
+            color: $secondary;
+        }
+    }
+}
+
+.input-wrap {
+    position: relative;
+    border-radius: 30px;
+    border: 1px solid $line;
+    padding-top: 15px;
+    padding-right: 20px;
+    padding-bottom: 15px;
+    padding-left: 20px;
+    font-family: 'Nunito';
+
+    &:focus-within {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, .12);
+    }
+
+    input {
+        padding-top: 0 !important;
+        padding-right: 0 !important;
+        padding-bottom: 0 !important;
+        padding-left: 0 !important;
+        width: auto;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-family: 'Nunito';
+        font-weight: 400;
+        font-size: 18px;
+    }
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 35px;
+    padding-top: 3px;
+    padding-right: 20px;
+    padding-bottom: 3px;
+    padding-left: 20px;
+    gap: 15px;
+    background: $hoverBg;
+    color: $text;
+
+    .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+    }
+
+    .name {
+        font: 'Nunito';
+        font-weight: 400;
+        font-size: 18px;
+    }
+
+    .icon-box-remove {
+        position: relative;
+        display: inline-block;
+        align-self: flex-end;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+
+        img {
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hover {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+        }
+
+        &:hover {
+            color: $primary;
+            background: $hoverBg;
+            cursor: pointer;
+
+            .hover {
+                opacity: 1;
+            }
+
+            .default {
+                opacity: 0;
+            }
+        }
+    }
+}
+
+.dropdown {
+    position: absolute;
+    top: 48px;
+    width: 335px;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    border-bottom-left-radius: 20px;
+    border: 1px solid $line;
+    padding-top: 20px;
+    padding-right: 21px;
+    padding-bottom: 20px;
+    padding-left: 21px;
+    gap: 15px;
+    background: $background;
+}
+
+.option {
+    width: auto;
+    border-radius: 35px;
+    padding-top: 4px;
+    padding-right: 20px;
+    padding-bottom: 4px;
+    padding-left: 20px;
+    gap: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    border: none;
+    background: transparent;   
+    cursor: pointer;
+
+    .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+    }
+
+    .meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .name {
+        font: 700 16px 'Nunito';
+        color: $text;
+    }
+
+    .status {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #D0D3E3;
+
+        &.online {
+            background: #39D353;
+        }
+    }
+
+    &:hover {
+        background: $hoverBg;
+    }
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+
+    >.button {
+        border: none;
+        border-radius: 25px;
+        padding-top: 12px;
+        padding-right: 25px;
+        padding-bottom: 12px;
+        padding-left: 25px;
+        font-weight: 700;
+        font-size: 18px;
+        color: #FFFFFF;
+        background: #444DF2;
+        cursor: pointer;
+
+        &:disabled {
+            background: #686868;
+        }
+    }
+}

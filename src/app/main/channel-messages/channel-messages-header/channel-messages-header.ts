@@ -37,9 +37,18 @@ export class ChannelMessagesHeader {
 
   private dialog = inject(MatDialog)
 
-  openEditChannel() {
+  openEditChannel(trigger: HTMLElement) {
+    const r = trigger.getBoundingClientRect();
+    const gap = 16;
+    const dlgW = 872;
+
     this.dialog.open(EditChannel, {
-      panelClass: 'edit-channel-dialog-panel'
+      width: dlgW + 'px',
+      panelClass: 'edit-channel-dialog-panel',
+      position: {
+        top: `${r.bottom + gap}px`,
+        left: `${-420 + dlgW}px`
+      }
     });
   }
 
@@ -49,9 +58,18 @@ export class ChannelMessagesHeader {
     });
   }
 
-  openAddMembers() {
+  openAddMembers(trigger: HTMLElement) {
+    const r = trigger.getBoundingClientRect();
+    const gap = 16;
+    const dlgW = 514;
+
     this.dialog.open(AddMembers, {
-      panelClass: 'add-members-dialog-panel'
+      width: dlgW + 'px',
+      panelClass: 'add-members-dialog-panel',
+      position: {
+        top: `${r.bottom + gap}px`,
+        left: `${r.right - dlgW}px`
+      }
     });
   }
 }

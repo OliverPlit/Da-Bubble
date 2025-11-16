@@ -1,5 +1,5 @@
 <header>
-    <div class="channel-title" (click)="openEditChannel()">
+    <div #btn1 class="channel-title" (click)="openEditChannel(btn1)">
         <h2>
             <span class="icon-box">
                 <img class="icon default" src="icons/tag.png" alt="">
@@ -27,7 +27,7 @@
             <span class="counter">{{ memberCount }}</span>
         </div>
 
-        <span class="icon-box" (click)="openAddMembers()">
+        <span #btn3 class="icon-box" (click)="openAddMembers(btn3)">
             <img class="default" src="icons/person_add.png" alt="">
             <img class="hover" src="icons/person_add_purple.png" alt="">
         </span>
