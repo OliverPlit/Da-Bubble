@@ -1,1 +1,30 @@
-<p>edit-members works!</p>
+<div class="edit-members-dialog">
+    <header class="edit-members-dialog-header">
+        <div class="headline">
+            <h2>Mitglieder</h2>
+
+            <span class="icon-box" (click)="close()">
+                <img class="default" src="icons/close.png" alt="">
+                <img class="hover" src="icons/close_purple.png" alt="">
+            </span>
+        </div>
+    </header>
+
+    <ul class="list">
+        <li class="row" *ngFor="let u of orderedMembers()" (click)="openProfile(u)" [class.you]="isYou(u)">
+            <img class="avatar" [src]="u.avatar" [alt]="u.name" />
+            <span class="name">{{ u.name }}</span>
+        </li>
+    </ul>
+
+    <footer class="footer" (click)="openAddMembers()">
+        <span class="icon-box">
+            <img class="default" src="icons/person_add.png" alt="">
+            <img class="hover" src="icons/person_add_purple.png" alt="">
+        </span>
+
+        <span>
+            Mitglieder hinzufügen
+        </span>
+    </footer>
+</div>

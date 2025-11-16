@@ -1,11 +1,79 @@
-import { Component } from '@angular/core';
+import { Component, Inject, signal, computed, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import { ProfileCard } from '../../../shared/profile-card/profile-card';
+import { AddMembers } from '../add-members/add-members';
+
+type User = {
+  uid: string;
+  name: string;
+  avatar: string;
+  isOnline?: boolean;
+}
+
+type DialogData = {
+  channelName?: string;
+  members?: User[];
+  currentUserId?: string;
+};
 
 @Component({
   selector: 'app-edit-members',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './edit-members.html',
   styleUrl: './edit-members.scss',
 })
 export class EditMembers {
+  private fallback: User[] = [
+    { uid: 'u_you', name: 'Frederik Beck (Du)', avatar: 'icons/avatars/avatar3.png', isOnline: true },
+    { uid: 'u_sofia', name: 'Sofia Müller', avatar: 'icons/avatars/avatar4.png', isOnline: true },
+    { uid: 'u_noah', name: 'Noah Braun', avatar: 'icons/avatars/avatar2.png', isOnline: true },
+  ];
+
+  channelName!: string;
+  currentUserId!: string;
+
+  members = signal<User[]>([]);
+  orderedMembers = computed(() => {
+    const you = this.currentUserId;
+    return [...this.members()].sort((a, b) =>
+      (b.uid === you ? 1 : 0) - (a.uid === you ? 1 : 0)
+    );
+  });
+
+  constructor(
+    private dialogRef: MatDialogRef<EditMembers>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData | null
+  ) {
+    this.channelName = data?.channelName ?? 'Entwicklerteam';
+    this.currentUserId = data?.currentUserId ?? 'u_you';
+
+    const initial = (data?.members && data.members.length) ? data.members : this.fallback;
+    this.members.set([...initial]);
+  }
+
+  private dialog = inject(MatDialog)
+
+  close() {
+    this.dialogRef.close();
+  }
+
+  openProfile(u: User) {
+    this.dialog.open(ProfileCard, {
+      data: u,
+      panelClass: 'profile-dialog-panel'
+    });
+  }
+
+  openAddMembers(): void {
+    this.dialogRef.afterClosed().subscribe(() => {
+      this.dialog.open(AddMembers, {
+        panelClass: 'add-members-dialog-panel'
+      });
+    });
+    this.dialogRef.close();
+  }
+
+  isYou(u: User) { return u.uid === this.currentUserId || /\(Du\)\s*$/.test(u.name); }
 
 }

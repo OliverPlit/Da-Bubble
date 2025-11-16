@@ -16,7 +16,7 @@
     </div>
 
     <div class="channel-members">
-        <div class="preview-members" (click)="openEditMembers()">
+        <div #btn2 class="preview-members" (click)="openEditMembers(btn2)">
             <ng-container *ngFor="let m of membersRtl">
                 <div class="avatar" role="img" [attr.aria-label]="m.name" [class.you]="m.isYou"
                     [style.background-image]="m.avatar ? 'url(' + m.avatar + ')' : null">

@@ -52,9 +52,18 @@ export class ChannelMessagesHeader {
     });
   }
 
-  openEditMembers() {
+  openEditMembers(trigger: HTMLElement) {
+    const r = trigger.getBoundingClientRect();
+    const gap = 16;
+    const dlgW = 415;
+
     this.dialog.open(EditMembers, {
-      panelClass: 'edit-members-dialog-panel'
+      width: dlgW + 'px',
+      panelClass: 'edit-members-dialog-panel',
+      position: {
+        top: `${r.bottom + gap}px`,
+        left: `${460 + dlgW}px`
+      }
     });
   }
 

@@ -117,6 +117,18 @@ body {
 }
 
 
+.edit-members-dialog-panel .mat-mdc-dialog-surface {
+  width: 415px !important;
+    max-width: 415px !important;
+    height: 411px !important;
+    max-height: 411px !important;
+  border-top-left-radius: 30px !important;
+  border-bottom-right-radius: 30px !important;
+  border-bottom-left-radius: 30px !important;
+  overflow: visible !important;
+}
+
+
 .add-members-dialog-panel .mat-mdc-dialog-surface {
   width: 514px !important;
   max-width: 514px !important;

@@ -1,0 +1,156 @@
+$primary: #535AF1;
+$secondary: #797EF3;
+$background: #FFFFFF;
+$hoverBg: #ECEEFE;
+$line: #ADB0D9;
+$text: #000000;
+
+.edit-members-dialog {
+    width: 415px !important;
+    max-width: 415px !important;
+    height: 411px !important;
+    max-height: 411px !important;
+    border-radius: 30px !important;
+    padding: 40px;
+    opacity: 1;
+    display: block;
+    margin: 0 auto;
+    box-sizing: border-box;
+    font-family: 'Nunito';
+}
+
+.edit-members-dialog-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+
+    .headline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    h2 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 24px;
+        align-self: flex-start;
+    }
+
+    .icon-box {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+
+        img {
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hover {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+        }
+
+        &:hover {
+            color: $primary;
+            background: $hoverBg;
+            cursor: pointer;
+
+            .hover {
+                opacity: 1;
+            }
+
+            .default {
+                opacity: 0;
+            }
+        }
+    }
+}
+
+.list {
+    width: 306px;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    padding: 0;
+
+    .row {
+        width: 261px;
+        border-radius: 35px;
+        padding-top: 4px;
+        padding-right: 20px;
+        padding-bottom: 4px;
+        padding-left: 20px;
+        gap: 15px;
+        display: flex;
+        cursor: pointer;
+
+        &:hover {
+            background-color: $hoverBg;
+        }
+    }
+
+    .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+    }
+
+    .name {
+        align-self: center;
+        font-weight: 400;
+        font-size: 18px;
+        color: $text;
+        white-space: nowrap;
+    }
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+    border: none;
+    border-radius: 100px;
+    padding-top: 12px;
+    padding-right: 29px;
+    padding-bottom: 12px;
+    padding-left: 29px;
+    gap: 15px;
+    font-weight: 400;
+    font-size: 18px;
+    color: $text;
+    cursor: pointer;
+
+    .icon-box {
+        position: relative;
+        border-radius: 20px;
+        padding: 8px;
+        gap: 10px;
+        background-color: $hoverBg;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+
+        .hover {
+            position: absolute;
+            opacity: 0;
+        }
+    }
+
+    &:hover {
+        background-color: $hoverBg;
+        color: $primary;
+
+        >.icon-box .hover {
+            opacity: 1;
+        }
+
+        >.icon-box .default {
+            opacity: 0;
+        }
+    }
+}
