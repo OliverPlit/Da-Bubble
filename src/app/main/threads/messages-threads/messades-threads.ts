@@ -67,9 +67,19 @@ export class MessadesThreads {
     });
   }
 
-  openAtMembers() {
+  openAtMembers(trigger: HTMLElement) {
+    const r = trigger.getBoundingClientRect();
+    const gap = 24;
+    const dlgW = 350;
+    const dlgH = 467;
+
     this.dialog.open(AtMembers, {
-      panelClass: 'at-members-dialog-panel'
+      width: dlgW + 'px',
+      panelClass: 'at-members-dialog-panel',
+      position: {
+        bottom: `${-160 + dlgH + gap}px`,
+        right: `${-240 + dlgW}px`
+      }
     });
   }
 

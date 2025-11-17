@@ -1,0 +1,58 @@
+$primary: #535AF1;
+$secondary: #797EF3;
+$background: #FFFFFF;
+$hoverBg: #ECEEFE;
+$line: #ADB0D9;
+$text: #000000;
+
+.at-members-dialog {
+    width: 350px !important;
+    max-width: 350px !important;
+    height: 467px !important;
+    max-height: 467px !important;
+    border: 1px solid $line;
+    padding: 20px;
+    opacity: 1;
+    display: block;
+    margin: 0 auto;
+    box-sizing: border-box;
+    font-family: 'Nunito';
+}
+
+.list {
+    width: 306px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 0;
+
+    .row {
+        width: 261px;
+        border-radius: 35px;
+        padding-top: 4px;
+        padding-right: 20px;
+        padding-bottom: 4px;
+        padding-left: 20px;
+        gap: 15px;
+        display: flex;
+        cursor: pointer;
+
+        &:hover {
+            background-color: $hoverBg;
+        }
+    }
+
+    .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+    }
+
+    .name {
+        align-self: center;
+        font-weight: 400;
+        font-size: 18px;
+        color: $text;
+        white-space: nowrap;
+    }
+}
