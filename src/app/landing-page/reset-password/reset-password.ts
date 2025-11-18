@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 export class ResetPassword {
   constructor(private router: Router) {}
 email = '';
-submitted = false
+submitted = false;
 
 resetPassword() {
 
