@@ -1,5 +1,15 @@
 <app-header></app-header>
-<app-menu (openNewMessage)="toggleNewMessage()"></app-menu>
 
-<app-channel-messages [showNewMessages]="showNewMessages" (closeNewMessage)="closeNewMessage()"></app-channel-messages>
-<app-threads></app-threads>
+<div class="workspace-wrapper">
+  <app-menu (openNewMessage)="toggleNewMessage()"></app-menu>
+
+  <div class="main-content">
+    <app-channel-messages
+      [showNewMessages]="showNewMessages"
+      (closeNewMessage)="closeNewMessage()"
+      [ngStyle]="channelMessagesStyle">
+    </app-channel-messages>
+
+    <app-threads *ngIf="showThreads"></app-threads>
+  </div>
+</div>

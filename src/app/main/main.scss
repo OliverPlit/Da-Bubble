@@ -1,0 +1,20 @@
+.workspace-wrapper {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 60px); /* Header abziehen */
+}
+
+.main-content {
+  display: flex;
+  gap: 25px;
+  width: 100%;
+}
+
+app-channel-messages {
+  transition: width 0.3s; /* weich animieren beim Öffnen/Schließen */
+}
+
+app-threads {
+  width: 485px;
+  flex-shrink: 0; /* verhindert schrumpfen */
+}

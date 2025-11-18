@@ -4,30 +4,33 @@ import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { AddChannel } from '../add-channel/add-channel';
-import { ChannelService } from '../channel-service';
-import { Channel} from "../channels/channel.model";
+import { FirebaseService } from '../../../services/firebase';
+import { Channel } from "../channels/channel.model";
 
 
 
 @Component({
   selector: 'app-channels',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './channels.html',
   styleUrl: './channels.scss',
 })
-export class Channels  implements OnInit{
+export class Channels implements OnInit {
   firestore: Firestore = inject(Firestore);
   channels$: Observable<any[]> | undefined;
-  channels: Channel[] = [];
-private dialog = inject(MatDialog);
+  channels: Channel[] = [
+  ];
+  private dialog = inject(MatDialog);
 
-constructor(private channelService : ChannelService) {}
+  constructor(private channelService: FirebaseService) { }
 
-ngOnInit(): void {
-  this.channelService.channels$.subscribe(data => {
-    this.channels = data;
-  })
-}
+  ngOnInit() {
+ this.channelService.getCollection$('channels')
+      .subscribe(data => {
+        this.channels = data as Channel[];
+      });
+  }
 
 
   openDialog() {
@@ -35,5 +38,9 @@ ngOnInit(): void {
       panelClass: 'add-channel-dialog-panel'
     });
   }
-  
+
+   addChannel(channel: Channel) {
+  this.channelService.addDocument('channels', channel);
+}
+
 }

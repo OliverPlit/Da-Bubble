@@ -1,17 +1,12 @@
 import 'zone.js';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
 import { App } from './app/app';
-import { provideFirebaseApp,initializeApp } from '@angular/fire/app';
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
-import { routes } from './app/app.routes';
 import { provideRouter } from '@angular/router';
+import { routes } from './app/app.routes';
 
-
-
-
-
-  const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyD--n2EoFIXLZrQLvMSYh1mlBy8OYOWvL8",
   authDomain: "dabubble-3de0e.firebaseapp.com",
   databaseURL: "https://dabubble-3de0e-default-rtdb.europe-west1.firebasedatabase.app",
@@ -25,7 +20,9 @@ import { provideRouter } from '@angular/router';
 bootstrapApplication(App, {
   providers: [
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
+
     provideFirestore(() => getFirestore()),
+
     provideRouter(routes)
   ]
 }).catch(err => console.error(err));

@@ -1,4 +1,7 @@
 export interface Channel {
-    name : string;
-    description : string;
+    createdBy: string;
+    description: string;
+    memberCount: number;
+    name: string;
+
 }

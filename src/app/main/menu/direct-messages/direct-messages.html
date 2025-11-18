@@ -4,8 +4,8 @@
 
 </div>
 
-<div class="main-container">
+<div class="main-container" *ngFor="let dm of directMessage">
     <img src="/icons/profile-menu.png" alt="">
-    <p>Name</p>
+    <p>{{dm.name}}</p>
 
 </div>

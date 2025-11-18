@@ -6,7 +6,8 @@ import { CommonModule } from '@angular/common';
 import { AddPeople } from './add-people/add-people';
 import { MatDialog } from '@angular/material/dialog';
 import { FormsModule, NgForm } from '@angular/forms';
-import { ChannelService } from '../channel-service';
+import { FirebaseService } from '../../../services/firebase';
+
 
 
 
@@ -19,7 +20,7 @@ import { ChannelService } from '../channel-service';
 })
 export class AddChannel {
   private dialog = inject(MatDialog);
-  constructor(private channelService: ChannelService) { }
+  constructor(private firebaseService: FirebaseService) { }
   dialogRef = inject(MatDialogRef<AddChannel>);
 
   close() {
@@ -36,7 +37,7 @@ export class AddChannel {
     const name = form.value.channelName;
     const description = form.value.description;
 
-    this.channelService.addChannel({name, description});
+    this.firebaseService.addDocument('channels', { name, description });
 
 
 
