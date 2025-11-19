@@ -57,7 +57,9 @@ body {
 
   }
 }
-
+.cdk-overlay-container {
+  z-index: 2000 !important;
+}
 
 ::ng-deep .menu .mat-mdc-menu-content {
   display: flex;
@@ -237,4 +239,12 @@ input::placeholder {
     color: white;
     cursor: pointer;
   }
+}
+
+
+@media (max-width: 400px) {
+.menu {
+    display: none !important;
+  }
+
 }

@@ -1,13 +1,29 @@
 <section>
     <img src="/icons/logo-menu.png" alt="logo">
     <input type="text" placeholder="Devspace duchsuchen">
-    <div class="profile-menu" matButton [matMenuTriggerFor]="menu">
+    <div class="profile-menu" (click)="openMenu()" [matMenuTriggerFor]="!isMobile ? menu : null">
         <p>Oliver Plit</p>
         <img class="profile-img" src="/icons/profile-menu.png" alt="">
-        <img src="/icons/dropdown-menu.png" alt="">
-        <mat-menu #menu="matMenu" class="menu">
+        <img src="/icons/dropdown-menu.png" alt="" class="dropdown">
+        <mat-menu #menu="matMenu" class="menu" xPosition="before" yPosition="below">
             <p (click)="openDialog()">Profile</p>
             <p (click)="logout()">Log out</p>
         </mat-menu>
+    </div>
+
+    <div class="mobile-menu" *ngIf="mobileMenuOpen">
+        <div class="mobile-menu-content">
+            <img src="./icons/mobile-menu.png" alt="" class="menu-bar">
+            <div>
+                <img src="/icons/direct-person.png" alt="">
+                <p (click)="openDialog()">Profile</p>
+
+            </div>
+            <div>
+                <img src="/icons/logout.png" alt="">
+                <p (click)="logout()">Log out</p>
+
+            </div>
+        </div>
     </div>
 </section>

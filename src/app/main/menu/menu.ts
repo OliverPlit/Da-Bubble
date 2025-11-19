@@ -23,9 +23,9 @@ export class Menu {
   showMessages = false;
   isMenuOpen = false;
   showNewMessages = false;
-  private dialog = inject(MatDialog);
     @Output() openNewMessage = new EventEmitter<void>();
 
+constructor(private dialog: MatDialog) {}
 
   openDialog() {
     this.dialog.open(AddChannel, {
@@ -36,14 +36,19 @@ export class Menu {
   onOpenNewMessage() {
     this.openNewMessage.emit(); // sagt Parent: toggle
  }
-
-  toggleChannels() {
-    this.showChannels = !this.showChannels; 
+toggleChannels() {
+  this.showChannels = !this.showChannels;
+  if (this.showChannels) {
+    this.showMessages = false; 
   }
+}
 
-  toggleMessages() {
-    this.showMessages = !this.showMessages; 
+toggleMessages() {
+  this.showMessages = !this.showMessages;
+  if (this.showMessages) {
+    this.showChannels = false;
   }
+}
 
   onDrawerChange(open: boolean) {
     this.isMenuOpen = open;

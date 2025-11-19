@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Firestore, doc, getDoc, collection, getDocs, addDoc, collectionData  } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 
@@ -8,8 +8,10 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class FirebaseService {
+    private firestore = inject(Firestore);
 
-  constructor(private firestore: Firestore) {}
+
+  constructor() {}
 
   // Ein Dokument abrufen
   async getDocument(collectionName: string, id: string) {
@@ -19,10 +21,11 @@ export class FirebaseService {
   }
 
   // Alle Dokumente einer Collection abrufen
-  getCollection$(collectionName: string): Observable<any[]> {
+   getCollection$(collectionName: string): Observable<any[]> {
     const colRef = collection(this.firestore, collectionName);
     return collectionData(colRef, { idField: 'id' });
   }
+
 
   // Dokument hinzufügen
   addDocument(collectionName: string, data: any) {

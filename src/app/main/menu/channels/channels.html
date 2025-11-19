@@ -1,5 +1,5 @@
 <section>
-    <div class="main-container" *ngFor=" let channel of channels">
+    <div class="main-container" *ngFor=" let channel of channels$ | async">
         <img src="/icons/tag-black.png" alt="">
         <p>{{(channel.name)}}</p>
     </div>

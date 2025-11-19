@@ -2,6 +2,8 @@ import { Component, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatDialog } from '@angular/material/dialog';
 import { EditProfile } from './edit-profile/edit-profile';
+import { FirebaseService } from '../../../services/firebase';
+
 
 
 
@@ -15,6 +17,7 @@ export class Profile {
    dialogRef = inject(MatDialogRef<Profile>);
  private dialog = inject(MatDialog);
 
+  constructor(private firebaseService: FirebaseService) { }
 
 openDialog() {
 this.dialog.open(EditProfile, {

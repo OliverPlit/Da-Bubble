@@ -21,15 +21,12 @@ export class Channels implements OnInit {
   channels$: Observable<any[]> | undefined;
   channels: Channel[] = [
   ];
-  private dialog = inject(MatDialog);
 
-  constructor(private channelService: FirebaseService) { }
+  constructor(private channelService: FirebaseService, private dialog: MatDialog) { }
 
   ngOnInit() {
- this.channelService.getCollection$('channels')
-      .subscribe(data => {
-        this.channels = data as Channel[];
-      });
+     this.channels$ = this.channelService.getCollection$('channels');
+
   }
 
 
@@ -39,8 +36,8 @@ export class Channels implements OnInit {
     });
   }
 
-   addChannel(channel: Channel) {
-  this.channelService.addDocument('channels', channel);
-}
+  addChannel(channel: Channel) {
+    this.channelService.addDocument('channels', channel);
+  }
 
 }
