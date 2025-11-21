@@ -3,33 +3,35 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
+import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-choose-avatar',
-  imports: [CommonModule, FormsModule , RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './choose-avatar.html',
   styleUrl: './choose-avatar.scss',
 })
 export class ChooseAvatar {
-  constructor(private router: Router) {}
+  
+  selectedAvatar: string = 'avatar1.png';
 
-  text = '';
-  email = '';
-  password = '';
-  acceptedPrivacy = false;
+  constructor(private firestore: Firestore, private router: Router) {}
 
-  submitted = false;
-  nameError = false;
-  emailError = false;
-  passwordError = false;
-  privacyError = false;
-
-  /** Email RegEx */
-  isValidEmail(email: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  selectAvatar(avatar: string) {
+    this.selectedAvatar = avatar;
   }
 
-  signUp() {
+  async saveAvatar() {
+    const userId = localStorage.getItem('pendingUserId');
+    if (!userId) return;
+
+    const userRef = doc(this.firestore, `users/${userId}`);
+
+    await updateDoc(userRef, {
+      avatar: this.selectedAvatar
+    });
+
+    // Weiterleiten
     this.router.navigate(['/']);
   }
 
