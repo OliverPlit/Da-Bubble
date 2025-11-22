@@ -3,21 +3,22 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
-import { Firestore, collection, addDoc } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { Auth, createUserWithEmailAndPassword } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-signup',
-  imports: [CommonModule, FormsModule , RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './signup.html',
   styleUrl: './signup.scss',
 })
 export class Signup {
-  constructor(private router: Router, private firestore: Firestore) {}
+
+  constructor(private router: Router, private firestore: Firestore, private auth: Auth) {}
 
   text = '';
   email = '';
   password = '';
-  avatar = 'avatar1.png';
   acceptedPrivacy = false;
 
   submitted = false;
@@ -26,47 +27,52 @@ export class Signup {
   passwordError = false;
   privacyError = false;
 
-createUser() {
-  const userData = {
-    name: this.text,
-    email: this.email,
-    password: this.password, 
-    avatar: this.avatar,              
-    provider: 'password',
-    isGuest: false,
-    isOnline: true,
-    isYou: true
-  };
-
-  const userRef = collection(this.firestore, 'users');
-  return addDoc(userRef, userData);
-}
-
   isValidEmail(email: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-async signUp() {
-  this.submitted = true;
-  this.nameError = this.text.trim() === '';
-  this.emailError = !this.isValidEmail(this.email);
-  this.passwordError = this.password.trim() === '';
-  this.privacyError = !this.acceptedPrivacy;
+  async signUp() {
+    this.submitted = true;
 
-  if (this.nameError || this.emailError || this.passwordError || this.privacyError) {
-    return;
+    this.nameError = this.text.trim() === '';
+    this.emailError = !this.isValidEmail(this.email);
+    this.passwordError = this.password.trim() === '';
+    this.privacyError = !this.acceptedPrivacy;
+
+    if (this.nameError || this.emailError || this.passwordError || this.privacyError) {
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        this.auth,
+        this.email,
+        this.password
+      );
+
+      const uid = userCredential.user.uid;
+      await setDoc(doc(this.firestore, 'users', uid), {
+        name: this.text,
+        email: this.email,
+        avatar: '',
+        provider: 'password',
+        isGuest: false,
+        isOnline: true,
+        isYou: true
+      });
+
+      localStorage.setItem('pendingUserId', uid);
+
+      this.router.navigate(['/choose-avatar']);
+
+    } catch (err: any) {
+      console.error('Fehler beim Auth-Signup:', err);
+
+      if (err.code === 'auth/email-already-in-use') {
+        this.emailError = true;
+      }
+    }
   }
-
-  try {
-    const userDocRef = await this.createUser();
-
-    localStorage.setItem('pendingUserId', userDocRef.id);
-
-    this.router.navigate(['/choose-avatar']);
-  } catch (err) {
-    console.error('❌ Fehler beim Erstellen des Users:', err);
-  }
-}
 
   goBack() {
     localStorage.setItem('skipIntro', 'true');

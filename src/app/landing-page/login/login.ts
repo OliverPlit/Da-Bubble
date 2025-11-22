@@ -7,6 +7,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Auth, signInWithEmailAndPassword } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-login',
@@ -30,28 +31,52 @@ export class Login {
   emailError = false;
   loginError = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private auth: Auth) {}
 
-  login() {
-        this.submitted = true;
+  async login() {
+    this.submitted = true;
 
-    if (!this.email || !this.email.includes("@")) {
-      this.emailError = true;
-    } else {
-      this.emailError = false;
-    }
+    this.emailError = !this.email || !this.email.includes('@');
+    this.loginError = false;
 
-    if (!this.password) {
+    if (this.emailError || !this.password) {
       this.loginError = true;
-    } else {
-      this.loginError = false;
+      return;
     }
-    if (this.email && this.password) {
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(this.auth, this.email, this.password);
+
+      localStorage.setItem('currentUser', JSON.stringify(userCredential.user));
+
       this.router.navigate(['/main']);
+    } catch (err: any) {
+      switch (err.code) {
+        case 'auth/user-not-found':
+        case 'auth/invalid-email':
+        case 'auth/invalid-credential':
+          this.emailError = true;
+          break;
+
+        case 'auth/wrong-password':
+          this.loginError = true;
+          break;
+
+        default:
+          this.loginError = true;
+          this.emailError = true;
+      }
     }
   }
 
   guestLogin() {
-    this.router.navigate(['/main']);
-  }
+  const guestUser = {
+    uid: 'guest',       
+    name: 'Guest',
+    avatar: 'avatar1.png'
+  };
+
+  localStorage.setItem('currentUser', JSON.stringify(guestUser));
+   this.router.navigate(['/main']);
+}
 }

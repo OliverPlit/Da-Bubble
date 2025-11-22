@@ -2,8 +2,8 @@
     <img src="/icons/logo-menu.png" alt="logo">
     <input type="text" placeholder="Devspace duchsuchen">
     <div class="profile-menu" (click)="openMenu()" [matMenuTriggerFor]="!isMobile ? menu : null">
-        <p>Oliver Plit</p>
-        <img class="profile-img" src="/icons/profile-menu.png" alt="">
+        <p>{{ userName }}</p>
+        <img class="profile-img" [src]="'/icons/avatars/' + userAvatar" alt="">
         <img src="/icons/dropdown-menu.png" alt="" class="dropdown">
         <mat-menu #menu="matMenu" class="menu" xPosition="before" yPosition="below">
             <p (click)="openDialog()">Profile</p>
