@@ -39,6 +39,7 @@ ngOnInit() {
   }
   setTimeout(() => {
     this.showIntro = false;
-  }, 3400);
+    document.body.classList.add('show-header');
+  }, 3600);
 }
 }

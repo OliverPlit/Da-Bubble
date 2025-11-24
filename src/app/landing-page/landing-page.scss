@@ -18,9 +18,9 @@ header {
   top: 32px;
   left: 32px;
   opacity: 0;
-  transition: opacity 0.6s ease;
-  animation: showHeaderLogo 0.6s ease forwards;
-  animation-delay: 3s;
+  transition: opacity 3s ease;
+  animation: showHeaderLogo 0.1s ease forwards;
+  animation-delay: 3.55s;
   p {
     font-size: 32px;
     font-weight: 700;
@@ -70,24 +70,32 @@ footer {
 .intro-wrapper {
   position: fixed;
   inset: 0;
-  background: linear-gradient(160deg, #8aa2ff, #1627ff);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
+}
 
+.intro-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #8aa2ff, #1627ff);
   animation: introFadeOut 0.8s ease forwards;
   animation-delay: 2.8s;
+  z-index: 1;
 }
 
 .intro-content {
   display: flex;
+  gap: 4px;
   align-items: center;
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  animation: introFlyToHeader 0.7s ease forwards;
+  z-index: 2;
+
+  animation: introFlyToHeader 0.7s ease-in forwards;
   animation-delay: 2.8s;
 }
 
@@ -100,7 +108,7 @@ footer {
 }
 
 .intro-text {
-  font-size: 46px;
+  font-size: 56px;
   font-weight: 700;
   color: white;
   font-family: 'Nunito', sans-serif;
@@ -110,8 +118,7 @@ footer {
   left: 70px;
   transform: translateX(-40px);
 
-  animation: textSlideOut 0.7s ease forwards;
-  animation-delay: 1.2s;
+  animation: textSlideOut 0.7s ease forwards 1.2s, textFadeOut 2s ease-out forwards 2.8s;
 }
 
 @keyframes introLogoIn {
@@ -125,21 +132,31 @@ footer {
   }
 }
 
+
+@keyframes textFadeOut {
+  from {
+    color: white;
+  }
+  to {
+    color: black;
+  }
+}
+
 @keyframes introLogoShift {
   from {
     transform: translateX(0);
   }
   to {
-    transform: translateX(-120px);
+    transform: translateX(-110px);
   }
 }
 
 @keyframes introLogoStay {
   from {
-    transform: translateX(-120px);
+    transform: translateX(-110px);
   }
   to {
-    transform: translateX(-120px);
+    transform: translateX(-110px);
   }
 }
 
@@ -162,9 +179,10 @@ footer {
   }
 
   100% {
-    top: 16px;
-    left: 48px;
+    top: 8px;
+    left: 72px;
     transform: translate(0, 0) scale(0.5833);
+     color: black;
   }
 }
 
@@ -174,6 +192,7 @@ footer {
   }
   to {
     opacity: 0;
+   
   }
 }
 
