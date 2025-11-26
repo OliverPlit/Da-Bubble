@@ -3,15 +3,14 @@
         <h2>Leute hinzufügen</h2>
         <img src="/icons/close.png" alt="" (click)="closeDialog()">
     </div>
-    <form #peopleForm="ngForm">
 
+    <form #peopleForm="ngForm">
         <div class="checkboxen">
             <label>
-                <input type="radio" name="option1" value="option1" (click)="toggleExtraField(false)"
+                <input type="radio" name="option1" value="option1" (click)="toggleExtraField(true)"
                     [(ngModel)]="selectedOption">
                 <span class="checkmark"></span>
-
-                <p> Alle Mitglieder von Entwicklerteam hinzufügen</p>
+                <p> Alle Mitglieder von DirectMessages auswählen</p>
             </label>
 
             <label>
@@ -20,24 +19,32 @@
                 <span class="checkmark"></span>
                 <p> Bestimmte Leute hinzufügen</p>
             </label>
+
             <div class="error" *ngIf="!selectedOption">
                 <p>Es muss eine Option ausgewählt sein</p>
             </div>
 
-            <div [style.display]="showExtraFields ? 'block' : 'none'">
-                <input name="people" type="text" placeholder="Name eingeben" class="input-name" [(ngModel)]="inputName"
-                    #people="ngModel" required minlength="5">
+            <div *ngIf="showExtraFields" class="multi-select">
+                <input type="text" placeholder="Name filtern..." [(ngModel)]="inputName"
+                    [ngModelOptions]="{standalone: true}" (input)="filterPeople($event)">
 
-              
-            </div>
-              <div class="error" *ngIf="people.invalid && people.touched">
-                    <p *ngIf="people.errors?.['minlength']">Beschreibung muss mehr als 5 Zeichen haben</p>
+                <div class="filtered-list" *ngIf="selectedOption === 'option2'">
+                    <div *ngFor="let person of filteredPeople" class="person-item" (click)="selectPerson(person)">
+                        <span>{{ person.name }}</span>
+                    </div>
                 </div>
 
+                <div class="selected-list">
+                    <div *ngFor="let person of selectedPeople" class="selected-person">
+                        {{ person.name }}
+                        <img src="/icons/close.png" (click)="removePerson(person)" class="remove-btn">
+                    </div>
+                </div>
+            </div>
         </div>
     </form>
 
     <div class="button-end">
-        <button [disabled]="!isFormValid()" (click)="closeDialog()">Erstellen</button>
+        <button [disabled]="!isFormValid()" (click)="addMember()">Erstellen</button>
     </div>
 </div>

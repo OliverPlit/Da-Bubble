@@ -14,7 +14,7 @@ import { Auth, createUserWithEmailAndPassword } from '@angular/fire/auth';
 })
 export class Signup {
 
-  constructor(private router: Router, private firestore: Firestore, private auth: Auth) {}
+  constructor(private router: Router, private firestore: Firestore, private auth: Auth) { }
 
   text = '';
   email = '';
@@ -56,6 +56,12 @@ export class Signup {
         email: this.email,
         avatar: 'avatar1.png',
         isYou: true
+      });
+
+      await setDoc(doc(this.firestore, 'directMessages', uid), {
+        createdAt: new Date(),
+        name: this.text,
+        avatar: 1,
       });
 
       localStorage.setItem('pendingUserId', uid);

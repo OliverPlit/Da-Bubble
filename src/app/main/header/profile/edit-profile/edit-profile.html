@@ -10,10 +10,10 @@
         <img src="/icons/direct-person.png" alt="">
         <h2>Vollständiger Name</h2>
     </div>
-    <form #channelForm="ngForm">
+    <form #channelForm="ngForm" (ngSubmit)="save(channelForm)">
 
         <div>
-            <input type="text" placeholder="Oliver Plit" name="nameInputEdit" ngModel>
+            <input type="text" placeholder="Oliver Plit" name="nameInputEdit" [(ngModel)]="nameInput">
         </div>
         <div class="edit-buttons">
             <button class="button-cancel" (click)="close()">Abbrechen</button>

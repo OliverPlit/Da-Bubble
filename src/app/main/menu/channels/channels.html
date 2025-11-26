@@ -1,7 +1,7 @@
 <section>
-    <div class="main-container" *ngFor=" let channel of channels$ | async">
+    <div class="main-container" *ngFor=" let membership  of memberships ">
         <img src="/icons/tag-black.png" alt="">
-        <p>{{(channel.name)}}</p>
+        <p>{{membership.name}}</p>
     </div>
 
 </section>

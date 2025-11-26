@@ -41,6 +41,15 @@
     display: flex;
     justify-content: center;
     margin-top: 20px;
+
+    >img {
+        width: 200px;
+        height: 200px;
+        border-radius: 500px;
+
+
+    }
+
 }
 
 .profile-name {
@@ -113,5 +122,3 @@
     margin-top: -5px;
 
 }
-
-

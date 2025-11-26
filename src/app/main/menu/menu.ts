@@ -30,7 +30,7 @@ export class Menu {
 
   @Output() openNewMessage = new EventEmitter<void>();
 
-  constructor(private dialog: MatDialog) { }
+  constructor(private dialog: MatDialog, ) { }
   @HostListener('window:resize')
   checkWidth() {
     this.isMobile = window.innerWidth <= 550;

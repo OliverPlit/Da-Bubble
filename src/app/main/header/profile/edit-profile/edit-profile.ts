@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, inject,  } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormsModule, NgForm } from '@angular/forms';
+import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
 
 
 
@@ -14,8 +15,9 @@ import { FormsModule, NgForm } from '@angular/forms';
   styleUrls: ['./edit-profile.scss', 'edit-profile.responsive.scss'],
 })
 export class EditProfile {
-
-
+  private firestore = inject(Firestore);
+ data = inject(MAT_DIALOG_DATA);
+nameInput: string = this.data.name;
   dialogRef = inject(MatDialogRef<EditProfile>);
 
 
@@ -23,16 +25,18 @@ export class EditProfile {
     this.dialogRef.close();
   }
 
-  save(channelForm: NgForm) {
-    let nameInput = channelForm.value.nameInputEdit;
+  async save(channelForm: NgForm) {
+ const newName = this.nameInput.trim();
+  if (!newName) return;
 
 
+ const uid = this.data.uid;
+  const userRef = doc(this.firestore, 'users', uid);
 
-    console.log('gespeichert', nameInput);
+  await updateDoc(userRef, { name: newName });
 
 
-
-    this.close()
+    this.dialogRef.close(newName)
   }
 }
 
