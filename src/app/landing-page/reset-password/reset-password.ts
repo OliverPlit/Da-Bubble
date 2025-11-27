@@ -17,16 +17,15 @@ email = '';
 submitted = false;
 
 async resetPassword() {
-  this.submitted = true;
 
   if (!this.emailValid(this.email)) {
+      this.submitted = true;
     return;
   }
 
   try {
     await sendPasswordResetEmail(this.auth, this.email.trim());
     this.submitted = false;
-    
     alert('Passwort-Reset E-Mail wurde gesendet!');
     this.router.navigate(['/']);
 
