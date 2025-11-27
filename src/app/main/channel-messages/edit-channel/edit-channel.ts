@@ -4,7 +4,13 @@ import { CommonModule } from '@angular/common';
 import { FirebaseService } from '../../../services/firebase';
 import { Channel } from "../../../main/menu/channels/channel.model";
 import { Observable } from 'rxjs';
-import { ChannelStoreService } from '../edit-channel/edit-file.service';
+import { collection, doc } from '@angular/fire/firestore';
+import { getDoc } from '@angular/fire/firestore';
+import { ChangeDetectorRef } from '@angular/core';
+import { Firestore } from '@angular/fire/firestore';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+
 
 
 
@@ -20,13 +26,35 @@ export class EditChannel {
   showInputDescription = false;
   closeName = true;
   closeDescription = true;
-  channels: Channel[] = [];
+  firestore: Firestore = inject(Firestore);
+  memberships: any[] = [];
+  data = inject(MAT_DIALOG_DATA);
+  channel: any;
 
-  constructor(private channelStore: ChannelStoreService) { }
+
+  constructor(private channelService: FirebaseService, private cdr: ChangeDetectorRef) { }
 
   async ngOnInit() {
-    await this.channelStore.loadChannels();
-    this.channels = this.channelStore.getChannelsSync();
+    this.loadData();
+  }
+
+
+  async loadData() {
+    const storedUser = localStorage.getItem('currentUser');
+    if (!storedUser) return;
+
+    const uid = JSON.parse(storedUser).uid;
+    if (!uid) return;
+
+    const userRef = doc(this.firestore, 'users', uid);
+    const membershipsRef = collection(userRef, 'memberships');
+
+    const channelRef = doc(this.firestore, `users/${uid}/memberships/${this.data.channelId}`);
+    const snap = await getDoc(channelRef);
+    if (snap.exists()) {
+      this.channel = snap.data();
+      this.cdr.detectChanges();
+    }
   }
 
 

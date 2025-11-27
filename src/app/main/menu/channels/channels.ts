@@ -1,31 +1,27 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { Firestore } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Component, inject, OnInit, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Firestore, collection, doc, collectionData } from '@angular/fire/firestore';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { AddChannel } from '../add-channel/add-channel';
 import { FirebaseService } from '../../../services/firebase';
 import { Channel } from "../channels/channel.model";
-import { collection, doc } from '@angular/fire/firestore';
-import { collectionData } from '@angular/fire/firestore';
-import { ChangeDetectorRef } from '@angular/core';
-
+import { ChannelMessages } from '../../channel-messages/channel-messages';
 
 
 @Component({
   selector: 'app-channels',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ChannelMessages],
   templateUrl: './channels.html',
   styleUrl: './channels.scss',
 })
 export class Channels implements OnInit {
   firestore: Firestore = inject(Firestore);
-  channels$: Observable<any[]> | undefined;
   memberships: any[] = [];
+  selectedChannel: any = null;
 
-  constructor(private channelService: FirebaseService, private dialog: MatDialog,   private cdr: ChangeDetectorRef) { }
-
+  constructor(private channelService: FirebaseService, private dialog: MatDialog, private cdr: ChangeDetectorRef) { }
+@Output() channelClicked = new EventEmitter<any>();
   ngOnInit() {
     this.loadData();
   }
@@ -42,19 +38,14 @@ export class Channels implements OnInit {
 
     collectionData(membershipsRef, { idField: 'id' }).subscribe(memberships => {
       this.memberships = memberships;
-       this.cdr.detectChanges();
+      this.cdr.detectChanges();
     });
   }
-
 
   openDialog() {
-    this.dialog.open(AddChannel, {
-      panelClass: 'add-channel-dialog-panel'
-    });
+    this.dialog.open(AddChannel, { panelClass: 'add-channel-dialog-panel' });
   }
 
-  addChannel(channel: Channel) {
-    this.channelService.addDocument('channels', channel);
-  }
-
+  openChannel(channel: any) {
+    this.selectedChannel = channel; }
 }

@@ -1,6 +1,6 @@
 export interface directMessageContact {
     createdAt: Date;
     name: string;
-    avatar: number;
+    avatar: string;
     state: boolean;
 }

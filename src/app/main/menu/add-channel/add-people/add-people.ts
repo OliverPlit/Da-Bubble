@@ -20,12 +20,12 @@ export class AddPeople implements OnInit {
   firestore: Firestore = inject(Firestore);
   showExtraFields = false;
   selectedOption: 'option1' | 'option2' | null = null;
-  inputName = "";
+  inputName: string = "";
   peopleList: string[] = [];
-  selectedPeople: { name: string, avatar?: string }[] = [];
   directMessagePeople: Observable<any[]> | undefined;
-  filteredPeople: { name: string }[] = [];
-  allPeople: { name: string, avatar?: string }[] = [];
+ selectedPeople: { name: string, avatar?: string }[] = [];
+allPeople: { name: string, avatar?: string }[] = [];
+filteredPeople: { name: string, avatar?: string }[] = [];
 
 
 
@@ -33,41 +33,65 @@ export class AddPeople implements OnInit {
   ngOnInit() {
     const dmRef = collection(this.firestore, 'directMessages');
     collectionData(dmRef, { idField: 'id' })
-      .pipe(map(users => users.map(u => ({ name: u['name'] as string, }))))
+      .pipe(map(users => users.map(u => ({ name: u['name'] as string, avatar: u ['avatar'] as string }))))
       .subscribe(users => {
         this.allPeople = users;
-        this.filteredPeople = users;
+        this.filteredPeople = [];
       });
   }
-
-
-  filterPeople(event: any) {
-    const value = event.target.value.toLowerCase();
-    this.filteredPeople = this.allPeople.filter(u => u.name.toLowerCase().includes(value));
+  onOptionChange(opt: 'option1' | 'option2') {
+    this.selectedOption = opt;
+    if (opt === 'option2') {
+      this.showExtraFields = true;
+    }
+    else {
+      this.showExtraFields = false;
+      this.inputName = '';
+      this.filteredPeople = [];
+      this.selectedPeople = [];
+    }
   }
 
 
- selectPerson(person: { name: string, avatar?: string }) {
-  // Wenn Person noch nicht ausgewählt, hinzufügen
-  if (!this.selectedPeople.find(p => p.name === person.name)) {
+  filterPeople() {
+    const value = this.inputName.toLowerCase().trim();
+
+    if (value.length < 1) {
+      this.filteredPeople = [];
+      return;
+    }
+
+    this.filteredPeople = this.allPeople
+      .filter(u => u.name.toLowerCase().includes(value))
+      .filter(u => !this.selectedPeople.some(sp => sp.name === u.name));
+  }
+
+  onInputKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter' && this.filteredPeople.length > 0) {
+      event.preventDefault();
+      this.selectPerson(this.filteredPeople[0]);
+    }
+  }
+
+
+  selectPerson(person: { name: string, avatar?: string }) {
+    debugger; 
+    if (this.selectedPeople.find(p => p.name === person.name && p.avatar === person.avatar)) return
     this.selectedPeople.push(person);
 
-    // Aus der Filterliste entfernen
-    this.filteredPeople = this.filteredPeople.filter(p => p.name !== person.name);
-    this.allPeople = this.allPeople.filter(p => p.name !== person.name);
+  this.allPeople = this.allPeople.filter(p => p.name !== person.name || p.avatar !== person.avatar);
+    this.filterPeople();
+
+    this.inputName = '';
   }
 
-  // Name im Input anzeigen
-  this.inputName = person.name;
-}
 
   removePerson(person: { name: string }) {
- this.selectedPeople = this.selectedPeople.filter(p => p.name !== person.name);
+    this.selectedPeople = this.selectedPeople.filter(p => p.name !== person.name);
+    this.allPeople.push(person);
+    this.allPeople.sort((a, b) => a.name.localeCompare(b.name));
 
-  this.allPeople.push(person);
-  this.filteredPeople.push(person);
-
-  this.inputName = '';
+    this.filterPeople();
   }
 
   toggleExtraField(status: boolean) {
@@ -123,6 +147,7 @@ export class AddPeople implements OnInit {
     this.closeDialog();
   }
   create() {
+    this.addMember();
     console.log('erstellt');
 
   }

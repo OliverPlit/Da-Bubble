@@ -1,5 +1,5 @@
 <section>
-    <div class="main-container" *ngFor=" let membership  of memberships ">
+  <div class="main-container" *ngFor="let membership of memberships" (click)="channelClicked.emit(membership)">
         <img src="/icons/tag-black.png" alt="">
         <p>{{membership.name}}</p>
     </div>
@@ -10,3 +10,6 @@
     <img src="/icons/add-circle-channel.png" alt="">
     <p>Channel hinzufügen</p>
 </div>
+<section *ngIf="selectedChannel">
+  <app-channel-messages [channel]="selectedChannel"></app-channel-messages>
+</section>

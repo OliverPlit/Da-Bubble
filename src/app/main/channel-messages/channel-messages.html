@@ -1,7 +1,10 @@
   <app-new-message *ngIf="showNewMessages" (close)="onClose()"></app-new-message>
 
-<section>
+<section >
 
-    <app-channel-messages-header></app-channel-messages-header>
-    <app-thread-channel-messages></app-thread-channel-messages>
+<app-channel-messages-header
+    [channel]="channelName"
+    [channelId]="channelId"
+    [members]="members">
+  </app-channel-messages-header>    <app-thread-channel-messages></app-thread-channel-messages>
 </section>
