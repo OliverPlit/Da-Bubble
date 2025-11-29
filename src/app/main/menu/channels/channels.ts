@@ -3,15 +3,14 @@ import { Firestore, collection, doc, collectionData } from '@angular/fire/firest
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { AddChannel } from '../add-channel/add-channel';
-import { FirebaseService } from '../../../services/firebase';
-import { Channel } from "../channels/channel.model";
-import { ChannelMessages } from '../../channel-messages/channel-messages';
+import { getDoc } from '@angular/fire/firestore';
+import { ChannelStateService } from '../channels/channel.service'
 
 
 @Component({
   selector: 'app-channels',
   standalone: true,
-  imports: [CommonModule, ChannelMessages],
+  imports: [CommonModule],
   templateUrl: './channels.html',
   styleUrl: './channels.scss',
 })
@@ -20,7 +19,8 @@ export class Channels implements OnInit {
   memberships: any[] = [];
   selectedChannel: any = null;
 
-  constructor(private channelService: FirebaseService, private dialog: MatDialog, private cdr: ChangeDetectorRef) { }
+
+  constructor(private dialog: MatDialog, private cdr: ChangeDetectorRef, private channelState: ChannelStateService ) { }
 @Output() channelClicked = new EventEmitter<any>();
   ngOnInit() {
     this.loadData();
@@ -46,6 +46,7 @@ export class Channels implements OnInit {
     this.dialog.open(AddChannel, { panelClass: 'add-channel-dialog-panel' });
   }
 
-  openChannel(channel: any) {
-    this.selectedChannel = channel; }
+onChannelClick(channel: any) {
+    this.channelState.selectChannel(channel);
+  }
 }

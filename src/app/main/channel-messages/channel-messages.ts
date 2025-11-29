@@ -1,8 +1,10 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { ChannelMessagesHeader } from './channel-messages-header/channel-messages-header';
 import { ThreadChannelMessages } from './thread-channel-messages/thread-channel-messages';
 import { NewMessage } from '../menu/new-message/new-message';
 import { CommonModule } from '@angular/common';
+import { ChannelStateService } from '../../main/menu/channels/channel.service';
 
 @Component({
   selector: 'app-channel-messages',
@@ -10,31 +12,32 @@ import { CommonModule } from '@angular/common';
   templateUrl: './channel-messages.html',
   styleUrl: './channel-messages.scss',
 })
-export class ChannelMessages {
-  private _channel: any;
-
-  @Input()
-  set channel(value: any) {
-    this._channel = value;
-    if (value) {
-      this.channelName = value.name;
-      this.channelId = value.id;
-      this.members = value.members || [];
-    }
-  }
-  get channel() {
-    return this._channel;
-  }
-
-  @Input() showNewMessages = false;
-  @Output() closeNewMessage = new EventEmitter<void>();
-
+export class ChannelMessages implements OnInit, OnDestroy {
   channelName = '';
   channelId = '';
   members: any[] = [];
+    fullChannel: any = null;
+
+ @Input() showNewMessages = false;
+    private subscription?: Subscription;
+  constructor(private channelState: ChannelStateService) {} 
+    ngOnInit() {
+    this.subscription = this.channelState.selectedChannel$.subscribe(channel => {
+      if (channel) {
+         this.fullChannel = channel;
+        this.channelName = channel.name || '';
+        this.channelId = channel.id || '';
+        this.members = channel.members || [];
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.subscription?.unsubscribe();
+  }
 
   onClose() {
-    this.closeNewMessage.emit();
+    this.showNewMessages = false;
   }
 
 }

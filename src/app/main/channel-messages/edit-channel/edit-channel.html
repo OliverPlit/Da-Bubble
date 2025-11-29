@@ -1,59 +1,70 @@
-<div class="add-channel-main" *ngFor="let membership  of memberships">
+<div class="add-channel-main" *ngIf="channel">
   <div class="add-channel-header">
-    <h2># Channelname</h2>
-    <img src="/icons/close-channel.png" alt="" (click)="close()">
-
+    <h2># {{ channel.name }}</h2>
+    <img src="/icons/close-channel.png" alt="Schließen" (click)="close()">
   </div>
+
+  <!-- Edit Name Section -->
   <div *ngIf="showInputName" class="edit-name-header">
     <div class="name-header">
       <label for="name">Channel-Name</label>
       <p (click)="saveEditName()">Speichern</p>
     </div>
-    <input type="text" id="name" name="name" placeholder="{{channel.name}}" class="input-channel">
+    <input 
+      type="text" 
+      id="name" 
+      name="name" 
+      [value]="editedName"
+      (input)="editedName = $any($event.target).value"
+      class="input-channel"
+      (keyup.enter)="saveEditName()">
   </div>
-  <div class="name-div" *ngIf="closeName">
 
+  <div class="name-div" *ngIf="closeName">
     <div class="name-header">
       <label for="name">Channel-Name</label>
-      <p (click)="toggleEditName()" >Bearbeiten</p>
+      <p (click)="toggleEditName()">Bearbeiten</p>
     </div>
-        <p>{{channel.name}}</p>
-
+    <p>{{ channel.name }}</p>
   </div>
-  <div *ngIf="showInputDescription">
-    <div class="name-header ">
-      <label for="name" class="description">Beschreibung <p> (optional)</p></label>
 
+  <!-- Edit Description Section -->
+  <div *ngIf="showInputDescription">
+    <div class="name-header">
+      <label for="description" class="description">
+        Beschreibung <span>(optional)</span>
+      </label>
       <p (click)="saveEditDescription()" class="edit-description">Speichern</p>
     </div>
-    <input type="text" id="name" name="name" placeholder="{{channel.description}}">
+    <input 
+      type="text" 
+      id="description" 
+      name="description" 
+      [value]="editedDescription"
+      (input)="editedDescription = $any($event.target).value"
+      placeholder="Beschreibung eingeben..."
+      (keyup.enter)="saveEditDescription()">
     <hr>
     <div class="created">
-      <label for="name">Erstellt von</label>
-      <p>{{channel.createdBy}}</p>
+      <label>Erstellt von</label>
+      <p>{{ channel.createdBy || 'Unbekannt' }}</p>
     </div>
   </div>
-  <div class="beschreibung-div" *ngIf="closeDescription">
 
+  <div class="beschreibung-div" *ngIf="closeDescription">
     <div class="name-header">
-      <label for="name" class="description">Beschreibung</label>
+      <label class="description">Beschreibung</label>
       <p (click)="toggleEditDescription()" class="edit-description">Bearbeiten</p>
     </div>
-    <p>{{channel.description}}</p>
+    <p>{{ channel.description || 'Keine Beschreibung vorhanden' }}</p>
     <hr>
     <div class="created">
-      <label for="name">Erstellt von</label>
-      <p>Oliver Plit</p>
+      <label>Erstellt von</label>
+      <p>{{ channel.createdBy || 'Unbekannt' }}</p>
     </div>
   </div>
 
-
-
-
-
-
-
   <div class="add-button">
-    <button (click)="close()">Channel verlassen</button>
+    <button (click)="leaveChannel()">Channel verlassen</button>
   </div>
 </div>

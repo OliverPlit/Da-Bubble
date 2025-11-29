@@ -15,22 +15,32 @@ type Member = { id: string; name: string; avatar?: string; isYou?: boolean };
   styleUrl: './channel-messages-header.scss',
 })
 export class ChannelMessagesHeader {
+  @Input() fullChannel: any = null;
   @Input() channel = '';
   @Input() channelId = '';
   @Input() members: Member[] = [];
 
   private dialog = inject(MatDialog);
 
-  get membersRtl(): Member[] {
-    return [...this.members].sort((a, b) => (b.isYou ? 1 : 0) - (a.isYou ? 1 : 0));
-  }
+  renderMembers(): Member[] {
+  if (!this.members || this.members.length === 0) return [];
+  
+  return [...this.members]
+    .map(m => ({
+      ...m,
+      avatar: m.avatar || '', // fallback leerer String, kein null
+      name: m.name || 'Unbekannt'
+    }))
+    .sort((a, b) => (a.isYou === b.isYou ? 0 : a.isYou ? -1 : 1));
+    debugger
+}
 
   get memberCount() {
     return this.members.length;
   }
 
 
-  openEditChannel(trigger: HTMLElement) {
+  openEditChannel(trigger: HTMLElement, channel: any) {
     const r = trigger.getBoundingClientRect();
     const gap = 16;
     const dlgW = 872;
@@ -41,7 +51,9 @@ export class ChannelMessagesHeader {
       position: {
         top: `${r.bottom + gap}px`,
         left: `${-420 + dlgW}px`
-      }
+      },
+        data: { channel }  
+
     });
   }
 
@@ -56,6 +68,10 @@ export class ChannelMessagesHeader {
       position: {
         top: `${r.bottom + gap}px`,
         left: `${460 + dlgW}px`
+      },
+       data: {
+        channelId: this.channelId,
+        members: this.members
       }
     });
   }

@@ -1,4 +1,14 @@
-  <app-new-message *ngIf="showNewMessages" (close)="onClose()"></app-new-message>
+ <app-new-message *ngIf="showNewMessages" (close)="onClose()"></app-new-message>
+
+<section>
+  <app-channel-messages-header
+    [channel]="channelName"
+    [channelId]="channelId"
+    [members]="members">
+  </app-channel-messages-header>
+  
+  <app-thread-channel-messages></app-thread-channel-messages>
+</section> <app-new-message *ngIf="showNewMessages" (close)="onClose()"></app-new-message>
 
 <section >
 
