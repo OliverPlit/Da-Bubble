@@ -7,7 +7,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Auth, signInWithEmailAndPassword } from '@angular/fire/auth';
+import { Auth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-login',
@@ -68,6 +68,21 @@ export class Login {
       }
     }
   }
+
+  async loginWithGoogle() {
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(this.auth, provider);
+    const user = result.user;
+
+    localStorage.setItem('currentUser', JSON.stringify(user));
+
+    this.router.navigate(['/main']);
+  } catch (error) {
+    console.error('Google Login Error:', error);
+    this.loginError.set(true);
+  }
+}
 
   guestLogin() {
     const guestUser = {
