@@ -7,7 +7,13 @@ import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Auth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from '@angular/fire/auth';
+import {
+  Auth,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from '@angular/fire/auth';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-login',
@@ -31,7 +37,7 @@ export class Login {
   emailError = signal(false);
   loginError = signal(false);
 
-  constructor(private router: Router, private auth: Auth) {}
+  constructor(private router: Router, private auth: Auth, private firestore: Firestore) {}
 
   async login() {
     this.submitted.set(true);
@@ -69,15 +75,32 @@ export class Login {
     }
   }
 
-  async loginWithGoogle() {
+async loginWithGoogle() {
   try {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(this.auth, provider);
     const user = result.user;
 
+    const userRef = doc(this.firestore, `users/${user.uid}`);
+    const userSnap = await getDoc(userRef);
+
     localStorage.setItem('currentUser', JSON.stringify(user));
 
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        uid: user.uid,
+        name: user.displayName,
+        email: user.email,
+        avatar: 'avatar1.png',
+      });
+
+      this.router.navigate(['/choose-avatar']);
+      return;
+    }
+
+
     this.router.navigate(['/main']);
+
   } catch (error) {
     console.error('Google Login Error:', error);
     this.loginError.set(true);

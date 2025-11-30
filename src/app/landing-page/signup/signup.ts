@@ -64,7 +64,7 @@ export class Signup {
         avatar: 1,
       });
 
-      localStorage.setItem('pendingUserId', uid);
+      localStorage.setItem('currentUser', uid);
 
       this.router.navigate(['/choose-avatar']);
 
