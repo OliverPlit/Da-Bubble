@@ -98,6 +98,12 @@ $hoverCard: #444DF2;
       }
     }
 
+    .emoji-reactions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .reactions {
       display: flex;
       align-items: center;
@@ -131,6 +137,33 @@ $hoverCard: #444DF2;
 
         &.active {
           background-color: #FFFFFF;
+        }
+      }
+
+      .icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 20px;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        background-color: $textYou;
+
+        .hover {
+          position: absolute;
+          opacity: 0;
+        }
+
+        &:hover {
+          background-color: $hoverBg;
+
+          .hover {
+            opacity: 1;
+          }
+
+          .default {
+            opacity: 0;
+          }
         }
       }
 

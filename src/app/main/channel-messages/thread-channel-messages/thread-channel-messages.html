@@ -5,7 +5,8 @@
             <span>{{ m.timeSeparator }}</span>
         </div>
 
-        <article class="message" *ngIf="!m.timeSeparator" [class.you]="m.isYou" #messageRef (mouseenter)="cancelEditMessagePanelHide(m)" (mouseleave)="scheduleEditMessagePanelHide(m)">
+        <article class="message" *ngIf="!m.timeSeparator" [class.you]="m.isYou" #messageRef
+            (mouseenter)="cancelEditMessagePanelHide(m)" (mouseleave)="scheduleEditMessagePanelHide(m)">
             <div class="avatar" [class.you]="m.isYou"
                 [style.background-image]="m.avatar ? 'url(' + m.avatar + ')' : null">
                 <span *ngIf="!m.avatar"></span>
@@ -22,11 +23,19 @@
                 </div>
 
                 <div class="reactions" [class.you]="m.isYou" *ngIf="m.reactions?.length">
-                    <div class="reaction" *ngFor="let r of m.reactions" [class.active]="r.youReacted" type="button"
-                        (mouseenter)="showReactionPanel(m, r, $event)" (mouseleave)="scheduleReactionPanelHide()">
-                        <img class="emoji" src="{{ r.emoji }}" alt="">
-                        <span class="count-emoji">{{ r.count }}</span>
+                    <div class="emoji-reactions">
+                        <div class="reaction" *ngFor="let r of m.reactions" [class.active]="r.youReacted" type="button"
+                            (mouseenter)="showReactionPanel(m, r, $event)" (mouseleave)="scheduleReactionPanelHide()">
+                            <img class="emoji" src="{{ r.emoji }}" alt="">
+                            <span class="count-emoji">{{ r.count }}</span>
+                        </div>
+
+                        <span class="icon-box">
+                            <img class="default" src="icons/add_reaction.png" alt="">
+                            <img class="hover" src="icons/add_reaction_purple.png" alt="">
+                        </span>
                     </div>
+
 
                     <div class="response" *ngFor="let r of m.reactions">
                         <span class="count-answere">{{ r.countAnsweres }} Antworten</span>
@@ -35,9 +44,9 @@
                 </div>
             </div>
 
-            <div class="reaction-panel" *ngIf="reactionPanel.show && reactionPanel.messageId === m.id" [style.left.px]="reactionPanel.x"
-                [style.top.px]="reactionPanel.y" (mouseenter)="cancelReactionPanelHide()"
-                (mouseleave)="scheduleReactionPanelHide()">
+            <div class="reaction-panel" *ngIf="reactionPanel.show && reactionPanel.messageId === m.id"
+                [style.left.px]="reactionPanel.x" [style.top.px]="reactionPanel.y"
+                (mouseenter)="cancelReactionPanelHide()" (mouseleave)="scheduleReactionPanelHide()">
 
                 <div class="panel-content">
                     <img *ngIf="reactionPanel.emoji" class="emoji" [src]="reactionPanel.emoji" alt="">
@@ -75,7 +84,9 @@
                 </span>
             </div>
 
-            <div class="edit-message-panel" [class.you]="m.isYou" *ngIf="m.isYou && editForId === m.id" (click)="editMessage($event)" (mouseenter)="cancelEditMessagePanelHide(m)" (mouseleave)="scheduleEditMessagePanelHide(m)">
+            <div class="edit-message-panel" [class.you]="m.isYou" *ngIf="m.isYou && editForId === m.id"
+                (click)="editMessage($event)" (mouseenter)="cancelEditMessagePanelHide(m)"
+                (mouseleave)="scheduleEditMessagePanelHide(m)">
                 <span>Nachricht bearbeiten</span>
             </div>
         </article>
