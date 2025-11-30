@@ -98,7 +98,6 @@ async loginWithGoogle() {
       return;
     }
 
-
     this.router.navigate(['/main']);
 
   } catch (error) {
