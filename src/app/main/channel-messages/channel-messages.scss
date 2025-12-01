@@ -2,6 +2,11 @@
     background-color: #FFFFFF !important;
 }
 
+:host {
+    display: block;
+    height: 100%;
+}
+
 section {
     width: 989px;
     height: 940px;
@@ -9,4 +14,9 @@ section {
     position: absolute;
     top: 157px;
     left: 406px;
+
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 0;
+    overflow: hidden;
 }

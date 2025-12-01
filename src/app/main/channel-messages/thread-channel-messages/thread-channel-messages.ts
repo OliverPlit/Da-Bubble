@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, inject } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, AfterViewInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AddEmojis } from '../add-emojis/add-emojis';
@@ -47,7 +47,13 @@ type ReactionPanelState = {
   templateUrl: './thread-channel-messages.html',
   styleUrl: './thread-channel-messages.scss',
 })
-export class ThreadChannelMessages {
+export class ThreadChannelMessages implements AfterViewInit {
+  @ViewChild('messagesEl') messagesEl!: ElementRef<HTMLDivElement>;
+
+  ngAfterViewInit() {
+    queueMicrotask(() => this.scrollToBottom());
+  }
+
   private dialog = inject(MatDialog);
   private hideTimer: any = null;
   private editHideTimer: any = null;
@@ -91,7 +97,7 @@ export class ThreadChannelMessages {
       reactions: [],
       isYou: false,
     },
-    { id: 'd2', timeSeparator: 'Heute', author: '', time: '', text: '' },
+    { id: 'd2', timeSeparator: 'Freitag, 27 Januar', author: '', time: '', text: '' },
     {
       id: 'm2',
       author: 'Oliver Plit',
@@ -103,11 +109,11 @@ export class ThreadChannelMessages {
         'erat, eu faucibus lacus iaculis ac.',
       reactions: [
         {
-          countAnsweres: 0,
-          isAnswered: false,
+          countAnsweres: 1,
+          isAnswered: true,
           time: '15:00',
           emoji: 'icons/emojis/emoji_rocket.png',
-          count: 1,
+          count: 2,
           youReacted: true,
           users: [
             { uid: 'u_sofia', name: 'Sofia Müller' },
@@ -118,6 +124,58 @@ export class ThreadChannelMessages {
         // { countAnsweres: 0, isAnswered: false, time: '15:00', emoji: 'icons/emojis/emoji_person raising both hands in celebration.png', count: 1, youReacted: false },
       ],
       isYou: true,
+    },
+    { id: 'd3', timeSeparator: 'Sonntag, 11 Februar', author: '', time: '', text: '' },
+    {
+      id: 'm3',
+      author: 'Max Mustermann',
+      time: '11:36 Uhr',
+      avatar: 'icons/avatars/avatar3.png',
+      text:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio ' +
+        'efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis ' +
+        'erat, eu faucibus lacus iaculis ac.',
+      reactions: [
+        {
+          countAnsweres: 5,
+          isAnswered: true,
+          time: '15:00',
+          emoji: 'icons/emojis/emoji_nerd face.png',
+          count: 2,
+          youReacted: false,
+          users: [
+            { uid: 'u_noah', name: 'Noah Braun' },
+            { uid: 'u_sofia', name: 'Sofia Müller' },
+          ]
+        },
+        // { countAnsweres: 0, isAnswered: false, time: '15:00', emoji: 'icons/emojis/emoji_nerd face.png', count: 1, youReacted: false },
+        // { countAnsweres: 0, isAnswered: false, time: '15:00', emoji: 'icons/emojis/emoji_person raising both hands in celebration.png', count: 1, youReacted: false },
+      ],
+      isYou: false,
+    },
+    { id: 'd4', timeSeparator: 'Montag, 12 Februar', author: '', time: '', text: '' },
+    {
+      id: 'm4',
+      author: 'Emily Mustermann',
+      time: '23:55 Uhr',
+      avatar: 'icons/avatars/avatar5.png',
+      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio ' +
+        'efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis ' +
+        'erat, eu faucibus lacus iaculis ac.',
+      reactions: [],
+      isYou: false,
+    },
+    { id: 'd5', timeSeparator: 'heute', author: '', time: '', text: '' },
+    {
+      id: 'm5',
+      author: 'Noah Braun',
+      time: '21:05 Uhr',
+      avatar: 'icons/avatars/avatar3.png',
+      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio ' +
+        'efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis ' +
+        'erat, eu faucibus lacus iaculis ac.',
+      reactions: [],
+      isYou: false,
     },
   ];
 
@@ -270,5 +328,10 @@ export class ThreadChannelMessages {
   @HostListener('document:keydown.escape')
   closeOnEsc() {
     this.editForId = null;
+  }
+
+  private scrollToBottom() {
+    const el = this.messagesEl?.nativeElement;
+    if (el) el.scrollTop = el.scrollHeight;
   }
 }
