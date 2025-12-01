@@ -19,7 +19,7 @@
         <div class="input-wrap" [class.has-chip]="selected().length > 0">
             <ng-container *ngFor="let u of selected()">
                 <span class="chip">
-                    <img class="avatar" [src]="u.avatar" [alt]="u.name" />
+                    <img class="avatar" [src]="'/icons/avatars/' + u.avatar" [alt]="u.name" />
                     <span class="name">{{ u.name }}</span>
 
                     <span class="icon-box-remove" (click)="removeSelected(u.uid)">
@@ -36,11 +36,11 @@
             <div class="dropdown" *ngIf="showDropdown()">
                 <button class="option" *ngFor="let u of suggestions(); let i = index"
                     [class.active]="i === activeIndex()" (mousedown)="$event.preventDefault()" (click)="selectUser(u)">
-                    <img class="avatar" [src]="u.avatar" [alt]="u.name" />
+                    <img class="avatar" [src]="'/icons/avatars/' + u.avatar" [alt]="u.name" />
                     <div class="meta">
                         <div class="row">
                             <span class="name">{{ u.name }}</span>
-                            <span class="dot" [class.online]="u.isOnline"></span>
+                            <span class="dot" [class.online]="u.status === 'online'"></span>
                         </div>
                     </div>
                 </button>

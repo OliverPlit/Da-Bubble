@@ -5,7 +5,7 @@
 </div>
 
 <div class="main-container" *ngFor="let dm of directMessage$ | async">
-    <img src="/icons/profile-menu.png" alt="">
+    <img [src]="'/icons/avatars/' + dm.avatar" alt="" class>
     <p>{{dm.name}}</p>
 
 </div>

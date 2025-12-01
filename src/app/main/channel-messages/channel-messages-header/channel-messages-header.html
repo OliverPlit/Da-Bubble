@@ -1,5 +1,5 @@
 <header>
-    <div #btn1 class="channel-title" (click)="openEditChannel(btn1, fullChannel)">
+    <div #btn1 class="channel-title" (click)="openEditChannel(btn1)">
         <h2>
             <span class="icon-box">
                 <img class="icon default" src="icons/tag.png" alt="">
@@ -19,7 +19,7 @@
         <div #btn2 class="preview-members" (click)="openEditMembers(btn2)">
             <ng-container *ngFor="let m of renderMembers()">
                 <div class="avatar" role="img" [attr.aria-label]="m.name" [class.you]="m.isYou"
-     [style.background-image]="m.avatar ? 'url(assets/icons/avatare/' + m.avatar + ')' : ''">
+     [style.background-image]="m.avatar ? 'url(/icons/avatars/' + m.avatar + ')' : ''">
                     <span *ngIf="!m.avatar">{{ m.name.charAt(0) }}</span>
                 </div>
             </ng-container>

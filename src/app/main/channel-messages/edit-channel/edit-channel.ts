@@ -1,11 +1,11 @@
-import { Component, inject } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, inject, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatDialogRef } from '@angular/material/dialog';
 import { ChangeDetectorRef } from '@angular/core';
-import { Firestore } from '@angular/fire/firestore';
+import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { doc, updateDoc } from '@angular/fire/firestore';
-
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
 
 
 
@@ -13,38 +13,61 @@ import { doc, updateDoc } from '@angular/fire/firestore';
 @Component({
   selector: 'app-edit-channel',
     standalone: true,
-  imports: [CommonModule],
+imports: [CommonModule, MatButtonModule, MatInputModule],
   templateUrl: './edit-channel.html',
   styleUrl: './edit-channel.scss',
 })
 export class EditChannel {
-  dialogRef = inject(MatDialogRef<EditChannel>);
+    dialogRef = inject(MatDialogRef<EditChannel>);
+  data = inject(MAT_DIALOG_DATA);
+  firestore = inject(Firestore);
+
+  channel: any;
+  editedName = '';
+  editedDescription = '';
   showInputName = false;
   showInputDescription = false;
   closeName = true;
   closeDescription = true;
-  firestore: Firestore = inject(Firestore);
-  memberships: any[] = [];
-  data = inject(MAT_DIALOG_DATA);
-  channel: any;
-  editedName = '';
-  editedDescription = '';
 
   constructor( private cdr: ChangeDetectorRef) { }
 
-  async ngOnInit() {
-    this.loadData();
-  }
+ 
+ngOnInit() {
+    console.log('=== DEBUG EditChannel ngOnInit ===');
+    console.log('MAT_DIALOG_DATA empfangen:', this.data);
+    console.log('data.channel:', this.data?.channel);
 
-
-  async loadData() {
-    if (this.data?.channel) {
-      this.channel = { ...this.data.channel };
-      this.editedName = this.channel.name || '';
-      this.editedDescription = this.channel.description || '';
-      this.cdr.detectChanges();
+    // ✅ Prüfe ob data und data.channel existieren
+    if (!this.data) {
+      console.error('❌ Keine Daten empfangen!');
+      return;
     }
+
+    if (!this.data.channel) {
+      console.error('❌ Kein Channel in data! Data:', this.data);
+      return;
+    }
+
+    this.channel = this.data.channel;
+
+    // ✅ Prüfe ob Channel-ID vorhanden ist
+    if (!this.channel.id) {
+      console.error('❌ Channel hat keine ID!', this.channel);
+    }
+
+    this.editedName = this.channel.name || '';
+    this.editedDescription = this.channel.description || '';
+
+    console.log('✅ Channel erfolgreich geladen:', {
+      id: this.channel.id,
+      name: this.channel.name,
+      description: this.channel.description,
+      members: this.channel.members
+    });
   }
+
+
 
 
   close() {
@@ -67,49 +90,23 @@ export class EditChannel {
 
   }
 
- async saveEditName() {
-    if (!this.editedName.trim()) {
-      alert('Channel-Name darf nicht leer sein');
-      return;
-    }
-
-    try {
-      // Channel in Firestore aktualisieren
-      const channelRef = doc(this.firestore, 'channels', this.channel.id);
-      await updateDoc(channelRef, {
-        name: this.editedName.trim()
-      });
-
-      // Lokale Daten aktualisieren
-      this.channel.name = this.editedName.trim();
-      this.showInputName = false;
-      this.closeName = true;
-      
-      this.cdr.detectChanges();
-    } catch (error) {
-      console.error('Fehler beim Speichern des Channel-Namens:', error);
-      alert('Fehler beim Speichern');
-    }
+  async saveEditName() {
+    if (!this.editedName.trim()) return;
+    const channelRef = doc(this.firestore, 'channels', this.channel.id);
+    await updateDoc(channelRef, { name: this.editedName.trim() });
+    this.channel.name = this.editedName.trim();
+    this.showInputName = false;
+    this.closeName = true;
+    this.cdr.detectChanges();
   }
 
   async saveEditDescription() {
-    try {
-      // Channel in Firestore aktualisieren
-      const channelRef = doc(this.firestore, 'channels', this.channel.id);
-      await updateDoc(channelRef, {
-        description: this.editedDescription.trim()
-      });
-
-      // Lokale Daten aktualisieren
-      this.channel.description = this.editedDescription.trim();
-      this.showInputDescription = false;
-      this.closeDescription = true;
-      
-      this.cdr.detectChanges();
-    } catch (error) {
-      console.error('Fehler beim Speichern der Beschreibung:', error);
-      alert('Fehler beim Speichern');
-    }
+    const channelRef = doc(this.firestore, 'channels', this.channel.id);
+    await updateDoc(channelRef, { description: this.editedDescription.trim() });
+    this.channel.description = this.editedDescription.trim();
+    this.showInputDescription = false;
+    this.closeDescription = true;
+    this.cdr.detectChanges();
   }
 
   async leaveChannel() {

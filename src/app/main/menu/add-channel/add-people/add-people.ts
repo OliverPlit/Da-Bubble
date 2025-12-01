@@ -23,11 +23,11 @@ export class AddPeople implements OnInit {
   inputName: string = "";
   peopleList: string[] = [];
   directMessagePeople: Observable<any[]> | undefined;
- selectedPeople: { name: string, avatar?: string }[] = [];
-allPeople: { name: string, avatar?: string }[] = [];
-filteredPeople: { name: string, avatar?: string }[] = [];
-hasFocus: boolean = false;
-activeIndex: number = -1;
+  selectedPeople: { name: string, avatar?: string }[] = [];
+  allPeople: { name: string, avatar?: string }[] = [];
+  filteredPeople: { name: string, avatar?: string }[] = [];
+  hasFocus: boolean = false;
+  activeIndex: number = -1;
 
 
 
@@ -35,7 +35,7 @@ activeIndex: number = -1;
   ngOnInit() {
     const dmRef = collection(this.firestore, 'directMessages');
     collectionData(dmRef, { idField: 'id' })
-      .pipe(map(users => users.map(u => ({ name: u['name'] as string, avatar: u ['avatar'] as string }))))
+      .pipe(map(users => users.map(u => ({ name: u['name'] as string, avatar: u['avatar'] as string }))))
       .subscribe(users => {
         this.allPeople = users;
         this.filteredPeople = [];
@@ -78,18 +78,17 @@ activeIndex: number = -1;
 
   selectPerson(person: { name: string, avatar?: string }) {
 
-  if (this.selectedPeople.some(p => p.name === person.name)) return;
+    if (this.selectedPeople.some(p => p.name === person.name)) return;
 
-  this.selectedPeople.push(person);
+    this.selectedPeople.push(person);
 
-  // Remove from full list
-  this.allPeople = this.allPeople.filter(
-    p => p.name !== person.name || p.avatar !== person.avatar
-  );
+    this.allPeople = this.allPeople.filter(
+      p => p.name !== person.name || p.avatar !== person.avatar
+    );
 
-  this.inputName = '';
-  this.filteredPeople = [];
-}
+    this.inputName = '';
+    this.filteredPeople = [];
+  }
 
 
   removePerson(person: { name: string }) {
@@ -135,19 +134,19 @@ activeIndex: number = -1;
     await setDoc(membershipRef, { members: [] }, { merge: true });
 
 
-    if (this.selectedOption === 'option1') {
-      await updateDoc(membershipRef, {
-        members: arrayUnion('Anna', 'Tim', 'Sophie', 'Jan')
-      });
-    }
-
     if (this.selectedOption === 'option2') {
-      const names = this.selectedPeople.map(p => p.name);
-
-      for (let n of names) {
-        await updateDoc(membershipRef, { members: arrayUnion(n) });
+      for (let p of this.selectedPeople) {
+        await updateDoc(membershipRef, {
+          members: arrayUnion({
+            name: p.name,
+            avatar: p.avatar ?? '',
+            status: 'online'   
+          })
+        });
       }
     }
+
+
 
 
     this.closeDialog();

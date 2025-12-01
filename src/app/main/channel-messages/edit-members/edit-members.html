@@ -12,7 +12,7 @@
 
     <ul class="list">
         <li class="row" *ngFor="let u of orderedMembers()" (click)="openProfile(u)" [class.you]="isYou(u)">
-            <img class="avatar" [src]="u.avatar" [alt]="u.name" />
+            <img class="avatar" [src]="'/icons/avatars/' + u.avatar" [alt]="u.name" />
             <span class="name">{{ u.name }}</span>
         </li>
     </ul>

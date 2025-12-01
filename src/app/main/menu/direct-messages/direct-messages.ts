@@ -23,6 +23,7 @@ export class DirectMessages {
   private firestore = inject(Firestore);
   private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
   userName: string = '';
+  userAvatar: string = '';
   constructor(private firebaseService: FirebaseService) { }
   directMessage$: Observable<directMessageContact[]> | undefined;
 
@@ -46,7 +47,7 @@ export class DirectMessages {
 
     if (!uid) return;
 
-    const userRef = doc(this.firestore, 'users', uid);
+    const userRef = doc(this.firestore, 'direct', uid);
     const snap = await getDoc(userRef);
     if (snap.exists()) {
       const data: any = snap.data();

@@ -47,6 +47,8 @@ export class Channels implements OnInit {
   }
 
 onChannelClick(channel: any) {
+    this.selectedChannel = channel;
+
     this.channelState.selectChannel(channel);
   }
 }

@@ -15,6 +15,7 @@ import { ChannelStateService } from '../../main/menu/channels/channel.service';
 export class ChannelMessages implements OnInit, OnDestroy {
   channelName = '';
   channelId = '';
+  description = '';
   members: any[] = [];
     fullChannel: any = null;
 
@@ -22,12 +23,15 @@ export class ChannelMessages implements OnInit, OnDestroy {
     private subscription?: Subscription;
   constructor(private channelState: ChannelStateService) {} 
     ngOnInit() {
+      
     this.subscription = this.channelState.selectedChannel$.subscribe(channel => {
       if (channel) {
+        console.log('Vollständiges Channel-Objekt:', channel); 
          this.fullChannel = channel;
         this.channelName = channel.name || '';
         this.channelId = channel.id || '';
         this.members = channel.members || [];
+        this.description = channel.description || ''; 
       }
     });
   }

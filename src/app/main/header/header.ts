@@ -7,6 +7,8 @@ import { CommonModule } from '@angular/common';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { ChangeDetectorRef } from '@angular/core';
+import { FirebaseService } from '../../services/firebase';
+
 
 @Component({
   selector: 'app-header',
@@ -23,6 +25,8 @@ export class Header {
   mobileMenuOpen = false;
   userName = '';
   userAvatar = '';
+constructor(private firebase: FirebaseService) {}
+
 
   openDialog() {
     const ref = this.dialog.open(Profile, {
@@ -39,6 +43,8 @@ export class Header {
   }
 
 
+  
+
   logout() {
     this.router.navigate(['']);
   }
@@ -46,6 +52,8 @@ export class Header {
   async ngOnInit() {
     this.checkWidth();
     await this.loadUser();
+        this.updateName();
+
   }
 
   async loadUser() {
@@ -64,8 +72,20 @@ export class Header {
       this.userAvatar = data.avatar;
 
       this.cd.detectChanges();
+            this.firebase.setName(this.userName);
+
     }
   }
+
+   updateName() {
+   this.firebase.currentName$.subscribe((name) => {
+      if (name) {
+        this.userName = name;
+        this.cd.detectChanges();
+      }
+    });
+  
+    }
 
   @HostListener('window:resize')
   checkWidth() {

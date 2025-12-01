@@ -34,6 +34,12 @@ export class Profile {
   ngOnInit() {
     this.checkWidth();
     this.loadUserData();
+     this.firebaseService.currentName$.subscribe((name) => {
+    if (name) {
+      this.userName = name;
+      this.cd.detectChanges();
+    }
+  });
   }
 
 
@@ -52,6 +58,8 @@ export class Profile {
       this.userName = data.name;
       this.userAvatar = data.avatar;
       this.userEmail = data.email;
+      this.firebaseService.setName(this.userName);
+
       this.cd.detectChanges();
 
     }
@@ -68,14 +76,6 @@ export class Profile {
       }
     });
 
-    ref.afterClosed().subscribe((updatedName?: string) => {
-      if (updatedName) {
-        this.userName = updatedName;
-        this.cd.detectChanges();
-        this.dialogRef.close(updatedName);
-
-      }
-    });
   }
   @HostListener('window:resize')
   checkWidth() {

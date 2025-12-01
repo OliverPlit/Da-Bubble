@@ -1,14 +1,21 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
+import { setDoc, Firestore, doc, updateDoc, arrayUnion, collection, collectionData } from '@angular/fire/firestore';
+import { map } from 'rxjs';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-type User = {
-  uid: string;
+
+
+
+type Member = {
+  uid: string;      
   name: string;
-  avatar: string;
-  isOnline?: boolean;
-}
+  avatar?: string;
+  status?: string;  
+  isYou?: boolean;
+};
 
 @Component({
   selector: 'app-add-members',
@@ -18,27 +25,46 @@ type User = {
 })
 export class AddMembers {
   private dialogRef = inject(MatDialogRef<AddMembers>);
+    data = inject(MAT_DIALOG_DATA);
+  @Input() fullChannel: any = null;
+  @Input() channel = '';
+  @Input() channelId = '';
+  @Input() members: Member[] = [];
+  firestore = inject(Firestore);
+allMembers: Member[] = [];
+channelName = this.data.channelName;
+ngOnInit() {
+  const dmRef = collection(this.firestore, 'directMessages');
 
-  allUsers: User[] = [
-    { uid: 'u_elise', name: 'Elise Roth', avatar: 'icons/avatars/avatar1.png', isOnline: true },
-    { uid: 'u_elias', name: 'Elias Neumann', avatar: 'icons/avatars/avatar2.png', isOnline: true },
-    { uid: 'u_noah', name: 'Noah Braun', avatar: 'icons/avatars/avatar3.png', isOnline: false },
-    { uid: 'u_sofia', name: 'Sofia Müller', avatar: 'icons/avatars/avatar4.png', isOnline: true },
-  ];
+  collectionData(dmRef, { idField: 'uid' })
+    .pipe(
+      map(users =>
+        users.map(u => ({
+          uid: u['uid'] ?? crypto.randomUUID(),
+          name: u['name'],
+          avatar: u['avatar'],
+          status: u['status'] ?? 'offline'
+        }))
+      )
+    )
+    .subscribe(list => {
+      this.allMembers = list;
+      this.members = list;
+    });
+}
 
-  channelName = 'Entwicklerteam';
 
   query = signal('');
   hasFocus = signal(false);
   activeIndex = signal<number>(-1);
-  selected = signal<User[]>([]);
+  selected = signal<Member[]>([]);
 
   suggestions = computed(() => {
     const q = this.query().trim().toLowerCase();
     if (!q) return [];
     const chosen = new Set(this.selected().map(u => u.uid));
-    return this.allUsers
-      .filter(u => !chosen.has(u.uid) && u.name.toLowerCase().includes(q))
+    return this.members
+      .filter(m => !chosen.has(m.uid) && m.name.toLowerCase().includes(q))
       .slice(0, 6);
   });
 
@@ -68,7 +94,7 @@ export class AddMembers {
     }
   }
 
-  selectUser(u: User) {
+  selectUser(u: Member) {
     if (this.selected().find(x => x.uid === u.uid)) return;
     this.selected.update(arr => [...arr, u]);
     this.query.set('');
@@ -79,7 +105,27 @@ export class AddMembers {
     this.selected.update(arr => arr.filter(u => u.uid !== uid));
   }
 
-  addMembers() {
+ async addMembers() {
+    const storedUser = localStorage.getItem('currentUser');
+    if (!storedUser) return;
+    const uid = JSON.parse(storedUser).uid;
+
+    const channelId = this.data.channelId
+    const membershipRef = doc(
+      this.firestore,
+      `users/${uid}/memberships/${channelId}`
+    );
+
+   for (const user of this.selected()) {
+    await updateDoc(membershipRef, {
+      members: arrayUnion({
+        uid: user.uid,
+        name: user.name,
+        avatar: user.avatar ?? '',
+        status: 'online'
+      })
+    });
+  }
     this.dialogRef.close({ added: this.selected() });
   }
 

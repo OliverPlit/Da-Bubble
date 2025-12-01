@@ -26,6 +26,7 @@ export class Menu {
   showNewMessages = false;
   isMobile = false;
   isChannelMessagesVisible = true;
+  userName: string = '';
 
   @Output() toggleChannelMessages = new EventEmitter<boolean>();
 
@@ -46,6 +47,9 @@ export class Menu {
   ngOnInit() {
     this.checkWidth();
   }
+  
+
+ 
   openDialog() {
     this.dialog.open(AddChannel, {
       panelClass: 'add-channel-dialog-panel'

@@ -1,19 +1,20 @@
-import { Component, Inject, signal, computed, inject } from '@angular/core';
+import { Component, Inject, signal, computed, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { ProfileCard } from '../../../shared/profile-card/profile-card';
 import { AddMembers } from '../add-members/add-members';
 
-type User = {
-  uid: string;
+type Member = {
+  uid: string;      
   name: string;
-  avatar: string;
-  isOnline?: boolean;
-}
+  avatar?: string;
+  status?: string;  
+  isYou?: boolean;
+};
 
 type DialogData = {
   channelName?: string;
-  members?: User[];
+  members?: Member[];
   currentUserId?: string;
 };
 
@@ -24,19 +25,18 @@ type DialogData = {
   styleUrl: './edit-members.scss',
 })
 export class EditMembers {
-  private fallback: User[] = [
-    { uid: 'u_you', name: 'Frederik Beck (Du)', avatar: 'icons/avatars/avatar3.png', isOnline: true },
-    { uid: 'u_sofia', name: 'Sofia Müller', avatar: 'icons/avatars/avatar4.png', isOnline: true },
-    { uid: 'u_noah', name: 'Noah Braun', avatar: 'icons/avatars/avatar2.png', isOnline: true },
-  ];
+ @Input() fullChannel: any = null;
+  @Input() channel = '';
+  @Input() channelId = '';
+  @Input() members: Member[] = [];
 
   channelName!: string;
   currentUserId!: string;
 
-  members = signal<User[]>([]);
+membersSignal = signal<Member[]>([]);
   orderedMembers = computed(() => {
     const you = this.currentUserId;
-    return [...this.members()].sort((a, b) =>
+    return [...this.membersSignal()].sort((a, b) =>
       (b.uid === you ? 1 : 0) - (a.uid === you ? 1 : 0)
     );
   });
@@ -48,8 +48,8 @@ export class EditMembers {
     this.channelName = data?.channelName ?? 'Entwicklerteam';
     this.currentUserId = data?.currentUserId ?? 'u_you';
 
-    const initial = (data?.members && data.members.length) ? data.members : this.fallback;
-    this.members.set([...initial]);
+const initial = data?.members?.length ? data.members : [];
+    this.membersSignal.set([...initial]);
   }
 
   private dialog = inject(MatDialog)
@@ -58,7 +58,7 @@ export class EditMembers {
     this.dialogRef.close();
   }
 
-  openProfile(u: User) {
+  openProfile(u: Member) {
     this.dialog.open(ProfileCard, {
       data: u,
       panelClass: 'profile-dialog-panel'
@@ -68,12 +68,17 @@ export class EditMembers {
   openAddMembers(): void {
     this.dialogRef.afterClosed().subscribe(() => {
       this.dialog.open(AddMembers, {
-        panelClass: 'add-members-dialog-panel'
+        panelClass: 'add-members-dialog-panel',
+         data: {
+      channelId: this.channelId,    
+      channelName: this.channel,   
+      members: this.members         
+    }
       });
     });
     this.dialogRef.close();
   }
 
-  isYou(u: User) { return u.uid === this.currentUserId || /\(Du\)\s*$/.test(u.name); }
+  isYou(u: Member) { return u.uid === this.currentUserId || /\(Du\)\s*$/.test(u.name); }
 
 }
