@@ -1,0 +1,34 @@
+<div class="main-container">
+    <div class="header">
+        <p>Neue Nachricht</p>
+        <input type="text" placeholder="An: #channel, oder @jemand oder E-Mail Adresse">
+    </div>
+    <div></div>
+    <footer class="composer">
+        <div class="composer-input">
+            <textarea></textarea>
+
+            <div class="composer-actions">
+                <div class="d-flex">
+                    <span class="icon-box" (click)="openAddEmojis()">
+                        <img class="default" src="icons/emoji_grey.png" alt="">
+                        <img class="hover1" src="icons/emoji_black.png" alt="">
+                        <img class="hover2" src="icons/emoji_purple.png" alt="">
+                    </span>
+                    <span class="icon-box" (click)="openAtMembers()">
+                        <img class="default" src="icons/at_grey.png" alt="">
+                        <img class="hover1" src="icons/at_black.png" alt="">
+                        <img class="hover2" src="icons/at_purple.png" alt="">
+                    </span>
+                </div>
+
+                <div>
+                    <span class="icon-box" (click)="sendMessage()">
+                        <img class="default" src="icons/Send icon.png" alt="">
+                        <img class="hover1" src="icons/Send icon_light.png" alt="">
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>

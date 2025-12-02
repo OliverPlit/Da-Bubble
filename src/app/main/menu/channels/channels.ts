@@ -39,6 +39,10 @@ export class Channels implements OnInit {
     collectionData(membershipsRef, { idField: 'id' }).subscribe(memberships => {
       this.memberships = memberships;
       this.cdr.detectChanges();
+
+        if (memberships.length > 0) {
+        this.onChannelClick(memberships[0]);
+      }
     });
   }
 
@@ -48,7 +52,7 @@ export class Channels implements OnInit {
 
 onChannelClick(channel: any) {
     this.selectedChannel = channel;
-
     this.channelState.selectChannel(channel);
+    
   }
 }

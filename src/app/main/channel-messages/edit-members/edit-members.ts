@@ -5,10 +5,10 @@ import { ProfileCard } from '../../../shared/profile-card/profile-card';
 import { AddMembers } from '../add-members/add-members';
 
 type Member = {
-  uid: string;      
+  uid: string;
   name: string;
   avatar?: string;
-  status?: string;  
+  status?: string;
   isYou?: boolean;
 };
 
@@ -25,7 +25,7 @@ type DialogData = {
   styleUrl: './edit-members.scss',
 })
 export class EditMembers {
- @Input() fullChannel: any = null;
+  @Input() fullChannel: any = null;
   @Input() channel = '';
   @Input() channelId = '';
   @Input() members: Member[] = [];
@@ -33,7 +33,7 @@ export class EditMembers {
   channelName!: string;
   currentUserId!: string;
 
-membersSignal = signal<Member[]>([]);
+  membersSignal = signal<Member[]>([]);
   orderedMembers = computed(() => {
     const you = this.currentUserId;
     return [...this.membersSignal()].sort((a, b) =>
@@ -48,7 +48,7 @@ membersSignal = signal<Member[]>([]);
     this.channelName = data?.channelName ?? 'Entwicklerteam';
     this.currentUserId = data?.currentUserId ?? 'u_you';
 
-const initial = data?.members?.length ? data.members : [];
+    const initial = data?.members?.length ? data.members : [];
     this.membersSignal.set([...initial]);
   }
 
@@ -58,9 +58,9 @@ const initial = data?.members?.length ? data.members : [];
     this.dialogRef.close();
   }
 
-  openProfile(u: Member) {
+openProfile(member: any) {
     this.dialog.open(ProfileCard, {
-      data: u,
+    data: member,
       panelClass: 'profile-dialog-panel'
     });
   }
@@ -69,11 +69,11 @@ const initial = data?.members?.length ? data.members : [];
     this.dialogRef.afterClosed().subscribe(() => {
       this.dialog.open(AddMembers, {
         panelClass: 'add-members-dialog-panel',
-         data: {
-      channelId: this.channelId,    
-      channelName: this.channel,   
-      members: this.members         
-    }
+        data: {
+          channelId: this.channelId,
+          channelName: this.channel,
+          members: this.members
+        }
       });
     });
     this.dialogRef.close();

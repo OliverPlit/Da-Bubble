@@ -50,7 +50,7 @@
     <hr>
     <div class="created">
       <label>Erstellt von</label>
-      <p>{{ channel.createdBy || 'Unbekannt' }}</p>
+      <p>{{ channel.createdBy }}</p>
     </div>
   </div>
 
@@ -59,11 +59,11 @@
       <label class="description">Beschreibung</label>
       <p (click)="toggleEditDescription()" class="edit-description">Bearbeiten</p>
     </div>
-    <p>{{ channel.description || 'Keine Beschreibung vorhanden' }}</p>
+    <p>{{ channel.description }}</p>
     <hr>
     <div class="created">
       <label>Erstellt von</label>
-      <p>{{ channel.createdBy || 'Unbekannt' }}</p>
+      <p>{{ channel.createdBy }}</p>
     </div>
   </div>
 

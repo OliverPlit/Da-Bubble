@@ -1,7 +1,73 @@
 <section>
     <img src="/icons/logo-menu.png" alt="logo">
-    <input type="text" placeholder="Devspace duchsuchen">
-    <div class="profile-menu" (click)="openMenu()" [matMenuTriggerFor]="!isMobile ? menu : null">
+ <div class="search-container">
+        <input 
+            type="text" 
+            placeholder="Devspace durchsuchen (# für Channels, @ für Personen)"
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput()"
+            (focus)="showSearchResults = searchQuery.length > 0"
+            >
+        
+
+        <!-- Search Results Dropdown -->
+        <div class="search-results" *ngIf="showSearchResults">
+            <!-- Loading Indicator -->
+            <div class="search-loading" *ngIf="isSearching">
+                <p>Suche läuft...</p>
+            </div>
+
+            <!-- No Results -->
+            <div class="no-results" *ngIf="!isSearching && searchResults.length === 0">
+                <p>Keine Ergebnisse gefunden</p>
+                <small>Versuche es mit # für Channels oder @ für Personen</small>
+            </div>
+
+            <!-- Results List -->
+            <div class="results-list" *ngIf="!isSearching && searchResults.length > 0">
+                <div 
+                    class="search-result-item" 
+                    *ngFor="let result of searchResults"
+                    (click)="selectSearchResult(result)">
+                    
+                    <!-- Channel Result -->
+                    <div class="result-content" *ngIf="result.type === 'channel'">
+                        <div class="result-icon channel-icon">#</div>
+                        <div class="result-details">
+                            <p class="result-title">{{ result.title }}</p>
+                            <small class="result-subtitle">{{ result.subtitle }}</small>
+                            <small class="result-meta" *ngIf="result.content">{{ result.content }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Direct Message Result -->
+                    <div class="result-content" *ngIf="result.type === 'direct'">
+                        <img 
+                            class="result-avatar" 
+                            [src]="'/icons/avatars/' + result.avatar" 
+                            alt="">
+                        <div class="result-details">
+                            <p class="result-title">{{ result.title }}</p>
+                            <small class="result-subtitle">{{ result.subtitle }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Message Result -->
+                    <div class="result-content" *ngIf="result.type === 'message'">
+                        <div class="result-icon message-icon">💬</div>
+                        <div class="result-details">
+                            <p class="result-title">{{ result.title }}</p>
+                            <small class="result-subtitle">{{ result.subtitle }}</small>
+                            <p class="result-message">{{ result.content }}</p>
+                            <small class="result-time" *ngIf="result.timestamp">
+                                {{ result.timestamp | date:'dd.MM.yyyy HH:mm' }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    <div class="profile-menu" (click)="openMenu()" [matMenuTriggerFor]="!isMobile ? menu : null">
         <p>{{ userName }}</p>
         <img class="profile-img" [src]="'/icons/avatars/' + userAvatar" alt="">
         <img src="/icons/dropdown-menu.png" alt="" class="dropdown">

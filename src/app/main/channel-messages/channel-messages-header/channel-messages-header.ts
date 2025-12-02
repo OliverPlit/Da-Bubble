@@ -6,6 +6,7 @@ import { EditChannel } from '../edit-channel/edit-channel';
 import { EditMembers } from '../edit-members/edit-members';
 import { AddMembers } from '../add-members/add-members';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { ChannelStateService } from '../../menu/channels/channel.service'
 
 
 type Member = { id: string; name: string; avatar?: string; isYou?: boolean };
@@ -20,8 +21,11 @@ export class ChannelMessagesHeader {
   @Input() fullChannel: any = null;
   @Input() channel = '';
   @Input() channelId = '';
-    @Input() description = '';
+  @Input() description = '';
+  @Input() createdBy = '';
+  selectedChannel: any = null;
 
+constructor(private channelState: ChannelStateService ){}
   @Input() members: Member[] = [];
 
   private firestore = inject(Firestore);
@@ -31,6 +35,16 @@ export class ChannelMessagesHeader {
 
   ngOnInit() {
     console.log('Header Init: Vollständiges Channel-Objekt:', this.fullChannel);
+    this.channelState.selectedChannel$.subscribe(channel => {
+      if (channel) {
+        this.fullChannel = channel;
+        this.channel = channel.name || '';
+        this.channelId = channel.id || '';
+        this.description = channel.description || '';
+        this.createdBy = channel.createdBy || '';
+        this.members = channel.members || [];
+      }
+    });
   }
   renderMembers(): Member[] {
     if (!this.members || this.members.length === 0) return [];
@@ -38,7 +52,7 @@ export class ChannelMessagesHeader {
     return [...this.members]
       .map(m => ({
         ...m,
-        avatar: m.avatar || '', 
+        avatar: m.avatar || '',
         name: m.name || 'Unbekannt'
       }))
       .sort((a, b) => (a.isYou === b.isYou ? 0 : a.isYou ? -1 : 1));
@@ -55,24 +69,24 @@ export class ChannelMessagesHeader {
     const gap = 16;
     const dlgW = 872;
 
-    // ✅ Debug: Prüfe alle verfügbaren Daten
     console.log('=== DEBUG openEditChannel ===');
     console.log('fullChannel:', this.fullChannel);
     console.log('channelId:', this.channelId);
     console.log('channel name:', this.channel);
     console.log('members:', this.members);
-        console.log('des:', this.description);
+    console.log('des:', this.description);
 
 
-    const channelData = this.fullChannel || {
-      id: this.channelId,
-      name: this.channel,
-      members: this.members,
-      description: this.description, // Falls verflügbar, sonst leer
-      createdBy: '' // Fals verfügbar, sonst leer
+    const channelData = {
+      id: this.fullChannel?.id || this.channelId,
+      name: this.fullChannel?.name || this.channel,
+      members: this.fullChannel?.members || this.members,
+      description: this.fullChannel?.description || this.description,
+      createdBy: this.fullChannel?.createdBy || this.createdBy
     };
 
     console.log('Übergebe an Dialog:', channelData);
+
 
     this.dialog.open(EditChannel, {
       width: dlgW + 'px',

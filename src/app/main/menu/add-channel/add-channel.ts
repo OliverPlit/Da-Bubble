@@ -7,7 +7,7 @@ import { AddPeople } from './add-people/add-people';
 import { MatDialog } from '@angular/material/dialog';
 import { FormsModule, NgForm } from '@angular/forms';
 import { FirebaseService } from '../../../services/firebase';
-import { Firestore, collection, collectionData, doc, setDoc } from '@angular/fire/firestore';
+import { Firestore, collection, collectionData, doc, setDoc, getDoc } from '@angular/fire/firestore';
 
 
 
@@ -21,8 +21,8 @@ import { Firestore, collection, collectionData, doc, setDoc } from '@angular/fir
 })
 export class AddChannel {
   private dialog = inject(MatDialog);
-    firestore: Firestore = inject(Firestore);
- memberships: any[] = [];
+  firestore: Firestore = inject(Firestore);
+  memberships: any[] = [];
 
   constructor(private firebaseService: FirebaseService) { }
   dialogRef = inject(MatDialogRef<AddChannel>);
@@ -37,36 +37,41 @@ export class AddChannel {
   }
 
   async openDialogPeople(form: NgForm) {
-  if (form.invalid) return;
+    if (form.invalid) return;
 
-  const name = form.value.channelName;
-  const description = form.value.description;
+    const name = form.value.channelName;
+    const description = form.value.description;
 
-  const storedUser = localStorage.getItem('currentUser');
-  if (!storedUser) return;
+    const storedUser = localStorage.getItem('currentUser');
+    if (!storedUser) return;
 
-  const uid = JSON.parse(storedUser).uid;
-  if (!uid) return;
- const userRef = doc(this.firestore, 'users', uid);
-  const membershipsRef = collection(userRef, 'memberships');
-   const membershipDocRef = doc(membershipsRef); 
-  const channelId = membershipDocRef.id; 
+    const uid = JSON.parse(storedUser).uid;
+    if (!uid) return;
+    const userRef = doc(this.firestore, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return;
 
-  await setDoc(membershipDocRef, {
-    channelId,
-    name,
-    description,
-    joinedAt: new Date(),
-    members: []  
-  });
+    const userData = userSnap.data();
+    const membershipsRef = collection(userRef, 'memberships');
+    const membershipDocRef = doc(membershipsRef);
+    const channelId = membershipDocRef.id;
+
+    await setDoc(membershipDocRef, {
+      channelId,
+      name,
+      description,
+      joinedAt: new Date(),
+      members: [],
+      createdBy: userData['name']
+    });
 
 
-  this.dialog.open(AddPeople, {
-    panelClass: 'add-people-dialog-panel',
-    data: { channelId}
-  });
+    this.dialog.open(AddPeople, {
+      panelClass: 'add-people-dialog-panel',
+      data: { channelId }
+    });
 
-  this.close();
-}
+    this.close();
+  }
 }
 

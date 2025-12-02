@@ -1,8 +1,9 @@
 import { Component, inject, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { ChangeDetectorRef } from '@angular/core';
-import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
+import { Firestore, doc, updateDoc, collection } from '@angular/fire/firestore';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -13,7 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 @Component({
   selector: 'app-edit-channel',
     standalone: true,
-imports: [CommonModule, MatButtonModule, MatInputModule],
+imports: [CommonModule, MatButtonModule, MatInputModule, FormsModule],
   templateUrl: './edit-channel.html',
   styleUrl: './edit-channel.scss',
 })
@@ -34,37 +35,11 @@ export class EditChannel {
 
  
 ngOnInit() {
-    console.log('=== DEBUG EditChannel ngOnInit ===');
-    console.log('MAT_DIALOG_DATA empfangen:', this.data);
-    console.log('data.channel:', this.data?.channel);
-
-    // ✅ Prüfe ob data und data.channel existieren
-    if (!this.data) {
-      console.error('❌ Keine Daten empfangen!');
-      return;
-    }
-
-    if (!this.data.channel) {
-      console.error('❌ Kein Channel in data! Data:', this.data);
-      return;
-    }
-
     this.channel = this.data.channel;
-
-    // ✅ Prüfe ob Channel-ID vorhanden ist
-    if (!this.channel.id) {
-      console.error('❌ Channel hat keine ID!', this.channel);
-    }
-
     this.editedName = this.channel.name || '';
     this.editedDescription = this.channel.description || '';
 
-    console.log('✅ Channel erfolgreich geladen:', {
-      id: this.channel.id,
-      name: this.channel.name,
-      description: this.channel.description,
-      members: this.channel.members
-    });
+
   }
 
 
@@ -90,24 +65,37 @@ ngOnInit() {
 
   }
 
-  async saveEditName() {
-    if (!this.editedName.trim()) return;
-    const channelRef = doc(this.firestore, 'channels', this.channel.id);
-    await updateDoc(channelRef, { name: this.editedName.trim() });
-    this.channel.name = this.editedName.trim();
-    this.showInputName = false;
-    this.closeName = true;
-    this.cdr.detectChanges();
-  }
+ async saveEditName() {
+  if (!this.editedName.trim()) return;
 
-  async saveEditDescription() {
-    const channelRef = doc(this.firestore, 'channels', this.channel.id);
-    await updateDoc(channelRef, { description: this.editedDescription.trim() });
-    this.channel.description = this.editedDescription.trim();
-    this.showInputDescription = false;
-    this.closeDescription = true;
-    this.cdr.detectChanges();
-  }
+  const storedUser = localStorage.getItem('currentUser');
+  if (!storedUser) return;
+  const uid = JSON.parse(storedUser).uid;
+  const userRef = doc(this.firestore, 'users', uid);
+  const membershipsRef = collection(userRef, 'memberships');
+  const membershipDocRef = doc(membershipsRef, this.channel.id);
+
+  await updateDoc(membershipDocRef, { name: this.editedName.trim() });
+  this.channel.name = this.editedName.trim();
+  this.showInputName = false;
+  this.closeName = true;
+  this.cdr.detectChanges();
+}
+
+async saveEditDescription() {
+  const storedUser = localStorage.getItem('currentUser');
+  if (!storedUser) return;
+  const uid = JSON.parse(storedUser).uid;
+  const userRef = doc(this.firestore, 'users', uid);
+  const membershipsRef = collection(userRef, 'memberships');
+  const membershipDocRef = doc(membershipsRef, this.channel.id);
+
+  await updateDoc(membershipDocRef, { description: this.editedDescription.trim() });
+  this.channel.description = this.editedDescription.trim();
+  this.showInputDescription = false;
+  this.closeDescription = true;
+  this.cdr.detectChanges();
+}
 
   async leaveChannel() {
     const confirmed = confirm(`Möchten Sie den Channel "${this.channel.name}" wirklich verlassen?`);

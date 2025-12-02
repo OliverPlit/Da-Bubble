@@ -1,0 +1,137 @@
+$primary: #535AF1;
+$placeholder: #686868;
+$hoverBg: #ECEEFE;
+$line: #ADB0D9;
+
+
+.main-container {
+    width: 1494px;
+    height: 940px;
+    border-radius: 30px;
+    background-color: white;
+    z-index: 100;
+    border-radius: 30px;
+    position: absolute;
+    top: 157px;
+    left: 406px;
+}
+
+.header {
+    font-family: 'Nunito';
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    padding-left: 40px;
+    padding-top: 20px;
+
+    >p {
+        margin-bottom: 30px;
+    }
+
+    >input {
+        width: 1404px;
+        border-radius: 30px;
+        padding-top: 15px;
+        padding-right: 20px;
+        padding-bottom: 15px;
+        padding-left: 20px;
+        gap: 10px;
+        border-width: 1px;
+
+        &::placeholder {}
+
+        font-family: 'Nunito-noBold';
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 18px;
+        line-height: 100%;
+        letter-spacing: 0%;
+
+    }
+}
+
+
+footer {
+  margin-top: 450px;
+}
+.composer {
+  border: 1px solid $line;
+  border-radius: 20px;
+  margin-right: 35px;
+  margin-left: 35px;
+  
+
+  .composer-input {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding: 20px;
+
+    textarea {
+      resize: none;
+      border: none;
+      outline: none;
+      font-family: 'Nunito';
+      font-weight: 400;
+      font-size: 18px;
+
+      &::placeholder {
+        color: $placeholder;
+      }
+
+      &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, .12);
+        background: #fff;
+      }
+    }
+
+    .composer-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+
+      .d-flex {
+        display: flex;
+      }
+
+      .icon-box {
+        position: relative;
+        border-radius: 20px;
+        padding: 8px;
+        gap: 10px;
+        background-color: $hoverBg;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+
+        .hover1, .hover2 {
+            position: absolute;
+            opacity: 0;
+        }
+
+        &:hover {
+            .hover1, .hover2 {
+                opacity: 1;
+            }
+
+            .default {
+                opacity: 0;
+            }
+        }
+      }
+
+      .send {
+        border: none;
+        cursor: pointer;
+        padding: 10px 18px;
+        border-radius: 12px;
+        background: $primary;
+        color: #fff;
+        font: 700 14px/1 'Nunito';
+      }
+    }
+  }
+}

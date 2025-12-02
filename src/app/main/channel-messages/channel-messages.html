@@ -6,7 +6,8 @@
   [channel]="channelName"
   [channelId]="channelId"
   [members]="members"
-  [description]="description">
+  [description]="description"
+  [createdBy]="createdBy">
 </app-channel-messages-header>
 </section> <app-new-message *ngIf="showNewMessages" (close)="onClose()"></app-new-message>
 
@@ -15,6 +16,8 @@
 <app-channel-messages-header
     [channel]="channelName"
     [channelId]="channelId"
-    [members]="members">
+    [members]="members"
+     [description]="description"
+  [createdBy]="createdBy">
   </app-channel-messages-header>    <app-thread-channel-messages></app-thread-channel-messages>
 </section>
