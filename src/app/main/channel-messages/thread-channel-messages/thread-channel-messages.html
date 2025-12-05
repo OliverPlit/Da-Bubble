@@ -7,6 +7,7 @@
 
         <article class="message" *ngIf="!m.timeSeparator" [class.you]="m.isYou" #messageRef
             (mouseenter)="cancelEditMessagePanelHide(m)" (mouseleave)="scheduleEditMessagePanelHide(m)">
+
             <div class="avatar" [class.you]="m.isYou"
                 [style.background-image]="m.avatar ? 'url(' + m.avatar + ')' : null">
                 <span *ngIf="!m.avatar"></span>
@@ -14,20 +15,20 @@
 
             <div class="message-body" [class.you]="m.isYou">
                 <div class="meta" [class.you]="m.isYou">
-                    <strong>{{ m.author }}</strong>
-                    <time>{{ m.time }}</time>
+                    <strong>{{ m.username }}</strong>
+                    <time>{{ m.createdAt }}</time>
                 </div>
 
                 <div class="text bubble" [class.you]="m.isYou">
                     {{ m.text }}
                 </div>
 
-                <div class="reactions" [class.you]="m.isYou" *ngIf="m.reactions?.length">
-                    <div class="emoji-reactions">
+                <div class="reactions" [class.you]="m.isYou" *ngIf="m.reactions.length || m.repliesCount > 0">
+                    <div class="emoji-reactions" *ngIf="m.reactions.length">
                         <div class="reaction" *ngFor="let r of m.reactions" [class.active]="r.youReacted" type="button"
                             (mouseenter)="showReactionPanel(m, r, $event)" (mouseleave)="scheduleReactionPanelHide()">
                             <img class="emoji" src="{{ r.emoji }}" alt="">
-                            <span class="count-emoji">{{ r.count }}</span>
+                            <span class="count-emoji">{{ r.emojiCount }}</span>
                         </div>
 
                         <span class="icon-box">
@@ -36,14 +37,14 @@
                         </span>
                     </div>
 
-                    <div class="response" *ngFor="let r of m.reactions">
-                        <span class="count-answere">{{ r.countAnsweres }} Antworten</span>
-                        <span class="answere">Letzte Antwort {{ r.time }}</span>
+                    <div class="response" *ngIf="m.repliesCount > 0">
+                        <span class="count-answere">{{ m.repliesCount }} Antworten</span>
+                        <span class="answere">Letzte Antwort {{ m.lastReplyTime }}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="reaction-panel" *ngIf="reactionPanel.show && reactionPanel.messageId === m.id"
+            <div class="reaction-panel" *ngIf="reactionPanel.show && reactionPanel.messageId === m.messageId"
                 [style.left.px]="reactionPanel.x" [style.top.px]="reactionPanel.y"
                 (mouseenter)="cancelReactionPanelHide()" (mouseleave)="scheduleReactionPanelHide()">
 
@@ -57,12 +58,14 @@
             </div>
 
             <div class="reaction-bar" [class.you]="m.isYou">
-                <span class="icon-box">
+                <span class="icon-box"
+                    (click)="toggleReaction(m, 'icons/emojis/emoji_white heavy check mark.png')">
                     <img class="default" src="icons/emojis/emoji_white heavy check mark.png" alt="">
                     <img class="hover" src="icons/emojis/emoji_white heavy check mark.png" alt="">
                 </span>
 
-                <span class="icon-box">
+                <span class="icon-box"
+                    (click)="toggleReaction(m, 'icons/emojis/emoji_person raising both hands in celebration.png')">
                     <img class="default" src="icons/emojis/emoji_person raising both hands in celebration.png" alt="">
                     <img class="hover" src="icons/emojis/emoji_person raising both hands in celebration.png" alt="">
                 </span>
@@ -83,7 +86,7 @@
                 </span>
             </div>
 
-            <div class="edit-message-panel" [class.you]="m.isYou" *ngIf="m.isYou && editForId === m.id"
+            <div class="edit-message-panel" [class.you]="m.isYou" *ngIf="m.isYou && editForId === m.messageId"
                 (click)="editMessage($event)" (mouseenter)="cancelEditMessagePanelHide(m)"
                 (mouseleave)="scheduleEditMessagePanelHide(m)">
                 <span>Nachricht bearbeiten</span>

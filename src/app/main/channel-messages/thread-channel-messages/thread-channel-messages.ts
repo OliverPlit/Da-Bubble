@@ -1,34 +1,33 @@
 import { Component, ElementRef, HostListener, inject, AfterViewInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../add-emojis/add-emojis';
 import { AtMembers } from '../at-members/at-members';
-import { MatDialog } from '@angular/material/dialog';
 
 type Message = {
-  id: string;
-  author: string;
-  time: string;
-  avatar?: string;
+  messageId: string;
+  username: string;
+  avatar: string;
+  isYou: boolean;
+  createdAt: string;
   text: string;
-  reactions?: Reaction[];
-  isYou?: boolean;
-  timeSeparator?: string;
-};
-
-type ReactionUser = {
-  uid: string;
-  name: string;
+  reactions: Reaction[];
+  repliesCount: number;
+  lastReplyTime?: string,
+  timeSeparator?: string;       // über createdAt abgleichen?
 };
 
 type Reaction = {
-  countAnsweres: number;
-  isAnswered?: boolean;
-  time: string,
   emoji: string;
-  count: number;
-  youReacted?: boolean;
-  users: ReactionUser[];
+  emojiCount: number;
+  youReacted: boolean;
+  reactionUsers: ReactionUser[];
+};
+
+type ReactionUser = {
+  userId: string;
+  username: string;
 };
 
 type ReactionPanelState = {
@@ -38,7 +37,7 @@ type ReactionPanelState = {
   emoji: string;
   title: string;
   subtitle: string;
-  messageId?: string;
+  messageId: string;
 };
 
 @Component({
@@ -50,21 +49,17 @@ type ReactionPanelState = {
 export class ThreadChannelMessages implements AfterViewInit {
   @ViewChild('messagesEl') messagesEl!: ElementRef<HTMLDivElement>;
 
-  ngAfterViewInit() {
-    queueMicrotask(() => this.scrollToBottom());
-  }
-
   private dialog = inject(MatDialog);
   private hideTimer: any = null;
   private editHideTimer: any = null;
   private host = inject(ElementRef<HTMLElement>);
 
-  editForId: string | null = null;
-
   channelName = 'Entwicklerteam';
+  userId = 'u_oliver';
+  username = 'Oliver Plit';
 
-  currentUserId = 'u_oliver';
-  currentUserName = 'Oliver Plit';
+  draft = '';
+  editForId: string | null = null;
 
   reactionPanel: ReactionPanelState = {
     show: false,
@@ -76,6 +71,10 @@ export class ThreadChannelMessages implements AfterViewInit {
     messageId: ''
   };
 
+  ngAfterViewInit() {
+    queueMicrotask(() => this.scrollToBottom());
+  }
+
   membersPreview = [
     { name: 'Noah Braun' },
     { name: 'Sofia Müller' },
@@ -84,103 +83,150 @@ export class ThreadChannelMessages implements AfterViewInit {
     { name: 'Elias Neumann' },
   ];
 
-  draft = '';
-
   messages: Message[] = [
-    { id: 'd1', timeSeparator: 'Dienstag, 14 Januar', author: '', time: '', text: '' },
     {
-      id: 'm1',
-      author: 'Noah Braun',
-      time: '14:25 Uhr',
+      messageId: 'd1',
+      username: '',
+      avatar: '',
+      isYou: false,
+      createdAt: '',
+      text: '',
+      reactions: [],
+      repliesCount: 0,
+      timeSeparator: 'Dienstag, 14 Januar'
+    },
+    {
+      messageId: 'm1',
+      username: 'Noah Braun',
       avatar: 'icons/avatars/avatar3.png',
+      isYou: false,
+      createdAt: '14:25 Uhr',
       text: 'Welche Version ist aktuell von Angular?',
       reactions: [],
-      isYou: false,
+      repliesCount: 2,
+      lastReplyTime: '14:56'
     },
-    { id: 'd2', timeSeparator: 'Freitag, 27 Januar', author: '', time: '', text: '' },
     {
-      id: 'm2',
-      author: 'Oliver Plit',
-      time: '15:06 Uhr',
+      messageId: 'd2',
+      username: '',
+      avatar: '',
+      isYou: false,
+      createdAt: '',
+      text: '',
+      reactions: [],
+      repliesCount: 0,
+      timeSeparator: 'Freitag, 27 Januar'
+    },
+    {
+      messageId: 'm2',
+      username: 'Oliver Plit',
       avatar: 'icons/avatars/avatar6.png',
-      text:
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio ' +
-        'efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis ' +
-        'erat, eu faucibus lacus iaculis ac.',
-      reactions: [
-        {
-          countAnsweres: 1,
-          isAnswered: true,
-          time: '15:00',
-          emoji: 'icons/emojis/emoji_rocket.png',
-          count: 2,
-          youReacted: true,
-          users: [
-            { uid: 'u_sofia', name: 'Sofia Müller' },
-            { uid: 'u_oliver', name: 'Oliver Plit' },
-          ]
-        },
-        // { countAnsweres: 0, isAnswered: false, time: '15:00', emoji: 'icons/emojis/emoji_nerd face.png', count: 1, youReacted: false },
-        // { countAnsweres: 0, isAnswered: false, time: '15:00', emoji: 'icons/emojis/emoji_person raising both hands in celebration.png', count: 1, youReacted: false },
-      ],
       isYou: true,
-    },
-    { id: 'd3', timeSeparator: 'Sonntag, 11 Februar', author: '', time: '', text: '' },
-    {
-      id: 'm3',
-      author: 'Max Mustermann',
-      time: '11:36 Uhr',
-      avatar: 'icons/avatars/avatar3.png',
+      createdAt: '15:06 Uhr',
       text:
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio ' +
         'efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis ' +
         'erat, eu faucibus lacus iaculis ac.',
       reactions: [
         {
-          countAnsweres: 5,
-          isAnswered: true,
-          time: '15:00',
-          emoji: 'icons/emojis/emoji_nerd face.png',
-          count: 2,
-          youReacted: false,
-          users: [
-            { uid: 'u_noah', name: 'Noah Braun' },
-            { uid: 'u_sofia', name: 'Sofia Müller' },
+          emoji: 'icons/emojis/emoji_rocket.png',
+          emojiCount: 2,
+          youReacted: true,
+          reactionUsers: [
+            { userId: 'u_sofia', username: 'Sofia Müller' },
+            { userId: 'u_oliver', username: 'Oliver Plit' },
           ]
         },
-        // { countAnsweres: 0, isAnswered: false, time: '15:00', emoji: 'icons/emojis/emoji_nerd face.png', count: 1, youReacted: false },
-        // { countAnsweres: 0, isAnswered: false, time: '15:00', emoji: 'icons/emojis/emoji_person raising both hands in celebration.png', count: 1, youReacted: false },
       ],
-      isYou: false,
+      repliesCount: 1,
+      lastReplyTime: '15:20'
     },
-    { id: 'd4', timeSeparator: 'Montag, 12 Februar', author: '', time: '', text: '' },
     {
-      id: 'm4',
-      author: 'Emily Mustermann',
-      time: '23:55 Uhr',
-      avatar: 'icons/avatars/avatar5.png',
-      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio ' +
-        'efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis ' +
-        'erat, eu faucibus lacus iaculis ac.',
+      messageId: 'd3',
+      username: '',
+      avatar: '',
+      isYou: false,
+      createdAt: '',
+      text: '',
       reactions: [],
-      isYou: false,
+      repliesCount: 0,
+      timeSeparator: 'Sonntag, 11 Februar'
     },
-    { id: 'd5', timeSeparator: 'heute', author: '', time: '', text: '' },
     {
-      id: 'm5',
-      author: 'Noah Braun',
-      time: '21:05 Uhr',
+      messageId: 'm3',
+      username: 'Max Mustermann',
       avatar: 'icons/avatars/avatar3.png',
+      isYou: false,
+      createdAt: '11:36 Uhr',
+      text:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio ' +
+        'efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis ' +
+        'erat, eu faucibus lacus iaculis ac.',
+      reactions: [
+        {
+          emoji: 'icons/emojis/emoji_nerd face.png',
+          emojiCount: 2,
+          youReacted: false,
+          reactionUsers: [
+            { userId: 'u_noah', username: 'Noah Braun' },
+            { userId: 'u_sofia', username: 'Sofia Müller' },
+          ]
+        },
+      ],
+      repliesCount: 0
+    },
+    {
+      messageId: 'd4',
+      username: '',
+      avatar: '',
+      isYou: false,
+      createdAt: '',
+      text: '',
+      reactions: [],
+      repliesCount: 0,
+      timeSeparator: 'Montag, 12 Februar'
+    },
+    {
+      messageId: 'm4',
+      username: 'Emily Mustermann',
+      avatar: 'icons/avatars/avatar5.png',
+      isYou: false,
+      createdAt: '23:55 Uhr',
       text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio ' +
         'efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis ' +
         'erat, eu faucibus lacus iaculis ac.',
       reactions: [],
+      repliesCount: 8,
+      lastReplyTime: '23:58'
+    },
+    {
+      messageId: 'd5',
+      username: '',
+      avatar: '',
       isYou: false,
+      createdAt: '',
+      text: '',
+      reactions: [],
+      repliesCount: 0,
+      timeSeparator: 'heute'
+    },
+    {
+      messageId: 'm5',
+      username: 'Noah Braun',
+      avatar: 'icons/avatars/avatar3.png',
+      isYou: false,
+      createdAt: '21:05 Uhr',
+      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio ' +
+        'efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis ' +
+        'erat, eu faucibus lacus iaculis ac.',
+      reactions: [],
+      repliesCount: 53,
+      lastReplyTime: '4:17'
     },
   ];
 
   openAddEmojis(trigger: HTMLElement) {
-    const r = trigger.getBoundingClientRect();
+    // const r = trigger.getBoundingClientRect();
     const gap = 24;
     const dlgW = 350;
     const dlgH = 467;
@@ -196,7 +242,7 @@ export class ThreadChannelMessages implements AfterViewInit {
   }
 
   openAtMembers(trigger: HTMLElement) {
-    const r = trigger.getBoundingClientRect();
+    // const r = trigger.getBoundingClientRect();
     const gap = 24;
     const dlgW = 350;
     const dlgH = 467;
@@ -214,19 +260,50 @@ export class ThreadChannelMessages implements AfterViewInit {
   sendMessage() {
     if (!this.draft.trim()) return;
     this.messages.push({
-      id: crypto.randomUUID(),
-      author: 'Oliver Plit',
-      time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr',
-      text: this.draft.trim(),
+      messageId: crypto.randomUUID(),
+      username: 'Oliver Plit',
+      avatar: '',
       isYou: true,
+      createdAt: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr',
+      text: this.draft.trim(),
       reactions: [],
+      repliesCount: 0,
     });
     this.draft = '';
+    this.scrollToBottom();
+  }
+
+  toggleReaction(m: Message, emoji: string) {
+    const you: ReactionUser = { userId: this.userId, username: this.username };
+    const rx = m.reactions.find(r => r.emoji === emoji);
+
+    if (rx) {
+      const youIdx = rx.reactionUsers.findIndex(u => u.userId === this.userId);
+      if (youIdx >= 0) {
+        rx.reactionUsers.splice(youIdx, 1);
+        rx.emojiCount = Math.max(0, rx.emojiCount - 1);
+        rx.youReacted = rx.reactionUsers.some(u => u.userId === this.userId);
+        if (rx.emojiCount === 0 || rx.reactionUsers.length === 0) {
+          m.reactions = m.reactions.filter(r => r !== rx);
+        } else {
+          m.reactions = [...m.reactions];
+        }
+      } else {
+        rx.reactionUsers.push(you);
+        rx.emojiCount += 1;
+        rx.youReacted = true;
+        m.reactions = [...m.reactions];
+      }
+    } else {
+      m.reactions = [
+        ...m.reactions,
+        { emoji, emojiCount: 1, youReacted: true, reactionUsers: [you] },
+      ];
+    }
   }
 
   showReactionPanel(m: Message, reaction: Reaction, event: MouseEvent) {
     const element = event.currentTarget as HTMLElement;
-
     const messageElement = element.closest('.message') as HTMLElement;
     if (!messageElement) return;
 
@@ -236,24 +313,24 @@ export class ThreadChannelMessages implements AfterViewInit {
     const x = reactionRect.left - messageRect.left + 40;
     const y = reactionRect.top - messageRect.top - 110;
 
-    const youReacted = reaction.users.some(u => u.uid === this.currentUserId);
-    const names = reaction.users.map(u => u.name);
+    const youReacted = reaction.reactionUsers.some(u => u.userId === this.userId);
+    const reactedUsers = reaction.reactionUsers.map(u => u.username);
 
     let title = '';
-    if (youReacted && names.length > 0) {
-      const otherUsers = names.filter(name => name !== this.currentUserName);
+    if (youReacted && reactedUsers.length > 0) {
+      const otherUsers = reactedUsers.filter(name => name !== this.username);
       if (otherUsers.length > 0) {
         title = `${otherUsers.slice(0, 2).join(' und ')} und Du`;
       } else {
         title = 'Du';
       }
-    } else if (names.length > 0) {
-      title = names.slice(0, 2).join(' und ');
+    } else if (reactedUsers.length > 0) {
+      title = reactedUsers.slice(0, 2).join(' und ');
     } else {
       title = '';
     }
 
-    const subtitle = reaction.users?.length > 1 ? 'haben reagiert' : 'hat reagiert';
+    const subtitle = reaction.reactionUsers?.length > 1 ? 'haben reagiert' : 'hat reagiert';
 
     this.reactionPanel = {
       show: true,
@@ -262,7 +339,7 @@ export class ThreadChannelMessages implements AfterViewInit {
       emoji: reaction.emoji,
       title,
       subtitle,
-      messageId: m.id
+      messageId: m.messageId
     };
   }
 
@@ -291,11 +368,11 @@ export class ThreadChannelMessages implements AfterViewInit {
   toggleEditMessagePanel(m: Message, ev: MouseEvent) {
     ev.stopPropagation();
     this.clearEditMessagePanelHide();
-    this.editForId = this.editForId === m.id ? null : m.id;
+    this.editForId = this.editForId === m.messageId ? null : m.messageId;
   }
 
   scheduleEditMessagePanelHide(m: Message) {
-    if (this.editForId !== m.id) return;
+    if (this.editForId !== m.messageId) return;
     this.clearEditMessagePanelHide();
     this.editHideTimer = setTimeout(() => {
       this.editForId = null;
