@@ -1,4 +1,5 @@
-<div class="intro-wrapper" *ngIf="showIntro">
+<body>
+  <div class="intro-wrapper" *ngIf="showIntro">
     <div class="intro-bg"></div>
   <div class="intro-content">
     <img src="/icons/Logo (1).png" class="intro-logo" />
@@ -20,6 +21,12 @@
   <router-outlet></router-outlet>
 </main>
 <footer>
-  <a routerLink="/legal-notice">Impressum</a>
-  <a routerLink="/privacy-policy">Datenschutz</a>
+    <div class="header-text-responsive" *ngIf="showHeaderText">
+    <p>Neu bei DABubble?</p>
+    <a routerLink="/signup">Konto erstellen</a>
+  </div>
+  <a routerLink="/legal-notice" class="responsive">Impressum</a>
+  <a routerLink="/privacy-policy" class="responsive">Datenschutz</a>
 </footer>
+</body>
+

@@ -1,8 +1,3 @@
-body {
-  max-width: 1440px;
-  margin: 0 auto;
-}
-
 header {
   display: flex;
   justify-content: end;
@@ -121,6 +116,10 @@ footer {
   animation: textSlideOut 0.7s ease forwards 1.2s, textFadeOut 2s ease-out forwards 2.8s;
 }
 
+.header-text-responsive {
+  display: none;
+}
+
 @keyframes introLogoIn {
   from {
     opacity: 0;
@@ -131,7 +130,6 @@ footer {
     transform: scale(1);
   }
 }
-
 
 @keyframes textFadeOut {
   from {
@@ -182,7 +180,7 @@ footer {
     top: 8px;
     left: 72px;
     transform: translate(0, 0) scale(0.5833);
-     color: black;
+    color: black;
   }
 }
 
@@ -192,7 +190,6 @@ footer {
   }
   to {
     opacity: 0;
-   
   }
 }
 
@@ -208,4 +205,34 @@ footer {
 .header-logo.no-intro {
   opacity: 1;
   animation: none !important;
+}
+
+@media (max-width: 500px) {
+  .header-text {
+    display: none;
+  }
+
+  header {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-logo {
+    position: relative;
+    top: 0;
+    left: 0;
+  }
+
+  .responsive {
+    display: none;
+  }
+
+  .header-text-responsive {
+    display: block;
+  }
+
+  footer {
+    position: static;
+
+  }
 }
