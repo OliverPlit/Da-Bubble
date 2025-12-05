@@ -50,19 +50,11 @@ ngOnInit() {
 
   }
 
- openProfile(member: directMessageContact) {
-  const dialogRef = this.dialog.open(ProfileCard, {
+openProfile(member: directMessageContact) {
+  this.dialog.open(ProfileCard, {
     data: member,
     panelClass: 'profile-dialog-panel'
   });
-
-  // WICHTIG: Type cast nötig, sonst TS meckert
-  const profileComponent = dialogRef.componentInstance as ProfileCard;
-
-  profileComponent.ChatDirectMessage.subscribe((dm: directMessageContact) => {
-    console.log('Event vom ProfileCard empfangen:', dm);
-    this.chatUser = dm;        // Chat auf den gewählten User wechseln
-    this.close.emit();          // optional: alte Chat-Komponente schließen
-  });
+ 
 }
 }

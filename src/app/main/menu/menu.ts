@@ -22,7 +22,7 @@ import { directMessageContact } from '../menu/direct-messages/direct-messages.mo
 })
 export class Menu {
   showFiller = false;
-  showChannels = false;
+  showChannels = true;
   showMessages = false;
   isMenuOpen = false;
   showNewMessages = false;
@@ -53,12 +53,10 @@ export class Menu {
   }
   
 onChatDirectMessage(dm: directMessageContact) {
-    console.log('Menu: Event empfangen, leite weiter...'); // DEBUG
-    this.ChatDirectMessage.emit(dm); // Leite es weiter nach oben
+    this.ChatDirectMessage.emit(dm); 
   }
 
   onChatDirectYou() {
-    console.log('Menu: Event empfangen, leite weiter...'); 
     this.ChatDirectYou.emit(); 
   }
 
@@ -77,14 +75,12 @@ onChatDirectMessage(dm: directMessageContact) {
   toggleChannels() {
     this.showChannels = !this.showChannels;
     if (this.showChannels) {
-      this.showMessages = false;
     }
   }
 
   toggleMessages() {
     this.showMessages = !this.showMessages;
     if (this.showMessages) {
-      this.showChannels = false;
     }
   }
 

@@ -28,6 +28,8 @@ export class Main {
   showThreads = false;
   isChannelMessagesVisible = true;
   selectedChatUser: directMessageContact | null = null;
+  activePanel: 'none' | 'chatYou' | 'chatDirect' | 'channel' = 'none';
+
 
 constructor(private directChatService: DirectChatService) {}
 
@@ -36,10 +38,28 @@ ngOnInit() {
   this.directChatService.chatUser$.subscribe(user => {
     if (user) {
       this.selectedChatUser = user;
-      this.showNewMessagesChat = true; // WICHTIG: sonst wird *ngIf nie true
+      this.showNewMessagesChat = true;
     }
   });
 }
+
+
+openChatYou() {
+  this.activePanel = 'chatYou';
+}
+
+openChatDirectMessage() {
+  this.activePanel = 'chatDirect';
+}
+
+openChannel() {
+  this.activePanel = 'channel';
+}
+
+closePanels() {
+  this.activePanel = 'none';
+}
+
 
   setChannelMessagesVisible(value: boolean) {
     this.isChannelMessagesVisible = value;

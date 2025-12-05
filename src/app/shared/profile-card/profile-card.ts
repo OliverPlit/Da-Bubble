@@ -3,6 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dial
 import { directMessageContact } from '../../main/menu/direct-messages/direct-messages.model';
 import { DirectChatService } from '../../services/direct-chat-service';
 
+
 @Component({
   selector: 'app-profile-card',
   templateUrl: './profile-card.html',
@@ -13,16 +14,22 @@ export class ProfileCard {
 
   dialogRef = inject(MatDialogRef<ProfileCard>);
   private dialog = inject(MatDialog);
+  private directChatService = inject(DirectChatService);
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: directMessageContact, private directChatService : DirectChatService) {}
+  constructor(@Inject(MAT_DIALOG_DATA) public data: directMessageContact) {}
 
   close() {
     this.dialogRef.close();
   }
 
-openChatDirectMessage(dm: directMessageContact) {
-  this.directChatService.openChat(dm);
-  this.close();
-}
+  closeAllDialogs() {
+    this.dialog.closeAll();
+  }
 
+  openChatDirectMessage(dm: directMessageContact) {
+    console.log('Starte Chat mit:', dm);
+    this.directChatService.openChat(dm);
+
+    this.closeAllDialogs();
+  }
 }

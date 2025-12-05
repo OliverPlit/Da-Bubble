@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -17,7 +17,7 @@ type Member = { id: string; name: string; avatar?: string; isYou?: boolean };
   templateUrl: './channel-messages-header.html',
   styleUrl: './channel-messages-header.scss',
 })
-export class ChannelMessagesHeader {
+export class ChannelMessagesHeader implements OnChanges {
   @Input() fullChannel: any = null;
   @Input() channel = '';
   @Input() channelId = '';
@@ -33,19 +33,13 @@ constructor(private channelState: ChannelStateService ){}
   private dialog = inject(MatDialog);
 
 
-  ngOnInit() {
-    console.log('Header Init: Vollständiges Channel-Objekt:', this.fullChannel);
-    this.channelState.selectedChannel$.subscribe(channel => {
-      if (channel) {
-        this.fullChannel = channel;
-        this.channel = channel.name || '';
-        this.channelId = channel.id || '';
-        this.description = channel.description || '';
-        this.createdBy = channel.createdBy || '';
-        this.members = channel.members || [];
-      }
-    });
+   ngOnChanges(changes: SimpleChanges) {
+    if (changes['fullChannel'] && changes['fullChannel'].currentValue) {
+      console.log('Header: Channel Update empfangen:', this.fullChannel);
+    }
   }
+
+
   renderMembers(): Member[] {
     if (!this.members || this.members.length === 0) return [];
 

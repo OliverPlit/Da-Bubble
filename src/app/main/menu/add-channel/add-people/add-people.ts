@@ -4,7 +4,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Observable, map, firstValueFrom } from 'rxjs';
-import { setDoc, Firestore, doc, updateDoc, arrayUnion, collection, collectionData } from '@angular/fire/firestore';
+import { setDoc, Firestore, doc, updateDoc, arrayUnion, collection, collectionData, getDoc } from '@angular/fire/firestore';
 
 
 
@@ -131,68 +131,88 @@ export class AddPeople implements OnInit {
   }
 
 
-  async addMember() {
-    const storedUser = localStorage.getItem('currentUser');
-    if (!storedUser) return;
-    const user = JSON.parse(storedUser);
-    const uid = user.uid;
-    const userName = user.name || 'Unbekannt';
-    const userAvatar = user.avatar || '';
-    const userEmail = user.email || 'keine Mail';
+async addMember() {
+  const storedUser = localStorage.getItem('currentUser');
+  if (!storedUser) {
+    return;
+  }
+  
+  const user = JSON.parse(storedUser);
+  const uid = user.uid;
+  
+  const userRef = doc(this.firestore, 'users', uid);
+  const userSnap = await getDoc(userRef);
+  
+  let userName = 'Unbekannt';
+  let userAvatar = 'avatar-0.png';
+  let userEmail = user.email || '';
 
-    const channelId = this.data.channelId;
-    const membershipRef = doc(
-      this.firestore,
-      `users/${uid}/memberships/${channelId}`
-    );
+  if (userSnap.exists()) {
+    const userData: any = userSnap.data();
+    userName = userData.name || 'Unbekannt';
+    userAvatar = userData.avatar || 'avatar-0.png';
+    userEmail = userData.email || userEmail;
+  }
 
-    // Stelle sicher, dass members existiert
-    await setDoc(membershipRef, { members: [] }, { merge: true });
 
-    if (this.selectedOption === 'option2') {
-      for (let p of this.selectedPeople) {
+  const channelId = this.data.channelId;
+  const membershipRef = doc(
+    this.firestore,
+    `users/${uid}/memberships/${channelId}`
+  );
+
+  await setDoc(membershipRef, { members: [] }, { merge: true });
+
+  await updateDoc(membershipRef, {
+    members: arrayUnion({
+      uid: uid,
+      name: `${userName} (Du)`,
+      avatar: userAvatar,
+      status: 'online',
+      email: userEmail,
+      isYou: true
+    })
+  });
+
+  if (this.selectedOption === 'option2') {
+    for (let p of this.selectedPeople) {
+      await updateDoc(membershipRef, {
+        members: arrayUnion({
+          uid: p.email || p.name, 
+          name: p.name,
+          avatar: p.avatar ?? 'avatar-0.png',
+          status: 'online',
+          email: p.email ?? ''
+        })
+      });
+    }
+  }
+
+  else if (this.selectedOption === 'option1') {
+    const dmRef = collection(this.firestore, 'directMessages');
+    const dmSnap = await firstValueFrom(collectionData(dmRef, { idField: 'id' }));
+    
+    if (dmSnap && dmSnap.length > 0) {
+      for (let dmUser of dmSnap) {
+        if (dmUser['uid'] === uid || dmUser['email'] === userEmail) {
+          continue;
+        }
+        
         await updateDoc(membershipRef, {
           members: arrayUnion({
-            name: p.name,
-            avatar: p.avatar ?? '',
+            uid: dmUser['uid'] || dmUser['id'],
+            name: dmUser['name'],
+            avatar: dmUser['avatar'] ?? 'avatar-0.png',
             status: 'online',
-            email: p.email ?? ''
-
+            email: dmUser['email'] ?? ''
           })
         });
       }
     }
-
-    // Option 1: alle DirectMessage User hinzufügen
-    else if (this.selectedOption === 'option1') {
-      const dmRef = collection(this.firestore, 'directMessages');
-      const dmSnap = await firstValueFrom(collectionData(dmRef, { idField: 'id' }));
-      if (dmSnap) {
-        for (let user of dmSnap) {
-          await updateDoc(membershipRef, {
-            members: arrayUnion({
-              name: user['name'],
-              avatar: user['avatar'] ?? '',
-              status: 'online',
-              email: user['email']
-            })
-          });
-        }
-      }
-    }
-
-    await updateDoc(membershipRef, {
-      members: arrayUnion({
-        name: userName,
-        avatar: userAvatar,
-        status: 'online',
-        email: userEmail,
-      })
-    });
-
-    this.closeDialog();
   }
 
+  this.closeDialog();
+}
 
   create() {
     this.addMember();

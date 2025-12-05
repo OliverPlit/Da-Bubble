@@ -10,10 +10,10 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 
 type Member = {
-  uid: string;      
+  uid: string;
   name: string;
   avatar?: string;
-  status?: string;  
+  status?: string;
   isYou?: boolean;
 };
 
@@ -25,33 +25,33 @@ type Member = {
 })
 export class AddMembers {
   private dialogRef = inject(MatDialogRef<AddMembers>);
-    data = inject(MAT_DIALOG_DATA);
+  data = inject(MAT_DIALOG_DATA);
   @Input() fullChannel: any = null;
   @Input() channel = '';
   @Input() channelId = '';
   @Input() members: Member[] = [];
   firestore = inject(Firestore);
-allMembers: Member[] = [];
-channelName = this.data.channelName;
-ngOnInit() {
-  const dmRef = collection(this.firestore, 'directMessages');
+  allMembers: Member[] = [];
+  channelName = this.data.channelName;
+  ngOnInit() {
+    const dmRef = collection(this.firestore, 'directMessages');
 
-  collectionData(dmRef, { idField: 'uid' })
-    .pipe(
-      map(users =>
-        users.map(u => ({
-          uid: u['uid'] ?? crypto.randomUUID(),
-          name: u['name'],
-          avatar: u['avatar'],
-          status: u['status'] ?? 'offline'
-        }))
+    collectionData(dmRef, { idField: 'uid' })
+      .pipe(
+        map(users =>
+          users.map(u => ({
+            uid: u['uid'] ?? crypto.randomUUID(),
+            name: u['name'],
+            avatar: u['avatar'],
+            status: u['status'] ?? 'offline'
+          }))
+        )
       )
-    )
-    .subscribe(list => {
-      this.allMembers = list;
-      this.members = list;
-    });
-}
+      .subscribe(list => {
+        this.allMembers = list;
+        this.members = list;
+      });
+  }
 
 
   query = signal('');
@@ -105,27 +105,27 @@ ngOnInit() {
     this.selected.update(arr => arr.filter(u => u.uid !== uid));
   }
 
- async addMembers() {
+  async addMembers() {
     const storedUser = localStorage.getItem('currentUser');
     if (!storedUser) return;
     const uid = JSON.parse(storedUser).uid;
 
     const channelId = this.data.channelId
-    const membershipRef = doc(
+     const membershipRef = doc(
       this.firestore,
       `users/${uid}/memberships/${channelId}`
     );
 
-   for (const user of this.selected()) {
-    await updateDoc(membershipRef, {
-      members: arrayUnion({
-        uid: user.uid,
-        name: user.name,
-        avatar: user.avatar ?? '',
-        status: 'online'
-      })
-    });
-  }
+    for (const user of this.selected()) {
+      await updateDoc(membershipRef, {
+        members: arrayUnion({
+          uid: user.uid,
+          name: user.name,
+          avatar: user.avatar ?? '',
+          status: 'online'
+        })
+      });
+    }
     this.dialogRef.close({ added: this.selected() });
   }
 
