@@ -213,7 +213,6 @@ footer {
   }
 
   header {
-    align-items: center;
     justify-content: center;
   }
 
@@ -221,6 +220,7 @@ footer {
     position: relative;
     top: 0;
     left: 0;
+    animation-delay: 2.3s !important;
   }
 
   .responsive {
@@ -233,6 +233,55 @@ footer {
 
   footer {
     position: static;
+  }
 
+  .intro-content {
+    animation: introFlyToHeaderMobile 0.6s ease-in forwards;
+    animation-delay: 2.6s;
+  }
+
+  .intro-logo {
+    width: 90px;
+      animation:
+    introLogoIn 0.6s ease forwards,
+    introLogoShift 0.5s ease forwards 0.6s,
+    introLogoFadeOut 0.5s ease forwards 3s;
+  }
+
+  .intro-text {
+    font-size: 40px;
+    animation: textSlideOutMobile 0.5s ease forwards 0.8s, textFadeOut 3.5s ease forwards 2s,  introLogoFadeOut 3s ease forwards 2s;
+  }
+
+  @keyframes introFlyToHeaderMobile {
+    0% {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    100% {
+      top: 22px;
+      left: 50%;
+      transform: translate(-50%, 0) scale(0.7778);
+    }
+  }
+
+  
+@keyframes introLogoFadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+  @keyframes textSlideOutMobile {
+    from {
+      opacity: 0;
+      transform: translateX(-190px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-70px);
+    }
   }
 }
