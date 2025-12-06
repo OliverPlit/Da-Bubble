@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../add-emojis/add-emojis';
 import { AtMembers } from '../at-members/at-members';
+import { EmojiService, EmojiId } from '../../../services/emoji.service';
 
 type Message = {
   messageId: string;
@@ -19,7 +20,7 @@ type Message = {
 };
 
 type Reaction = {
-  emoji: string;
+  emojiId: EmojiId;
   emojiCount: number;
   youReacted: boolean;
   reactionUsers: ReactionUser[];
@@ -53,6 +54,7 @@ export class ThreadChannelMessages implements AfterViewInit {
   private hideTimer: any = null;
   private editHideTimer: any = null;
   private host = inject(ElementRef<HTMLElement>);
+  private emojiSvc = inject(EmojiService);
 
   channelName = 'Entwicklerteam';
   userId = 'u_oliver';
@@ -73,6 +75,10 @@ export class ThreadChannelMessages implements AfterViewInit {
 
   ngAfterViewInit() {
     queueMicrotask(() => this.scrollToBottom());
+  }
+
+  getEmojiSrc(emojiId: EmojiId | string) {
+    return this.emojiSvc.src(emojiId);
   }
 
   membersPreview = [
@@ -129,7 +135,7 @@ export class ThreadChannelMessages implements AfterViewInit {
         'erat, eu faucibus lacus iaculis ac.',
       reactions: [
         {
-          emoji: 'icons/emojis/emoji_rocket.png',
+          emojiId: 'rocket',
           emojiCount: 2,
           youReacted: true,
           reactionUsers: [
@@ -164,7 +170,7 @@ export class ThreadChannelMessages implements AfterViewInit {
         'erat, eu faucibus lacus iaculis ac.',
       reactions: [
         {
-          emoji: 'icons/emojis/emoji_nerd face.png',
+          emojiId: 'nerd',
           emojiCount: 2,
           youReacted: false,
           reactionUsers: [
@@ -273,9 +279,9 @@ export class ThreadChannelMessages implements AfterViewInit {
     this.scrollToBottom();
   }
 
-  toggleReaction(m: Message, emoji: string) {
+  toggleReaction(m: Message, emojiId: EmojiId) {
     const you: ReactionUser = { userId: this.userId, username: this.username };
-    const rx = m.reactions.find(r => r.emoji === emoji);
+    const rx = m.reactions.find(r => r.emojiId === emojiId);
 
     if (rx) {
       const youIdx = rx.reactionUsers.findIndex(u => u.userId === this.userId);
@@ -297,9 +303,31 @@ export class ThreadChannelMessages implements AfterViewInit {
     } else {
       m.reactions = [
         ...m.reactions,
-        { emoji, emojiCount: 1, youReacted: true, reactionUsers: [you] },
+        { emojiId, emojiCount: 1, youReacted: true, reactionUsers: [you] },
       ];
     }
+  }
+
+  toggleEmoji(m: Message, event: MouseEvent) {
+    const btn = event.currentTarget as HTMLElement;
+    const r = btn.getBoundingClientRect();
+
+    const dlgW = 20;
+    const gap = -10;
+
+    const ref = this.dialog.open(AddEmojis, {
+      width: dlgW + 'px',
+      panelClass: 'add-emojis-dialog-panel',
+      position: {
+        top: `${Math.round(r.bottom + gap)}px`,
+        left: `${Math.max(8, Math.round(r.left - dlgW + btn.offsetWidth))}px`,
+      },
+    });
+
+    ref.afterClosed().subscribe((emojiId: string | null) => {
+      if (!emojiId || !this.emojiSvc.isValid(emojiId)) return;
+      this.toggleReaction(m, emojiId);
+    });
   }
 
   showReactionPanel(m: Message, reaction: Reaction, event: MouseEvent) {
@@ -336,7 +364,7 @@ export class ThreadChannelMessages implements AfterViewInit {
       show: true,
       x: Math.max(10, x),
       y: Math.max(10, y),
-      emoji: reaction.emoji,
+      emoji: this.emojiSvc.src(reaction.emojiId),
       title,
       subtitle,
       messageId: m.messageId

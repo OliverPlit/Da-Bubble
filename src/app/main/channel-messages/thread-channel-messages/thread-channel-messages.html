@@ -27,11 +27,11 @@
                     <div class="emoji-reactions" *ngIf="m.reactions.length">
                         <div class="reaction" *ngFor="let r of m.reactions" [class.active]="r.youReacted" type="button"
                             (mouseenter)="showReactionPanel(m, r, $event)" (mouseleave)="scheduleReactionPanelHide()">
-                            <img class="emoji" src="{{ r.emoji }}" alt="">
+                            <img class="emoji" [src]="getEmojiSrc(r.emojiId)" alt="">
                             <span class="count-emoji">{{ r.emojiCount }}</span>
                         </div>
 
-                        <span class="icon-box">
+                        <span #emojiBtn class="icon-box" (click)="toggleEmoji(m, $event)">
                             <img class="default" src="icons/add_reaction.png" alt="">
                             <img class="hover" src="icons/add_reaction_purple.png" alt="">
                         </span>
@@ -59,18 +59,18 @@
 
             <div class="reaction-bar" [class.you]="m.isYou">
                 <span class="icon-box"
-                    (click)="toggleReaction(m, 'icons/emojis/emoji_white heavy check mark.png')">
+                    (click)="toggleReaction(m, 'check')">
                     <img class="default" src="icons/emojis/emoji_white heavy check mark.png" alt="">
                     <img class="hover" src="icons/emojis/emoji_white heavy check mark.png" alt="">
                 </span>
 
                 <span class="icon-box"
-                    (click)="toggleReaction(m, 'icons/emojis/emoji_person raising both hands in celebration.png')">
+                    (click)="toggleReaction(m, 'thumbs_up')">
                     <img class="default" src="icons/emojis/emoji_person raising both hands in celebration.png" alt="">
                     <img class="hover" src="icons/emojis/emoji_person raising both hands in celebration.png" alt="">
                 </span>
 
-                <span class="icon-box">
+                <span #barEmojiBtn class="icon-box" (click)="toggleEmoji(m, $event)">
                     <img class="default" src="icons/add_reaction.png" alt="">
                     <img class="hover" src="icons/add_reaction_purple.png" alt="">
                 </span>
@@ -101,7 +101,7 @@
 
         <div class="composer-actions">
             <div class="d-flex">
-                <span #btn1 class="icon-box" (click)="openAddEmojis(btn1)">
+                <span #addEmojiBtn class="icon-box" (click)="openAddEmojis(addEmojiBtn)">
                     <img class="default" src="icons/emoji_grey.png" alt="">
                     <img class="hover1" src="icons/emoji_black.png" alt="">
                     <img class="hover2" src="icons/emoji_purple.png" alt="">

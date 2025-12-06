@@ -1,6 +1,6 @@
 <div class="add-emoji-dialog">
-    <span class="icon-box" *ngFor="let e of emojis()" role="listitem" type="button" (click)="choose(e)">
-        <img class="default" [src]="e.src" [alt]="e.name">
-        <img class="hover" [src]="e.src" [alt]="e.name">
+    <span class="icon-box" *ngFor="let emoji of emojis" role="listitem" type="button" (click)="choose(emoji)">
+        <img class="default" [src]="emoji.emojiSrc" [alt]="emoji.emojiname">
+        <img class="hover" [src]="emoji.emojiSrc" [alt]="emoji.emojiname">
     </span>
 </div>
