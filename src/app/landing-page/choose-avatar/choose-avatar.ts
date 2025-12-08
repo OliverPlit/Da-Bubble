@@ -25,7 +25,7 @@ selectAvatar(avatar: string) {
 
 
   async saveAvatar() {
-    const userId = JSON.parse(localStorage.getItem('currentUser') || '{}').uid;
+    const userId = localStorage.getItem('currentUser');
     if (!userId) return;
 
     const userRef = doc(this.firestore, `users/${userId}`);
