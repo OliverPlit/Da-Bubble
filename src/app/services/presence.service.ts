@@ -1,12 +1,15 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
-import { Database, ref, onDisconnect, set } from '@angular/fire/database';
+import { Database, ref, onDisconnect, set, onValue } from '@angular/fire/database';
 
 @Injectable({ providedIn: 'root' })
-export class PresenceService implements OnDestroy {
+export class PresenceService {
+
+  userStatusMap = signal<Record<string, 'online' | 'offline'>>({});
 
   constructor(private auth: Auth, private db: Database) {
     this.initPresence();
+    this.listenToAllStatuses();
   }
 
   private initPresence() {
@@ -27,5 +30,11 @@ export class PresenceService implements OnDestroy {
     });
   }
 
-  ngOnDestroy() {}
+  private listenToAllStatuses() {
+    const statusRef = ref(this.db, 'status');
+
+    onValue(statusRef, snapshot => {
+      this.userStatusMap.set(snapshot.val() || {});
+    });
+  }
 }

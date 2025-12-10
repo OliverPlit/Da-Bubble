@@ -5,6 +5,7 @@ import { App } from './app/app';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 import { provideAuth, getAuth } from '@angular/fire/auth';
+import { provideDatabase, getDatabase } from '@angular/fire/database';
 
 import { provideRouter } from '@angular/router';
 import { routes } from './app/app.routes';
@@ -26,6 +27,7 @@ bootstrapApplication(App, {
 
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),
+    provideDatabase(() => getDatabase()),
 
     provideRouter(routes)
   ]
