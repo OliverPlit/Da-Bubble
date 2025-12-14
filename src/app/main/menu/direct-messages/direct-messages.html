@@ -1,15 +1,19 @@
-<div class="main-container" 
-     (click)="openChatYou()"
-     [class.active]="isYouSelected">
-  <img [src]="'/icons/avatars/' + userAvatar" alt="Avatar">
-<span class="status-dot" [ngClass]="presence.userStatusMap()[currentUserId] === 'online' ? 'online' : 'offline'">
-</span>  <p>{{userName}} (Du)</p>
+<div class="main-container" (click)="openChatYou()" [class.active]="isYouSelected">
+  <img [src]="'/icons/avatars/' + userAvatar" alt="Avatar" />
+  <span class="status-dot online"></span>
+  <p>{{ userName }} (Du)</p>
 </div>
 
-<div class="main-container" 
-     *ngFor="let dm of directMessage$ | async" 
-     (click)="openChatDirectMessage(dm)"
-     [class.active]="selectedDmId === dm.id">
-  <img [src]="'/icons/avatars/' + dm.avatar" alt="">
-  <p>{{dm.name}}</p>
+<div
+  class="main-container"
+  *ngFor="let dm of directMessage$ | async"
+  (click)="openChatDirectMessage(dm)"
+  [class.active]="selectedDmId === dm.id"
+>
+  <img [src]="'/icons/avatars/' + dm.avatar" alt="" />
+  <span
+    class="status-dot"
+    [ngClass]="presence.userStatusMap()[dm.id] === 'online' ? 'online' : 'offline'"
+  ></span>
+  <p>{{ dm.name }}</p>
 </div>

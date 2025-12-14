@@ -12,7 +12,6 @@ export class PresenceService {
   }
 
   private setupPresence() {
-    // effect läuft garantiert im Injection Context
     effect(() => {
       this.initPresence();
       this.listenToAllStatuses();
@@ -22,6 +21,10 @@ export class PresenceService {
   private initPresence() {
     this.auth.onAuthStateChanged(user => {
       if (!user) return;
+
+       if (!window.location.pathname.startsWith('/main/channels')) {
+      return;
+    }
 
       const statusRef = ref(this.db, `status/${user.uid}`);
 
@@ -34,8 +37,6 @@ export class PresenceService {
         state: 'offline',
         lastChanged: Date.now()
       });
-
-      console.log('🟢 Presence init für UID:', user.uid);
     });
   }
 
@@ -49,10 +50,6 @@ export class PresenceService {
       for (const uid in raw) {
         mapped[uid] = raw[uid]?.state === 'online' ? 'online' : 'offline';
       }
-
-      console.log('🟦 Presence RAW:', raw);
-      console.log('🟩 Presence MAPPED:', mapped);
-
       this.userStatusMap.set(mapped);
     });
   }
