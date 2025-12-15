@@ -6,9 +6,11 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatMenuTrigger } from '@angular/material/menu';
-import { Firestore, collection, query, where, getDocs, orderBy, limit, doc,getDoc } from '@angular/fire/firestore';
+import { Firestore, collection, query, where, getDocs, orderBy, limit, doc, getDoc } from '@angular/fire/firestore';
 import { ChangeDetectorRef } from '@angular/core';
 import { FirebaseService } from '../../services/firebase';
+import { ChannelStateService } from '../menu/channels/channel.service';
+import { DirectChatService } from '../../services/direct-chat-service';
 
 interface SearchResult {
   type: 'channel' | 'direct' | 'message';
@@ -18,13 +20,13 @@ interface SearchResult {
   avatar?: string;
   timestamp?: Date;
   content?: string;
+  channelData?: any;
+  dmData?: any; 
 }
-
-
 
 @Component({
   selector: 'app-header',
-  imports: [MatMenuModule, CommonModule,FormsModule],
+  imports: [MatMenuModule, CommonModule, FormsModule],
   templateUrl: './header.html',
   styleUrls: ['./header.scss', './header.responsive.scss'],
 })
@@ -33,18 +35,19 @@ export class Header {
   private router = inject(Router);
   private firestore = inject(Firestore);
   private cd = inject(ChangeDetectorRef);
+  private channelState = inject(ChannelStateService); // 🔥 NEU
+  private directChatService = inject(DirectChatService); // 🔥 NEU
+  
   isMobile = false;
   mobileMenuOpen = false;
   userName = '';
   userAvatar = '';
-   searchQuery = '';
+  searchQuery = '';
   searchResults: SearchResult[] = [];
   showSearchResults = false;
   isSearching = false;
 
-
-constructor(private firebase: FirebaseService) {}
-
+  constructor(private firebase: FirebaseService) {}
 
   openDialog() {
     const ref = this.dialog.open(Profile, {
@@ -60,9 +63,6 @@ constructor(private firebase: FirebaseService) {}
     });
   }
 
-
-  
-
   logout() {
     this.router.navigate(['']);
   }
@@ -70,8 +70,7 @@ constructor(private firebase: FirebaseService) {}
   async ngOnInit() {
     this.checkWidth();
     await this.loadUser();
-        this.updateName();
-
+    this.updateName();
   }
 
   async loadUser() {
@@ -90,20 +89,18 @@ constructor(private firebase: FirebaseService) {}
       this.userAvatar = data.avatar;
 
       this.cd.detectChanges();
-            this.firebase.setName(this.userName);
-
+      this.firebase.setName(this.userName);
     }
   }
 
-   updateName() {
-   this.firebase.currentName$.subscribe((name) => {
+  updateName() {
+    this.firebase.currentName$.subscribe((name) => {
       if (name) {
         this.userName = name;
         this.cd.detectChanges();
       }
     });
-  
-    }
+  }
 
   @HostListener('window:resize')
   checkWidth() {
@@ -116,17 +113,16 @@ constructor(private firebase: FirebaseService) {}
   openMenu() {
     if (this.isMobile) {
       this.mobileMenuOpen = true;
-    } else {
     }
   }
 
   closeMobileMenu() {
     this.mobileMenuOpen = false;
   }
-   async onSearchInput() {
+
+  async onSearchInput() {
     const query = this.searchQuery.trim();
 
-    // Leere Suche - Ergebnisse zurücksetzen
     if (!query) {
       this.searchResults = [];
       this.showSearchResults = false;
@@ -144,10 +140,6 @@ constructor(private firebase: FirebaseService) {}
       else if (query.startsWith('#')) {
         const searchTerm = query.substring(1).toLowerCase();
         this.searchResults = await this.searchChannels(searchTerm);
-      }
-      // Ohne Präfix = Alle Messages durchsuchen
-      else {
-        //this.searchResults = await this.searchAllMessages(query.toLowerCase());
       }
     } catch (error) {
       console.error('Fehler bei der Suche:', error);
@@ -179,6 +171,13 @@ constructor(private firebase: FirebaseService) {}
             id: doc.id,
             title: userData['name'] || 'Unbekannt',
             avatar: userData['avatar'] || 'avatar-1.png',
+            dmData: { 
+              id: doc.id,
+              name: userData['name'] || 'Unbekannt',
+              avatar: userData['avatar'] || 'avatar-1.png',
+              email: userData['email'] || '',
+              status: userData['status'] || 'offline'
+            }
           });
         }
       });
@@ -186,20 +185,19 @@ constructor(private firebase: FirebaseService) {}
       console.error('Fehler beim Durchsuchen der Direct Messages:', error);
     }
 
-    return results.slice(0, 5); 
+    return results.slice(0, 5);
   }
 
-  // Channels durchsuchen
   async searchChannels(searchTerm: string): Promise<SearchResult[]> {
-        const storedUser = localStorage.getItem('currentUser');
-  if (!storedUser) return []
+    const storedUser = localStorage.getItem('currentUser');
+    if (!storedUser) return [];
+    
     const uid = JSON.parse(storedUser).uid;
     const results: SearchResult[] = [];
 
     try {
-          const userRef = doc(this.firestore, 'users', uid);
-
-    const channelsRef = collection(userRef, 'memberships');
+      const userRef = doc(this.firestore, 'users', uid);
+      const channelsRef = collection(userRef, 'memberships');
       const channelsSnapshot = await getDocs(channelsRef);
 
       channelsSnapshot.forEach((doc) => {
@@ -213,7 +211,11 @@ constructor(private firebase: FirebaseService) {}
             id: doc.id,
             title: `# ${channelData['name']}`,
             subtitle: channelData['description'] || 'Keine Beschreibung',
-            content: `${channelData['members']?.length || 0} Mitglieder`
+            content: `${channelData['members']?.length || 0} Mitglieder`,
+            channelData: {
+              id: doc.id,
+              ...channelData
+            }
           });
         }
       });
@@ -224,113 +226,37 @@ constructor(private firebase: FirebaseService) {}
     return results.slice(0, 10);
   }
 
-  // Alle Messages durchsuchen (Channels + Direct Messages)
-/*   async searchAllMessages(searchTerm: string): Promise<SearchResult[]> {
-    const results: SearchResult[] = [];
-
-    try {
-      // 1. Channel-Messages durchsuchen
-      const channelsRef = collection(this.firestore, 'channels');
-      const channelsSnapshot = await getDocs(channelsRef);
-
-      for (const channelDoc of channelsSnapshot.docs) {
-    const channelsRef = collection(userRef, 'memberships', 'messages');
-        const messagesSnapshot = await getDocs(query(messagesRef, orderBy('timestamp', 'desc'), limit(50)));
-
-        messagesSnapshot.forEach((msgDoc) => {
-          const msgData = msgDoc.data();
-          const content = msgData['content']?.toLowerCase() || '';
-
-          if (content.includes(searchTerm)) {
-            results.push({
-              type: 'message',
-              id: msgDoc.id,
-              title: `# ${channelDoc.data()['name']}`,
-              subtitle: msgData['senderName'] || 'Unbekannt',
-              content: this.truncateText(msgData['content'], 60),
-              timestamp: msgData['timestamp']?.toDate()
-            });
-          }
-        });
-      }
-
-      // 2. Direct Messages durchsuchen
-      const storedUser = localStorage.getItem('currentUser');
-      if (storedUser) {
-        const currentUid = JSON.parse(storedUser).uid;
-        const dmRef = collection(this.firestore, 'directMessages');
-        const dmSnapshot = await getDocs(dmRef);
-
-        for (const dmDoc of dmSnapshot.docs) {
-          // Nur DMs wo der aktuelle User beteiligt ist
-          const participants = dmDoc.id.split('_');
-          if (!participants.includes(currentUid)) continue;
-
-          const messagesRef = collection(this.firestore, 'directMessages', dmDoc.id, 'messages');
-          const messagesSnapshot = await getDocs(query(messagesRef, orderBy('timestamp', 'desc'), limit(50)));
-
-          messagesSnapshot.forEach((msgDoc) => {
-            const msgData = msgDoc.data();
-            const content = msgData['content']?.toLowerCase() || '';
-
-            if (content.includes(searchTerm)) {
-              results.push({
-                type: 'message',
-                id: msgDoc.id,
-                title: `@ ${msgData['senderName'] || 'Direct Message'}`,
-                subtitle: 'Direct Message',
-                content: this.truncateText(msgData['content'], 60),
-                timestamp: msgData['timestamp']?.toDate()
-              });
-            }
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Fehler beim Durchsuchen aller Messages:', error);
-    }
-
-    // Nach Timestamp sortieren (neueste zuerst)
-    return results
-      .sort((a, b) => {
-        if (!a.timestamp || !b.timestamp) return 0;
-        return b.timestamp.getTime() - a.timestamp.getTime();
-      })
-      .slice(0, 20); // Maximal 20 Ergebnisse
-  } */
-
-  // Hilfsfunktion: Text kürzen
   private truncateText(text: string, maxLength: number): string {
     if (!text) return '';
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   }
 
-  // Suchergebnis auswählen
   selectSearchResult(result: SearchResult) {
     this.showSearchResults = false;
     this.searchQuery = '';
 
     switch (result.type) {
       case 'channel':
-        // Navigiere zu Channel
-        this.router.navigate(['/main/channel', result.id]);
+        if (result.channelData) {
+          this.channelState.selectChannel(result.channelData);
+          this.router.navigate(['/main/channels']);
+        }
         break;
 
       case 'direct':
-        // Navigiere zu Direct Message
-        this.router.navigate(['/main/direct', result.id]);
+        if (result.dmData) {
+          this.directChatService.openChat(result.dmData);
+          this.router.navigate(['/main/direct-message', result.dmData.name]);
+        }
         break;
 
       case 'message':
-        // Optional: Navigiere zur spezifischen Message
         console.log('Navigiere zu Message:', result);
         break;
     }
   }
 
-  // Suche schließen (z.B. bei Klick außerhalb)
   closeSearch() {
     this.showSearchResults = false;
   }
 }
-

@@ -1,17 +1,21 @@
-import { Component, Input, inject, OnChanges, SimpleChanges, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { EditChannel } from '../edit-channel/edit-channel';
 import { EditMembers } from '../edit-members/edit-members';
 import { AddMembers } from '../add-members/add-members';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { Firestore, doc, docData } from '@angular/fire/firestore';
 import { ChannelStateService } from '../../menu/channels/channel.service';
 import { Subscription } from 'rxjs';
 
-
-
-type Member = { id: string; name: string; avatar?: string; isYou?: boolean };
+type Member = { 
+  id: string; 
+  name: string; 
+  avatar?: string; 
+  isYou?: boolean;
+  uid?: string;
+};
 
 @Component({
   selector: 'app-channel-messages-header',
@@ -27,38 +31,67 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
   @Input() createdBy = '';
   selectedChannel: any = null;
 
-  constructor(private channelState: ChannelStateService) { }
   @Input() members: Member[] = [];
 
   private firestore = inject(Firestore);
-
-  private subscription: Subscription | null = null;
   private dialog = inject(MatDialog);
+  private channelState = inject(ChannelStateService);
 
+  private channelSubscription: Subscription | null = null;
+  private stateSubscription: Subscription | null = null;
+  private currentUserId: string = '';
 
   ngOnInit() {
-    this.subscription = this.channelState.selectedChannel$.subscribe(channel => {
+    // User ID laden
+    const storedUser = localStorage.getItem('currentUser');
+    this.currentUserId = storedUser ? JSON.parse(storedUser).uid : '';
+
+    // 🔥 LIVE-UPDATES: Channel-Daten direkt von Firestore abonnieren
+    this.listenToChannelUpdates();
+
+    // Channel-State auch abonnieren (für andere Updates)
+    this.stateSubscription = this.channelState.selectedChannel$.subscribe(channel => {
       if (channel && channel.id === this.channelId) {
-        this.channel = channel.name;
-
-        const storedUser = localStorage.getItem('currentUser');
-        const uid = storedUser ? JSON.parse(storedUser).uid : '';
-
-        this.members = (channel.members || []).map((m: any) => ({
-          id: m.uid,
-          name: m.name,
-          avatar: m.avatar,
-          isYou: m.uid === uid
-        }));
+        this.updateChannelData(channel);
       }
     });
+  }
 
+  private listenToChannelUpdates() {
+    if (!this.currentUserId || !this.channelId) return;
+
+    const membershipRef = doc(
+      this.firestore,
+      `users/${this.currentUserId}/memberships/${this.channelId}`
+    );
+
+    // 🔥 LIVE-SUBSCRIPTION: Automatische Updates bei Änderungen
+    this.channelSubscription = docData(membershipRef).subscribe((channelData: any) => {
+      if (channelData) {
+        this.updateChannelData({ ...channelData, id: this.channelId });
+      }
+    });
+  }
+
+  private updateChannelData(channel: any) {
+    this.channel = channel.name || this.channel;
+    this.description = channel.description || this.description;
+    this.createdBy = channel.createdBy || this.createdBy;
+
+    // Members mit korrekten IDs und isYou-Flag aktualisieren
+    this.members = (channel.members || []).map((m: any) => ({
+      id: m.uid || m.id,
+      uid: m.uid || m.id,
+      name: m.name,
+      avatar: m.avatar,
+      isYou: (m.uid || m.id) === this.currentUserId
+    }));
   }
 
   ngOnDestroy() {
-    this.subscription?.unsubscribe();
+    this.channelSubscription?.unsubscribe();
+    this.stateSubscription?.unsubscribe();
   }
-
 
   renderMembers(): Member[] {
     if (!this.members || this.members.length === 0) return [];
@@ -70,26 +103,16 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
         name: m.name || 'Unbekannt'
       }))
       .sort((a, b) => (a.isYou === b.isYou ? 0 : a.isYou ? -1 : 1));
-    debugger
   }
 
   get memberCount() {
     return this.members.length;
   }
 
-
   openEditChannel(trigger: HTMLElement) {
     const r = trigger.getBoundingClientRect();
     const gap = 16;
     const dlgW = 872;
-
-    console.log('=== DEBUG openEditChannel ===');
-    console.log('fullChannel:', this.fullChannel);
-    console.log('channelId:', this.channelId);
-    console.log('channel name:', this.channel);
-    console.log('members:', this.members);
-    console.log('des:', this.description);
-
 
     const channelData = {
       id: this.fullChannel?.id || this.channelId,
@@ -98,9 +121,6 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
       description: this.fullChannel?.description || this.description,
       createdBy: this.fullChannel?.createdBy || this.createdBy
     };
-
-    console.log('Übergebe an Dialog:', channelData);
-
 
     this.dialog.open(EditChannel, {
       width: dlgW + 'px',
@@ -113,11 +133,18 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
     });
   }
 
-
   openEditMembers(trigger: HTMLElement) {
     const r = trigger.getBoundingClientRect();
     const gap = 16;
     const dlgW = 415;
+
+    // Members mit uid-Feld für edit-members
+    const membersForDialog = this.members.map(m => ({
+      uid: m.uid || m.id,
+      name: m.name,
+      avatar: m.avatar,
+      isYou: m.isYou
+    }));
 
     this.dialog.open(EditMembers, {
       width: dlgW + 'px',
@@ -128,7 +155,8 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
       },
       data: {
         channelId: this.channelId,
-        members: this.members,
+        channelName: this.channel,
+        members: membersForDialog,
         channelState: this.channelState
       }
     });
@@ -138,6 +166,14 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
     const r = trigger.getBoundingClientRect();
     const gap = 16;
     const dlgW = 514;
+
+    // Members mit uid-Feld für add-members
+    const membersForDialog = this.members.map(m => ({
+      uid: m.uid || m.id,
+      name: m.name,
+      avatar: m.avatar,
+      isYou: m.isYou
+    }));
 
     this.dialog.open(AddMembers, {
       width: dlgW + 'px',
@@ -149,7 +185,7 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
       data: {
         channelId: this.channelId,
         channelName: this.channel,
-        members: this.members,
+        existingMembers: membersForDialog,
         channelState: this.channelState
       }
     });

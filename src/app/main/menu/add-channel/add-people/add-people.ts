@@ -28,11 +28,14 @@ export class AddPeople implements OnInit {
   filteredPeople: { uid: string, name: string, avatar: string, email: string }[] = [];
   hasFocus: boolean = false;
   activeIndex: number = -1;
+  currentUserId: string = '';
 
 
 
 
   ngOnInit() {
+        this.loadCurrentUserId();
+
     const dmRef = collection(this.firestore, 'directMessages');
 
     collectionData(dmRef, { idField: 'uid' })
@@ -51,6 +54,15 @@ export class AddPeople implements OnInit {
         this.filteredPeople = [];
       });
   }
+
+  private loadCurrentUserId() {
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      this.currentUserId = JSON.parse(storedUser).uid;
+    }
+  }
+
+
 
 
   onOptionChange(opt: 'option1' | 'option2') {
@@ -77,7 +89,8 @@ export class AddPeople implements OnInit {
 
     this.filteredPeople = this.allPeople
       .filter(u => u.name.toLowerCase().includes(value))
-      .filter(u => !this.selectedPeople.some(sp => sp.uid === u.uid));
+      .filter(u => !this.selectedPeople.some(sp => sp.uid === u.uid))
+      .filter(u => u.uid !== this.currentUserId); 
   }
 
   onInputKeydown(event: KeyboardEvent) {
@@ -136,10 +149,8 @@ export class AddPeople implements OnInit {
     const channelId = this.data.channelId;
 
     try {
-        // 1. UIDs basierend auf der Auswahl ermitteln
         const memberUids: string[] = await this.getMemberUids(currentUid);
 
-        // 2. Für jede UID die Channel-Mitgliedschaft erstellen/aktualisieren
         for (const memberUid of memberUids) {
             await this.handleUserChannelMembership(memberUid, channelId, memberUids);
         }
@@ -153,15 +164,12 @@ export class AddPeople implements OnInit {
 
 
 async getMemberUids(currentUid: string): Promise<string[]> {
-    let memberUids: string[] = [currentUid]; // Der aktuelle User ist immer dabei
+    let memberUids: string[] = [currentUid]; 
 
     if (this.selectedOption === 'option2') {
-        // Option 2: Ausgewählte Personen hinzufügen
         memberUids.push(...this.selectedPeople.map(p => p.uid));
     } else if (this.selectedOption === 'option1') {
-        // Option 1: Alle DirectMessages-User hinzufügen
         const dmRef = collection(this.firestore, 'directMessages');
-        // Holen aller UIDs aus der directMessages Collection
         const dmSnap = await firstValueFrom(collectionData(dmRef, { idField: 'uid' }));
         memberUids = dmSnap.map(u => u['uid'] as string);
     }

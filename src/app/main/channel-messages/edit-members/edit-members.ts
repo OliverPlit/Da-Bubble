@@ -65,25 +65,20 @@ export class EditMembers implements OnDestroy {
   ) {}
 
   async ngOnInit() {
-    // 1️⃣ Initialdaten setzen
     if (this.data?.channelName) this.channelName = this.data.channelName;
     if (this.data?.currentUserId) this.currentUserId = this.data.currentUserId;
 
     const initial = this.data?.members || [];
     this.membersSignal.set([...initial]);
 
-    // 2️⃣ Usernamen initial laden
     await this.initUserId();
 
-    // 3️⃣ Live-Updates für Members aus Firestore
     this.listenToMembershipChanges();
 
-    // 4️⃣ Live-Updates für eigenen Namen abonnieren
     this.nameSubscription = this.firebaseService.currentName$.subscribe(name => {
       if (!name) return;
       this.userName = name;
 
-      // Mitglieder aktualisieren, nur der aktuelle User bekommt neuen Namen
       this.membersSignal.update(members =>
         members.map(m =>
           m.uid === this.currentUserId ? { ...m, name: `${name} (Du)` } : m
@@ -107,7 +102,6 @@ export class EditMembers implements OnDestroy {
 
       const updatedMembers = channelData.members.map((m: Member) => {
         if (m.uid === this.currentUserId) {
-          // Immer aktuellen Namen aus FirebaseService nehmen
           const currentName = this.firebaseService.currentNameValue || 'Du';
           return { ...m, name: `${currentName} (Du)` };
         }
@@ -125,13 +119,12 @@ export class EditMembers implements OnDestroy {
     const userData = JSON.parse(storedUser);
     this.currentUserId = userData.uid;
 
-    // initialen Namen aus directMessages laden
     const userRef = doc(this.firestore, 'directMessages', this.currentUserId);
     const snap = await getDoc(userRef);
     if (snap.exists()) {
       const data: any = snap.data();
       this.userName = data.name;
-      this.firebaseService.setName(this.userName); // wichtig: BehaviorSubject updaten
+      this.firebaseService.setName(this.userName); 
       this.cd.detectChanges();
     }
   }

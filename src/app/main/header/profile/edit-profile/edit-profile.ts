@@ -1,7 +1,7 @@
 import { Component, inject, } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
+import { Firestore, doc, updateDoc, getDocs, collection, writeBatch } from '@angular/fire/firestore';
 import { ChangeDetectorRef } from '@angular/core';
 import { FirebaseService } from '../../../../services/firebase';
 
@@ -35,17 +35,14 @@ export class EditProfile {
     const uid = this.data.uid;
     
     try {
-      // 🔥 BEIDE Collections aktualisieren!
-      
-      // 1. Update in 'users' Collection
       const userRef = doc(this.firestore, 'users', uid);
       await updateDoc(userRef, { name: newName });
       
-      // 2. Update in 'directMessages' Collection 🔥 DAS WAR DAS FEHLENDE STÜCK!
       const dmRef = doc(this.firestore, 'directMessages', uid);
       await updateDoc(dmRef, { name: newName });
       
-      // 3. FirebaseService aktualisieren (für currentName$ Observable)
+      await this.updateNameInAllChannelMemberships(uid, newName);
+
       this.firebase.setName(newName);
       
       this.cd.detectChanges();
@@ -55,5 +52,47 @@ export class EditProfile {
       console.error('❌ Fehler beim Speichern des Namens:', error);
     }
   }
+
+ private async updateNameInAllChannelMemberships(uid: string, newName: string) {
+  try {
+    const usersCol = collection(this.firestore, 'users');
+    const usersSnapshot = await getDocs(usersCol);
+
+    for (const userDoc of usersSnapshot.docs) {
+      const membershipsCol = collection(
+        this.firestore,
+        `users/${userDoc.id}/memberships`
+      );
+      const membershipsSnapshot = await getDocs(membershipsCol);
+
+      for (const membershipDoc of membershipsSnapshot.docs) {
+        const membershipData = membershipDoc.data();
+        const members = membershipData['members'] || [];
+
+        const memberIndex = members.findIndex((m: any) => m.uid === uid);
+
+        if (memberIndex !== -1) {
+          const updatedMembers = [...members];
+          const isCurrentUser = userDoc.id === uid;
+
+          updatedMembers[memberIndex] = {
+            ...updatedMembers[memberIndex],
+            name: isCurrentUser ? `${newName} (Du)` : newName
+          };
+
+          const membershipRef = doc(
+            this.firestore,
+            `users/${userDoc.id}/memberships/${membershipDoc.id}`
+          );
+
+          await updateDoc(membershipRef, { members: updatedMembers });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Fehler beim Aktualisieren der Memberships:', error);
+  }
+}
+
 }
 

@@ -58,7 +58,6 @@ export class AddMembers {
   async ngOnInit() {
     await this.initUserId();
 
-    // 🔥 Live-Updates für eigenen Namen abonnieren
     this.firebaseService.currentName$.subscribe((name) => {
       if (!name) return;
       this.userName = name;
@@ -67,12 +66,10 @@ export class AddMembers {
       if (!storedUser) return;
       const currentUid = JSON.parse(storedUser).uid;
 
-      // existingMembers aktualisieren
       this.existingMembers.update(members =>
         members.map(m => m.uid === currentUid ? { ...m, name: `${name} (Du)` } : m)
       );
 
-      // selected Members aktualisieren
       this.selected.update(members =>
         members.map(m => m.uid === currentUid ? { ...m, name: `${name} (Du)` } : m)
       );
@@ -80,14 +77,17 @@ export class AddMembers {
       this.cd.detectChanges();
     });
 
-    // 1️⃣ Daten übernehmen
     const data = this.data as DialogData;
     this.channelId = data.channelId || '';
     this.channelName = data.channelName || '';
     this.fullChannel = data.fullChannel;
-    if (data.existingMembers) this.existingMembers.set(data.existingMembers);
+    
+    if (data.existingMembers) {
+      this.existingMembers.set(data.existingMembers);
+    } else if (data.members) {
+      this.existingMembers.set(data.members);
+    }
 
-    // 2️⃣ Alle User laden
     const dmRef = collection(this.firestore, 'directMessages');
     collectionData(dmRef, { idField: 'uid' })
       .pipe(
@@ -162,6 +162,7 @@ export class AddMembers {
   }
 
   selectUser(u: Member) {
+    // Doppelte Checks zur Sicherheit
     if (this.selected().find(x => x.uid === u.uid)) return;
     if (this.existingMembers().find(x => x.uid === u.uid)) return;
 
@@ -185,13 +186,23 @@ export class AddMembers {
     const channelId = this.channelId;
 
     try {
-      let memberUids: string[] = [currentUid, ...this.selected().map(u => u.uid)];
-      memberUids = Array.from(new Set(memberUids));
+      // Alle UIDs sammeln (bestehende + neue)
+      const newMemberUids = this.selected().map(u => u.uid);
+      const existingMemberUids = this.existingMembers().map(u => u.uid);
+      
+      let allMemberUids = Array.from(new Set([
+        ...existingMemberUids,
+        ...newMemberUids
+      ]));
 
-      for (const userUid of memberUids) {
-        await this.handleUserChannelMembership(userUid, channelId, memberUids);
+      console.log('🔥 Updating members for all users:', allMemberUids);
+
+      // FÜR JEDEN MEMBER (auch die bestehenden!) das Membership aktualisieren
+      for (const userUid of allMemberUids) {
+        await this.handleUserChannelMembership(userUid, channelId, allMemberUids);
       }
 
+      // Channel-State aktualisieren (für Live-Updates)
       const membershipRef = doc(this.firestore, `users/${currentUid}/memberships/${channelId}`);
       const snap = await getDoc(membershipRef);
       if (snap.exists()) {
@@ -250,27 +261,15 @@ export class AddMembers {
 
   async setChannelMembership(userUid: string, channelId: string, channelData: any, allMembers: Member[]) {
     const ref = doc(this.firestore, `users/${userUid}/memberships/${channelId}`);
-    const snap = await getDoc(ref);
-
-    let existingMembers: Member[] = [];
-    if (snap.exists()) {
-      const data = snap.data();
-      existingMembers = Array.isArray(data['members']) ? data['members'] : [];
-    }
-
-    const mergedMembers = [
-      ...existingMembers,
-      ...allMembers.filter(newUser => !existingMembers.some(old => old.uid === newUser.uid))
-    ];
-
+    
     await setDoc(ref, {
       channelId,
       name: channelData['name'] || 'Neuer Channel',
       description: channelData['description'] || '',
-      joinedAt: snap.exists() ? snap.data()['joinedAt'] : new Date(),
+      joinedAt: channelData['joinedAt'] || new Date(),
       createdBy: channelData['createdBy'] || 'Unbekannt',
-      members: mergedMembers
-    });
+      members: allMembers
+    }, { merge: false });
   }
 
   close() {
