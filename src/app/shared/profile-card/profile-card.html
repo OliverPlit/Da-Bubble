@@ -1,32 +1,41 @@
 <div class="profile-main">
-    <div class="profile-header">
-        <h2>Profil</h2>
-        <span class="icon-box" (click)="close()">
-            <img class="default" src="icons/close.png" alt="">
-            <img class="hover" src="icons/close_purple.png" alt="">
-        </span>
-    </div>
-    <div class="profile-img-div">
-<img [src]="'/icons/avatars/' + data.avatar" alt="" class="avatar">
-    </div>
-    <div class="profile-name">
-        <h2>{{ data.name }}</h2>
-    </div>
-    <div class="status-div">
-        <img src="/icons/Online.png" alt="">
-        <p class="status">Status</p>
+  <div class="profile-header">
+    <h2>Profil</h2>
+    <span class="icon-box" (click)="close()">
+      <img class="default" src="icons/close.png" alt="" />
+      <img class="hover" src="icons/close_purple.png" alt="" />
+    </span>
+  </div>
+  <div class="profile-img-div">
+    <img [src]="'/icons/avatars/' + data.avatar" alt="" class="avatar" />
+  </div>
+  <div class="profile-name">
+    <h2>{{ data.name }}</h2>
+  </div>
+  <div class="status-div">
+    <span
+      class="status-dot"
+      [class.online]="presence.userStatusMap()[data.id] === 'online'"
+      [class.offline]="presence.userStatusMap()[data.id] !== 'online'"
+    ></span>
+    <p
+      class="status"
+      [class.online-text]="presence.userStatusMap()[data.id] === 'online'"
+      [class.offline-text]="presence.userStatusMap()[data.id] !== 'online'"
+    >
+      Status
+    </p>
+  </div>
+  <div class="email-div">
+    <img src="/icons/mail.png" alt="" />
+    <p>E-Mail-Adresse</p>
+  </div>
+  <p class="email-name">{{ data.email }}</p>
 
-    </div>
-    <div class="email-div">
-        <img src="/icons/mail.png" alt="">
-        <p>E-Mail-Adresse</p>
-    </div>
-    <p class="email-name">{{ data.email }}</p>
-
-    <footer class="footer">
-        <button class="button" (click)="openChatDirectMessage(data)">
-            <img src="/icons/mode_comment.png" alt="">
-            <span>Nachricht</span>
-        </button>
-    </footer>
+  <footer class="footer">
+    <button class="button" (click)="openChatDirectMessage(data)">
+      <img src="/icons/mode_comment.png" alt="" />
+      <span>Nachricht</span>
+    </button>
+  </footer>
 </div>

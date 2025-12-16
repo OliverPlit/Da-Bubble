@@ -163,3 +163,20 @@ footer {
     }
   }
 }
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 36px;
+  margin-left: -24px;
+}
+
+.online {
+  background: #2ecc71;
+  box-shadow: 0 0 8px #2ecc71;
+}
+
+.offline {
+  background: #e74c3c;
+}

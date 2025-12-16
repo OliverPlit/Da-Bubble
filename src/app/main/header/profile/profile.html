@@ -1,24 +1,25 @@
 <div class="profile-main">
-    <div class="profile-header">
-        <h2>Profil</h2>
-        <img src="/icons/close-channel.png" alt="" (click)="close()">
-    </div>
-    <div class="profile-img-div">
-        <img [src]="'/icons/avatars/' + userAvatar" alt="">
-    </div>
-    <div class="profile-name" ng>
-        <h2>{{userName}}</h2>
-        <p (click)="openDialog()" *ngIf="!mobileEdit">Bearbeiten</p>
-        <img src="/icons/edit-mobile.png" alt="" *ngIf="mobileEdit" (click)="openDialog()">
-    </div>
-    <div class="status-div">
-        <img src="/icons/Online.png" alt="">
-        <p class="status">Status</p>
-
-    </div>
-    <div class="email-div">
-        <img src="/icons/mail.png" alt="">
-        <p>E-Mail-Adresse</p>
-    </div>
-    <p class="email-name">{{userEmail}}</p>
+  <div class="profile-header">
+    <h2>Profil</h2>
+    <img src="/icons/close-channel.png" alt="" (click)="close()" />
+  </div>
+  <div class="profile-img-div">
+    <img [src]="'/icons/avatars/' + userAvatar" alt="" />
+  </div>
+  <div class="profile-name" ng>
+    <h2>{{ userName }}</h2>
+    <p (click)="openDialog()" *ngIf="!mobileEdit">Bearbeiten</p>
+    <img src="/icons/edit-mobile.png" alt="" *ngIf="mobileEdit" (click)="openDialog()" />
+  </div>
+  <div class="status-div">
+    <span
+      class="status-dot online"
+    ></span>
+    <p class="status online-text">Status</p>
+  </div>
+  <div class="email-div">
+    <img src="/icons/mail.png" alt="" />
+    <p>E-Mail-Adresse</p>
+  </div>
+  <p class="email-name">{{ userEmail }}</p>
 </div>

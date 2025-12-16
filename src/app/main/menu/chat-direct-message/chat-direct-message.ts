@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { directMessageContact } from '../direct-messages/direct-messages.model';
 import { ProfileCard } from '../../../shared/profile-card/profile-card';
 import { DirectChatService } from '../../../services/direct-chat-service';
-
+import { PresenceService } from '../../../services/presence.service';
 
 @Component({
   selector: 'app-chat-direct-message',
@@ -18,43 +18,45 @@ import { DirectChatService } from '../../../services/direct-chat-service';
 export class ChatDirectMessage {
   @Input() chatUser: directMessageContact | null = null;
   @Output() close = new EventEmitter<void>();
-  private dialog = inject(MatDialog)
-constructor(private directChatService: DirectChatService) {}
+  private dialog = inject(MatDialog);
+  public presence = inject(PresenceService);
+  constructor(private directChatService: DirectChatService) {}
 
-ngOnInit() {
-  this.directChatService.chatUser$.subscribe(user => {
-    if (user) {
-      this.chatUser = user;
-    }
-  });
-}
+  ngOnInit() {
+    this.directChatService.chatUser$.subscribe((user) => {
+      if (user) {
+        this.chatUser = user; 
+      }
+    });
+  }
 
   closeMessage() {
     this.close.emit();
   }
 
-
   openAddEmojis() {
     this.dialog.open(AddEmojis, {
-      panelClass: 'add-emojis-dialog-panel'
+      panelClass: 'add-emojis-dialog-panel',
     });
   }
 
   openAtMembers() {
     this.dialog.open(AtMembers, {
-      panelClass: 'at-members-dialog-panel'
+      panelClass: 'at-members-dialog-panel',
     });
   }
 
-  sendMessage() {
+  sendMessage() {}
 
+  openProfile(member: directMessageContact) {
+    this.dialog.open(ProfileCard, {
+      data: member,
+      panelClass: 'profile-dialog-panel',
+    });
   }
 
-openProfile(member: directMessageContact) {
-  this.dialog.open(ProfileCard, {
-    data: member,
-    panelClass: 'profile-dialog-panel'
-  });
- 
-}
+  getStatus(uid: string): 'online' | 'offline' {
+    const map = this.presence.userStatusMap();
+    return map[uid] ?? 'offline';
+  }
 }

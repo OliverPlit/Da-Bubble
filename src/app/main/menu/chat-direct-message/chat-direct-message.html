@@ -1,11 +1,19 @@
 <div class="main-container" *ngIf="chatUser as user">
     <div class="header">
         <img [src]="'/icons/avatars/' + chatUser.avatar" alt="" class="avatar">
+        <span
+        class="status-dot"
+        [ngClass]="presence.userStatusMap()[chatUser.id] === 'online' ? 'online' : 'offline'"
+      ></span>
         <h2>{{user.name}}</h2>
     </div>
     <div class="second-container">
         <div>
             <img [src]="'/icons/avatars/' + chatUser.avatar" alt="" class="avatar">
+            <span
+        class="status-dot"
+        [ngClass]="presence.userStatusMap()[chatUser.id] === 'online' ? 'online' : 'offline'"
+      ></span>
             <h2>{{user.name}}</h2>
         </div>
         <p>Diese Unterhaltung findet nur zwischen <span (click)="openProfile(user)" class="name-color">@{{user.name}}</span> und dir statt.</p>

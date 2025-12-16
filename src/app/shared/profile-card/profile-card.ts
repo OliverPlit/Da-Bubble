@@ -3,7 +3,8 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dial
 import { directMessageContact } from '../../main/menu/direct-messages/direct-messages.model';
 import { DirectChatService } from '../../services/direct-chat-service';
 import { Router } from '@angular/router';
-
+import { PresenceService } from '../../services/presence.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-profile-card',
@@ -16,8 +17,8 @@ export class ProfileCard {
   dialogRef = inject(MatDialogRef<ProfileCard>);
   private dialog = inject(MatDialog);
   private directChatService = inject(DirectChatService);
-    private router = inject(Router);
-
+  private router = inject(Router);
+  public presence = inject(PresenceService);
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: directMessageContact) {}
 
@@ -29,22 +30,26 @@ export class ProfileCard {
     this.dialog.closeAll();
   }
 
-openChatDirectMessage(dm: directMessageContact) {
+  openChatDirectMessage(dm: directMessageContact) {
     console.log('Starte Chat mit:', dm);
-    
+
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       const currentUserId = JSON.parse(storedUser).uid;
-      
       if (dm.id === currentUserId) {
         this.router.navigate(['/main/direct-you']);
         this.closeAllDialogs();
         return;
       }
     }
-    
+
     this.directChatService.openChat(dm);
     this.router.navigate(['/main/direct-message', dm.name]);
     this.closeAllDialogs();
+  }
+
+  getStatus(uid: string): 'online' | 'offline' {
+    const map = this.presence.userStatusMap();
+    return map[uid] ?? 'offline';
   }
 }

@@ -1,42 +1,46 @@
 <div class="main-container">
-    <div class="header">
-        <img [src]="'/icons/avatars/' + userAvatar" alt="" class="avatar">
-        <h2>{{userName}} (Du)</h2>
+  <div class="header">
+    <img [src]="'/icons/avatars/' + userAvatar" alt="" class="avatar" />
+    <span class="status-dot online"></span>
+    <h2>{{ userName }} (Du)</h2>
+  </div>
+  <div class="second-container">
+    <div>
+      <img [src]="'/icons/avatars/' + userAvatar" class="avatar" />
+       <span class="status-dot online"></span>
+      <h2 (click)="openProfileHeader()">{{ userName }} (Du)</h2>
     </div>
-    <div class="second-container">
+    <p>Dieser Raum ist nur für dich da.</p>
+    <span>
+      Mache dir Notizen, liste deine To-dos auf oder bewahre Links und Dateien griffbereit auf. Du
+      kannst hier auch gerne Dinge mit dir selbst besprechen</span
+    >
+  </div>
+  <footer class="composer">
+    <div class="composer-input">
+      <textarea></textarea>
+
+      <div class="composer-actions">
+        <div class="d-flex">
+          <span class="icon-box" (click)="openAddEmojis()">
+            <img class="default" src="icons/emoji_grey.png" alt="" />
+            <img class="hover1" src="icons/emoji_black.png" alt="" />
+            <img class="hover2" src="icons/emoji_purple.png" alt="" />
+          </span>
+          <span class="icon-box" (click)="openAtMembers()">
+            <img class="default" src="icons/at_grey.png" alt="" />
+            <img class="hover1" src="icons/at_black.png" alt="" />
+            <img class="hover2" src="icons/at_purple.png" alt="" />
+          </span>
+        </div>
+
         <div>
-            <img [src]="'/icons/avatars/' + userAvatar" class="avatar">
-            <h2 (click)="openProfileHeader()">{{userName}} (Du)</h2>
+          <span class="icon-box" (click)="sendMessage()">
+            <img class="default" src="icons/Send icon.png" alt="" />
+            <img class="hover1" src="icons/Send icon_light.png" alt="" />
+          </span>
         </div>
-        <p>Dieser Raum ist nur für dich da.</p> <span> Mache dir Notizen, liste deine To-dos auf oder bewahre Links und
-            Dateien griffbereit auf. Du kannst hier
-            auch gerne Dinge mit dir selbst besprechen</span>
+      </div>
     </div>
-    <footer class="composer">
-        <div class="composer-input">
-            <textarea></textarea>
-
-            <div class="composer-actions">
-                <div class="d-flex">
-                    <span class="icon-box" (click)="openAddEmojis()">
-                        <img class="default" src="icons/emoji_grey.png" alt="">
-                        <img class="hover1" src="icons/emoji_black.png" alt="">
-                        <img class="hover2" src="icons/emoji_purple.png" alt="">
-                    </span>
-                    <span class="icon-box" (click)="openAtMembers()">
-                        <img class="default" src="icons/at_grey.png" alt="">
-                        <img class="hover1" src="icons/at_black.png" alt="">
-                        <img class="hover2" src="icons/at_purple.png" alt="">
-                    </span>
-                </div>
-
-                <div>
-                    <span class="icon-box" (click)="sendMessage()">
-                        <img class="default" src="icons/Send icon.png" alt="">
-                        <img class="hover1" src="icons/Send icon_light.png" alt="">
-                    </span>
-                </div>
-            </div>
-        </div>
-    </footer>
+  </footer>
 </div>

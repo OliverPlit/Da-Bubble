@@ -48,14 +48,12 @@ export class PresenceService {
             state: 'online',
             lastChanged: Date.now(),
           });
-          console.log('🟢 ONLINE:', event.urlAfterRedirects);
         } else {
           // 🔴 OFFLINE
           set(this.statusRef, {
             state: 'offline',
             lastChanged: Date.now(),
           });
-          console.log('🔴 OFFLINE:', event.urlAfterRedirects);
         }
       });
   }

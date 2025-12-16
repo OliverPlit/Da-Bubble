@@ -106,16 +106,38 @@ $hoverBtn: #797EF3;
 
 .status-div {
     display: flex;
-    justify-content: row;
     align-items: center;
     gap: 10px;
-    color: #92C83E;
     margin-top: -25px;
 
     >p {
         font-size: 20px;
     }
 }
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.online {
+  background: #2ecc71;
+  box-shadow: 0 0 8px #2ecc71;
+}
+
+.online-text {
+    color: #2ecc71;
+}
+
+.offline-text {
+    color: #e74c3c;
+}
+
+.offline {
+  background: #e74c3c;
+}
+
 
 .email-div {
     display: flex;

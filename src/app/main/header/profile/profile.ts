@@ -6,42 +6,44 @@ import { FirebaseService } from '../../../services/firebase';
 import { CommonModule } from '@angular/common';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { ChangeDetectorRef } from '@angular/core';
-
-
-
+import { PresenceService } from '../../../services/presence.service';
 
 @Component({
   selector: 'app-profile',
   imports: [CommonModule],
   templateUrl: './profile.html',
-  styleUrls: ['./profile.scss', './profile.responsive.scss']
+  styleUrls: ['./profile.scss', './profile.responsive.scss'],
 })
 export class Profile {
   dialogRef = inject(MatDialogRef<Profile>);
   private dialog = inject(MatDialog);
   private firestore = inject(Firestore);
   private cd = inject(ChangeDetectorRef);
+  public presence = inject(PresenceService);
 
   mobileEdit = false;
   userName: string = '';
   userEmail: string = '';
   userAvatar = '';
+  userUid = '';
 
-
-  constructor(private firebaseService: FirebaseService) { }
-
+  constructor(private firebaseService: FirebaseService) {}
 
   ngOnInit() {
     this.checkWidth();
     this.loadUserData();
-     this.firebaseService.currentName$.subscribe((name) => {
-    if (name) {
-      this.userName = name;
-      this.cd.detectChanges();
-    }
-  });
+    this.firebaseService.currentName$.subscribe((name) => {
+      if (name) {
+        this.userName = name;
+        this.cd.detectChanges();
+      }
+    });
   }
 
+  getStatus(uid: string): 'online' | 'offline' {
+    const map = this.presence.userStatusMap();
+    return map[uid] ?? 'offline';
+  }
 
   async loadUserData() {
     const storedUser = localStorage.getItem('currentUser');
@@ -49,6 +51,7 @@ export class Profile {
 
     const uid = JSON.parse(storedUser).uid;
     if (!uid) return;
+    this.userUid = uid;
 
     const userRef = doc(this.firestore, 'users', uid);
     const snap = await getDoc(userRef);
@@ -61,9 +64,7 @@ export class Profile {
       this.firebaseService.setName(this.userName);
 
       this.cd.detectChanges();
-
     }
-
   }
 
   openDialog() {
@@ -72,16 +73,14 @@ export class Profile {
       position: { top: '120px', right: '20px' },
       data: {
         name: this.userName,
-        uid: JSON.parse(localStorage.getItem('currentUser') || '{}').uid
-      }
+        uid: JSON.parse(localStorage.getItem('currentUser') || '{}').uid,
+      },
     });
-
   }
   @HostListener('window:resize')
   checkWidth() {
     this.mobileEdit = window.innerWidth <= 550;
   }
-
 
   close() {
     this.dialogRef.close();
