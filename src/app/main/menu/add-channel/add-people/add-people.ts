@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Observable, map, firstValueFrom } from 'rxjs';
 import { setDoc, Firestore, doc, updateDoc, arrayUnion, collection, collectionData, getDoc } from '@angular/fire/firestore';
+import { writeBatch } from '@angular/fire/firestore';
 
 
 
@@ -141,25 +142,75 @@ export class AddPeople implements OnInit {
   }
 
 
- async addMember() {
-    const storedUser = localStorage.getItem('currentUser');
-    if (!storedUser) return;
+async addMember() {
+  const storedUser = localStorage.getItem('currentUser');
+  if (!storedUser) return;
+  const currentUid = JSON.parse(storedUser).uid;
+  const channelId = this.data.channelId;
 
-    const currentUid = JSON.parse(storedUser).uid;
-    const channelId = this.data.channelId;
+  try {
+    const memberUids: string[] = await this.getMemberUids(currentUid);
+    const channelData = await this.fetchChannelData(currentUid, channelId);
+    
+    // ✅ Alle User-Daten EINMAL abrufen (ohne "(Du)")
+    const baseMembers = await this.fetchBaseMemberDetails(memberUids);
+    
+    const batch = writeBatch(this.firestore);
 
-    try {
-        const memberUids: string[] = await this.getMemberUids(currentUid);
+    // ✅ Für jeden User eine individuelle Member-Liste erstellen
+    memberUids.forEach(memberUid => {
+      const membershipRef = doc(
+        this.firestore, 
+        `users/${memberUid}/memberships/${channelId}`
+      );
+      
+      // Individuelle Members für diesen User
+      const individualMembers = baseMembers.map(m => ({
+        ...m,
+        name: m.uid === memberUid ? `${m.name} (Du)` : m.name,
+        isYou: m.uid === memberUid
+      }));
+      
+      batch.set(membershipRef, {
+        channelId,
+        name: channelData['name'] || 'Neuer Channel',
+        description: channelData['description'] || '',
+        joinedAt: new Date(),
+        createdBy: channelData['createdBy'] || 'Unbekannt',
+        members: individualMembers,
+      });
+    });
 
-        for (const memberUid of memberUids) {
-            await this.handleUserChannelMembership(memberUid, channelId, memberUids);
-        }
-        await this.updateChannelState(currentUid, channelId, memberUids);
+    await batch.commit();
+    await this.updateChannelState(currentUid, channelId, memberUids);
+    this.closeDialog();
+  } catch (error) {
+    console.error('Fehler beim Hinzufügen von Mitgliedern:', error);
+  }
+}
 
-        this.closeDialog();
-    } catch (error) {
-        console.error('Fehler beim Hinzufügen von Mitgliedern:', error);
+// Neue Hilfsmethode: Holt Member-Daten OHNE "(Du)"
+async fetchBaseMemberDetails(allMemberUids: string[]): Promise<any[]> {
+  const memberPromises = allMemberUids.map(async (uid) => {
+    const dmUserRef = doc(this.firestore, 'directMessages', uid);
+    const dmUserSnap = await getDoc(dmUserRef);
+    
+    if (dmUserSnap.exists()) {
+      const userData = dmUserSnap.data();
+      return {
+        uid: uid,
+        name: userData['name'], // ✅ Ohne "(Du)"
+        avatar: userData['avatar'] || 'avatar-0.png',
+        email: userData['email'] || '',
+        status: 'online',
+        isYou: false
+      };
     }
+    return null;
+  });
+
+  const results = await Promise.all(memberPromises);
+  return results.filter(member => member !== null);
 }
 
 
@@ -182,14 +233,9 @@ async handleUserChannelMembership(userUid: string, channelId: string, allMemberU
     try {
         const storedUser = localStorage.getItem('currentUser');
         const currentUid = storedUser ? JSON.parse(storedUser).uid : '';
-
-        // 1. Channel-Informationen vom Ersteller holen
         const channelData = await this.fetchChannelData(currentUid, channelId);
-
-        // 2. Alle Member-Daten (Name, Avatar etc.) holen
         const allMembers = await this.fetchMemberDetails(currentUid, allMemberUids);
 
-        // 3. Channel-Membership für diesen User erstellen/aktualisieren
         await this.setChannelMembership(userUid, channelId, channelData, allMembers);
 
     } catch (error) {
@@ -210,24 +256,27 @@ async fetchChannelData(currentUid: string, channelId: string): Promise<any> {
 
 
 async fetchMemberDetails(currentUid: string, allMemberUids: string[]): Promise<any[]> {
-    const allMembers = [];
-    for (const uid of allMemberUids) {
-        const dmUserRef = doc(this.firestore, 'directMessages', uid);
-        const dmUserSnap = await getDoc(dmUserRef);
-
-        if (dmUserSnap.exists()) {
-            const userData = dmUserSnap.data();
-            allMembers.push({
-                uid: uid,
-                name: uid === currentUid ? `${userData['name']} (Du)` : userData['name'],
-                avatar: userData['avatar'] || 'avatar-0.png',
-                email: userData['email'] || '',
-                status: 'online',
-                isYou: uid === currentUid
-            });
-        }
+  // Alle User-Daten PARALLEL abrufen statt sequentiell
+  const memberPromises = allMemberUids.map(async (uid) => {
+    const dmUserRef = doc(this.firestore, 'directMessages', uid);
+    const dmUserSnap = await getDoc(dmUserRef);
+    
+    if (dmUserSnap.exists()) {
+      const userData = dmUserSnap.data();
+      return {
+        uid: uid,
+        name: uid === currentUid ? `${userData['name']} (Du)` : userData['name'],
+        avatar: userData['avatar'] || 'avatar-0.png',
+        email: userData['email'] || '',
+        status: 'online',
+        isYou: uid === currentUid
+      };
     }
-    return allMembers;
+    return null;
+  });
+
+  const results = await Promise.all(memberPromises);
+  return results.filter(member => member !== null);
 }
 
 async setChannelMembership(userUid: string, channelId: string, channelData: any, allMembers: any[]) {
@@ -250,7 +299,6 @@ async setChannelMembership(userUid: string, channelId: string, channelData: any,
 async updateChannelState(currentUid: string, channelId: string, memberUids: string[]) {
     if (!this.data.channelState) return;
 
-    // Aktuelle Channel-Daten neu laden
     const membershipRef = doc(this.firestore, `users/${currentUid}/memberships/${channelId}`);
     const membershipSnap = await getDoc(membershipRef);
     
@@ -260,7 +308,6 @@ async updateChannelState(currentUid: string, channelId: string, memberUids: stri
             ...membershipSnap.data()
         };
         
-        // Channel-State Service aktualisieren
         this.data.channelState.updateSelectedChannel(updatedChannelData);
     }
 }

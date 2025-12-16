@@ -197,12 +197,10 @@ export class AddMembers {
 
       console.log('🔥 Updating members for all users:', allMemberUids);
 
-      // FÜR JEDEN MEMBER (auch die bestehenden!) das Membership aktualisieren
       for (const userUid of allMemberUids) {
         await this.handleUserChannelMembership(userUid, channelId, allMemberUids);
       }
 
-      // Channel-State aktualisieren (für Live-Updates)
       const membershipRef = doc(this.firestore, `users/${currentUid}/memberships/${channelId}`);
       const snap = await getDoc(membershipRef);
       if (snap.exists()) {
