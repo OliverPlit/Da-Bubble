@@ -10,6 +10,8 @@
 
             <div class="avatar" [class.you]="m.isYou" [style.background-image]="'url(' + (m.avatar | avatarUrl) + ')'">
                 <span *ngIf="!m.avatar"></span>
+
+                <span class="status-dot" [ngClass]="presence.userStatusMap()[uid] === 'online' ? 'online' : 'offline'"></span>
             </div>
 
             <div class="message-body" [class.you]="m.isYou">
