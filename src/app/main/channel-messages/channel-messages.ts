@@ -5,6 +5,7 @@ import { ThreadChannelMessages } from './thread-channel-messages/thread-channel-
 import { NewMessage } from '../menu/new-message/new-message';
 import { CommonModule } from '@angular/common';
 import { ChannelStateService } from '../../main/menu/channels/channel.service';
+import { CurrentUserService } from '../../services/current-user.service';
 
 @Component({
   selector: 'app-channel-messages',
@@ -13,6 +14,7 @@ import { ChannelStateService } from '../../main/menu/channels/channel.service';
   styleUrl: './channel-messages.scss',
 })
 export class ChannelMessages implements OnInit, OnDestroy {
+  currentUid = '';
   channelName = '';
   channelId = '';
   description = '';
@@ -22,8 +24,14 @@ export class ChannelMessages implements OnInit, OnDestroy {
 
   @Input() showNewMessages = false;
   private subscription?: Subscription;
-  constructor(private channelState: ChannelStateService) { }
-  ngOnInit() {
+  constructor(
+    private channelState: ChannelStateService,
+    private session: CurrentUserService
+  ) { }
+  async ngOnInit() {
+    await this.session.hydrateFromLocalStorage();
+    const u = this.session.getCurrentUser();
+    this.currentUid = u?.uid ?? '';
 
     this.subscription = this.channelState.selectedChannel$.subscribe(channel => {
       if (channel) {

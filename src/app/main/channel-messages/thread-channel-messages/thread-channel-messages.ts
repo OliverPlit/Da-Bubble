@@ -1,10 +1,20 @@
-import { Component, ElementRef, HostListener, inject, AfterViewInit, ViewChild } from '@angular/core';
+import {
+  Component, ElementRef, HostListener, inject, AfterViewInit,
+  ViewChild, Input, OnInit, OnDestroy,
+  input
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../add-emojis/add-emojis';
 import { AtMembers } from '../at-members/at-members';
 import { EmojiService, EmojiId } from '../../../services/emoji.service';
+import { MessagesStoreService, MessageDoc, ReactionUserDoc } from '../../../services/messages-store.service';
+import { Unsubscribe } from '@angular/fire/firestore';
+import { CurrentUserService, CurrentUser, AvatarUrlPipe } from '../../../services/current-user.service';
+import { Subscription } from 'rxjs';
+import { ChannelStateService } from '../../menu/channels/channel.service';
+import { OnChanges, SimpleChanges } from '@angular/core';
 
 type Message = {
   messageId: string;
@@ -41,14 +51,21 @@ type ReactionPanelState = {
   messageId: string;
 };
 
+function isEmojiId(x: unknown): x is EmojiId {
+  return x === 'rocket' || x === 'check' || x === 'nerd' || x === 'thumbs_up';
+}
+
 @Component({
   selector: 'app-thread-channel-messages',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AvatarUrlPipe],
   templateUrl: './thread-channel-messages.html',
   styleUrl: './thread-channel-messages.scss',
 })
-export class ThreadChannelMessages implements AfterViewInit {
+export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('messagesEl') messagesEl!: ElementRef<HTMLDivElement>;
+  @Input() uid!: string;
+  @Input() channelId!: string;
+  @Input() channelName = '';
 
   private dialog = inject(MatDialog);
   private hideTimer: any = null;
@@ -56,9 +73,17 @@ export class ThreadChannelMessages implements AfterViewInit {
   private host = inject(ElementRef<HTMLElement>);
   private emojiSvc = inject(EmojiService);
 
-  channelName = 'Entwicklerteam';
-  userId = 'u_oliver';
-  username = 'Oliver Plit';
+  private messageStoreSvc = inject(MessagesStoreService);
+  private unsub: Unsubscribe | null = null;
+  private stateSub: Subscription | null = null;
+
+  private session = inject(CurrentUserService);
+  private channelState = inject(ChannelStateService);
+
+  // channelName = 'Entwicklerteam';
+  // uid = '';
+  name = '';
+  avatar = '';
 
   draft = '';
   editForId: string | null = null;
@@ -75,11 +100,160 @@ export class ThreadChannelMessages implements AfterViewInit {
 
   messagesView: Message[] = [];
 
+  async ngOnInit() {
+    await this.session.hydrateFromLocalStorage();
+    const u = this.session.getCurrentUser();
+    if (u) {
+      this.uid = u.uid;
+      this.name = u.name;
+      this.avatar = u.avatar;
+    }
+
+    this.startListening();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['channelId'] || changes['ownerUid']) {
+      this.restartListening();
+    }
+  }
+
+  private restartListening() {
+    this.unsub?.();
+    this.startListening();
+  }
+
+  private startListening() {
+    if (!this.uid || !this.channelId) return;
+    this.unsub = this.messageStoreSvc.listenChannelMessages(
+      this.uid,
+      this.channelId,
+      (docs) => {
+        this.messages = docs.map(d => this.mapDocToMessage(d));
+        this.rebuildMessagesView();
+        queueMicrotask(() => this.scrollToBottom());
+      }
+    );
+  }
+
+
   ngAfterViewInit() {
     this.rebuildMessagesView();
     queueMicrotask(() => this.scrollToBottom());
   }
 
+
+  ngOnDestroy() { this.unsub?.(); }
+
+
+  private mapDocToMessage(d: MessageDoc & { id: string }): Message {
+    return {
+      messageId: d.id,
+      username: d.author.username,
+      avatar: d.author.avatar,
+      isYou: d.author.uid === this.uid,
+      createdAt: (d.createdAt as any) ?? new Date(),
+      text: d.text,
+      reactions: (d.reactions ?? []).map(r => {
+        const emojiId: EmojiId = isEmojiId(r.emojiId) ? r.emojiId : 'rocket'; // Fallback oder throw
+        const reactionUsers: ReactionUser[] = (r.reactionUsers ?? []).map(u => ({
+          userId: u.userId,
+          username: u.username
+        }));
+        return {
+          emojiId,
+          emojiCount: Number(r.emojiCount ?? reactionUsers.length ?? 0),
+          youReacted: reactionUsers.some(u => u.userId === this.uid),
+          reactionUsers
+        };
+      }),
+      repliesCount: d.repliesCount ?? 0,
+      lastReplyTime: d.lastReplyTime ? (d.lastReplyTime as any) : undefined
+    };
+  }
+
+
+  async sendMessage() {
+    if (!this.draft.trim()) return;
+    const u = this.session.getCurrentUser();
+    if (!u) return; // optional: Guard
+
+    await this.messageStoreSvc.sendChannelMessage(this.uid, this.channelId, {
+      text: this.draft.trim(),
+      author: { uid: u.uid, username: u.name, avatar: u.avatar },
+    });
+
+    this.draft = '';
+  }
+
+
+  async toggleReaction(m: any, emojiId: EmojiId) {
+    if (!this.uid) return;
+    const you = { userId: this.uid, username: this.name };
+    await this.messageStoreSvc.toggleChannelReaction(this.uid, this.channelId, m.messageId, emojiId, you);
+  }
+
+
+  async toggleEmoji(m: Message, event: MouseEvent) {
+    // currentTarget kann laut Typ-Defs null sein → absichern
+    const btn = event.currentTarget as HTMLElement | null;
+    if (!btn) return;
+
+    const rect = btn.getBoundingClientRect();
+    const dlgW = 350;   // tatsächliche Dialogbreite
+    const gap = 8;
+
+    const dialogRef = this.dialog.open(AddEmojis, {
+      width: dlgW + 'px',
+      panelClass: 'add-emojis-dialog-panel',
+      position: {
+        top: `${Math.round(rect.bottom + gap)}px`,
+        left: `${Math.max(8, Math.round(rect.left - dlgW + btn.offsetWidth))}px`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((emojiId: string | null) => {
+      if (!emojiId) return;
+      if (!this.emojiSvc.isValid(emojiId)) return;
+      this.toggleReaction(m, emojiId as EmojiId);
+    });
+  }
+
+
+
+
+  getEmojiSrc(id: EmojiId | string) { return this.emojiSvc.src(id); }
+
+
+  private toDate(x: unknown): Date | null {
+    if (!x) return null;
+
+    // Firestore Timestamp (hat .toDate())
+    if (typeof (x as any)?.toDate === 'function') {
+      const d = (x as any).toDate();
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    if (x instanceof Date) return isNaN(x.getTime()) ? null : x;
+
+    if (typeof x === 'string') {
+      const date = new Date(x);
+      if (!isNaN(date.getTime())) return date;
+
+      // erlaubt "HH:MM"
+      const m = /^(\d{1,2}):(\d{2})$/.exec(x.trim());
+      if (m) {
+        const d = new Date();
+        d.setHours(parseInt(m[1], 10), parseInt(m[2], 10), 0, 0);
+        return d;
+      }
+    }
+
+    return null;
+  }
+
+
+  /*
   private toDate(x: unknown): Date | null {
     if (x instanceof Date) return isNaN(x.getTime()) ? null : x;
 
@@ -97,6 +271,7 @@ export class ThreadChannelMessages implements AfterViewInit {
 
     return null;
   }
+  */
 
   private getTimeSafe(date: string | Date | null | undefined): number {
     const d = this.toDate(date);
@@ -178,9 +353,11 @@ export class ThreadChannelMessages implements AfterViewInit {
     return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
   }
 
+  /*
   getEmojiSrc(emojiId: EmojiId | string) {
     return this.emojiSvc.src(emojiId);
   }
+  */
 
   membersPreview = [
     { name: 'Noah Braun' },
@@ -214,7 +391,7 @@ export class ThreadChannelMessages implements AfterViewInit {
         'erat, eu faucibus lacus iaculis ac.',
       reactions: [
         {
-          emojiId: 'rocket',
+          emojiId: 'rocket' as EmojiId,
           emojiCount: 2,
           youReacted: true,
           reactionUsers: [
@@ -238,7 +415,7 @@ export class ThreadChannelMessages implements AfterViewInit {
         'erat, eu faucibus lacus iaculis ac.',
       reactions: [
         {
-          emojiId: 'nerd',
+          emojiId: 'nerd' as EmojiId,
           emojiCount: 2,
           youReacted: false,
           reactionUsers: [
@@ -309,6 +486,7 @@ export class ThreadChannelMessages implements AfterViewInit {
     });
   }
 
+  /*
   sendMessage() {
     if (!this.draft.trim()) return;
 
@@ -326,7 +504,9 @@ export class ThreadChannelMessages implements AfterViewInit {
     this.rebuildMessagesView();
     this.scrollToBottom();
   }
+  */
 
+  /*
   toggleReaction(m: Message, emojiId: EmojiId) {
     const you: ReactionUser = { userId: this.userId, username: this.username };
     const rx = m.reactions.find(r => r.emojiId === emojiId);
@@ -355,7 +535,9 @@ export class ThreadChannelMessages implements AfterViewInit {
       ];
     }
   }
+  */
 
+  /*
   toggleEmoji(m: Message, event: MouseEvent) {
     const btn = event.currentTarget as HTMLElement;
     const r = btn.getBoundingClientRect();
@@ -377,6 +559,7 @@ export class ThreadChannelMessages implements AfterViewInit {
       this.toggleReaction(m, emojiId);
     });
   }
+  */
 
   showReactionPanel(m: Message, reaction: Reaction, event: MouseEvent) {
     const element = event.currentTarget as HTMLElement;
@@ -389,12 +572,12 @@ export class ThreadChannelMessages implements AfterViewInit {
     const x = reactionRect.left - messageRect.left + 40;
     const y = reactionRect.top - messageRect.top - 110;
 
-    const youReacted = reaction.reactionUsers.some(u => u.userId === this.userId);
+    const youReacted = reaction.reactionUsers.some(u => u.userId === this.uid);
     const reactedUsers = reaction.reactionUsers.map(u => u.username);
 
     let title = '';
     if (youReacted && reactedUsers.length > 0) {
-      const otherUsers = reactedUsers.filter(name => name !== this.username);
+      const otherUsers = reactedUsers.filter(name => name !== this.name);
       if (otherUsers.length > 0) {
         title = `${otherUsers.slice(0, 2).join(' und ')} und Du`;
       } else {

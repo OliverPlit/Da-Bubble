@@ -1,29 +1,23 @@
- 
- <app-new-message *ngIf="showNewMessages" (close)="onClose()"></app-new-message>
+<!-- <app-new-message *ngIf="showNewMessages" (close)="onClose()"></app-new-message> -->
 
-<section>
- <app-channel-messages-header
-  [fullChannel]="fullChannel"  
-  [channel]="channelName"
-  [channelId]="channelId"
-  [members]="members"
-  [description]="description"
-  [createdBy]="createdBy">
-</app-channel-messages-header>
-</section>
+<!-- <section>
+  <app-channel-messages-header [fullChannel]="fullChannel" [channel]="channelName" [channelId]="channelId"
+    [members]="members" [description]="description" [createdBy]="createdBy">
+  </app-channel-messages-header>
+</section> -->
 
 
 <app-new-message *ngIf="showNewMessages" (close)="onClose()"></app-new-message>
 
 
 
-<section >
+<section>
 
-<app-channel-messages-header
-    [channel]="channelName"
-    [channelId]="channelId"
-    [members]="members"
-     [description]="description"
-  [createdBy]="createdBy">
-  </app-channel-messages-header>    <app-thread-channel-messages></app-thread-channel-messages>
+  <app-channel-messages-header [channel]="channelName" [channelId]="channelId" [members]="members"
+    [description]="description" [createdBy]="createdBy">
+  </app-channel-messages-header>
+
+  <app-thread-channel-messages [uid]="currentUid" [channelName]="channelName" [channelId]="channelId">
+
+  </app-thread-channel-messages>
 </section>
