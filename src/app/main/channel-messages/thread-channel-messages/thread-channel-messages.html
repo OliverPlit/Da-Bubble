@@ -85,8 +85,8 @@
                 </span>
             </div>
 
-            <div class="edit-message-panel" [class.you]="m.isYou" *ngIf="m.isYou && editForId === m.messageId"
-                (click)="editMessage($event)" (mouseenter)="cancelEditMessagePanelHide(m)"
+            <div class="edit-message-panel" [class.you]="m.isYou" *ngIf="m.isYou && showEditPanelForId === m.messageId"
+                (click)="editMessage(m, $event)" (mouseenter)="cancelEditMessagePanelHide(m)"
                 (mouseleave)="scheduleEditMessagePanelHide(m)">
                 <span>Nachricht bearbeiten</span>
             </div>
@@ -96,7 +96,7 @@
 
 <footer class="composer">
     <div class="composer-input">
-        <textarea [(ngModel)]="draft" placeholder="Nachricht an #{{ channelName }}"></textarea>
+        <textarea #composerTextarea [(ngModel)]="draft" placeholder="Nachricht an #{{ channelName }}"></textarea>
 
         <div class="composer-actions">
             <div class="d-flex">

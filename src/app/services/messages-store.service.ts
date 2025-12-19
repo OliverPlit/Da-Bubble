@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import {
     Firestore, collection, doc, addDoc, serverTimestamp,
-    query, orderBy, onSnapshot, runTransaction
+    query, orderBy, onSnapshot, runTransaction, updateDoc
 } from '@angular/fire/firestore';
 import { Timestamp, Unsubscribe } from '@angular/fire/firestore';
 
@@ -103,6 +103,16 @@ export class MessagesStoreService {
             repliesCount: 0,
             lastReplyTime: null
         } satisfies MessageDoc);
+    }
+
+    async updateChannelMessage(uid: string, channelId: string, messageId: string, text: string) {
+        const ref = this.channelMsgDoc(uid, channelId, messageId);
+        await updateDoc(ref, {
+            text,
+            // optional, wenn du "bearbeitet" anzeigen willst:
+            // editedAt: serverTimestamp(),
+            // edited: true,
+        });
     }
 
     async sendDirectMessage(

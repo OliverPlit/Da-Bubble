@@ -64,6 +64,8 @@ function isEmojiId(x: unknown): x is EmojiId {
 })
 export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('messagesEl') messagesEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('composerTextarea') composerTextarea!: ElementRef<HTMLTextAreaElement>;
+
   @Input() uid!: string;
   @Input() channelId!: string;
   @Input() channelName = '';
@@ -88,6 +90,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
 
   draft = '';
   editForId: string | null = null;
+  showEditPanelForId: string | null = null;
 
   reactionPanel: ReactionPanelState = {
     show: false,
@@ -99,6 +102,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     messageId: '',
   };
 
+  messages: Message[] = [];
   messagesView: Message[] = [];
 
   async ngOnInit() {
@@ -175,15 +179,23 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
 
 
   async sendMessage() {
-    if (!this.draft.trim()) return;
+    const text = this.draft.trim();
+    if (!text || !this.uid || !this.channelId) return;
+
     const u = this.session.getCurrentUser();
-    if (!u) return; // optional: Guard
+    if (!u) return;
+
+    if (this.editForId) {
+      await this.messageStoreSvc.updateChannelMessage(this.uid, this.channelId, this.editForId, text);
+      this.editForId = null;
+      this.draft = '';
+      return;
+    }
 
     await this.messageStoreSvc.sendChannelMessage(this.uid, this.channelId, {
-      text: this.draft.trim(),
+      text,
       author: { uid: u.uid, username: u.name, avatar: u.avatar },
     });
-
     this.draft = '';
   }
 
@@ -220,10 +232,9 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     });
   }
 
-
-
-
-  getEmojiSrc(id: EmojiId | string) { return this.emojiSvc.src(id); }
+  getEmojiSrc(emojiId: EmojiId | string) {
+    return this.emojiSvc.src(emojiId);
+  }
 
 
   private toDate(x: unknown): Date | null {
@@ -363,6 +374,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   }
   */
 
+  /*
   membersPreview = [
     { name: 'Noah Braun' },
     { name: 'Sofia Müller' },
@@ -370,7 +382,9 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     { name: 'Elise Roth' },
     { name: 'Elias Neumann' },
   ];
+  */
 
+  /*
   messages: Message[] = [
     {
       messageId: 'm1',
@@ -459,6 +473,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       lastReplyTime: '2025-12-07T04:17:00+01:00',
     },
   ];
+  */
 
   openAddEmojis(trigger: HTMLElement) {
     // const r = trigger.getBoundingClientRect();
@@ -638,44 +653,77 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   toggleEditMessagePanel(m: Message, ev: MouseEvent) {
     ev.stopPropagation();
     this.clearEditMessagePanelHide();
-    this.editForId = this.editForId === m.messageId ? null : m.messageId;
+    this.showEditPanelForId = this.showEditPanelForId === m.messageId ? null : m.messageId;
   }
 
   scheduleEditMessagePanelHide(m: Message) {
+    /*
     if (this.editForId !== m.messageId) return;
     this.clearEditMessagePanelHide();
     this.editHideTimer = setTimeout(() => {
       this.editForId = null;
     });
-  }
+    */
 
-  cancelEditMessagePanelHide(_: Message) {
+
+    if (this.showEditPanelForId !== m.messageId) return;
     this.clearEditMessagePanelHide();
+    this.editHideTimer = setTimeout(() => {
+      this.showEditPanelForId = null;
+    });
   }
 
+  cancelEditMessagePanelHide(_: Message) { this.clearEditMessagePanelHide(); }
+  private clearEditMessagePanelHide() {
+    if (this.editHideTimer) { clearTimeout(this.editHideTimer); this.editHideTimer = null; }
+  }
+
+  /*
   private clearEditMessagePanelHide() {
     if (this.editHideTimer) {
       clearTimeout(this.editHideTimer);
       this.editHideTimer = null;
     }
   }
+  */
 
-  editMessage(ev: MouseEvent) {
+  editMessage(m: Message, ev: MouseEvent) {
     ev.stopPropagation();
-    this.editForId = null;
+    if (!m.isYou) return;
+    this.editForId = m.messageId;
+    this.showEditPanelForId = null;
+    this.draft = m.text;
+    queueMicrotask(() => this.composerTextarea?.nativeElement.focus());
   }
 
+  @HostListener('document:keydown.escape') closeOnEsc() {
+    this.editForId = null;
+    // optional: this.draft = '';
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeOnOutsideClick(ev: MouseEvent) {
+    if (!this.host.nativeElement.contains(ev.target as Node)) {
+      this.showEditPanelForId = null; // nur Panel zu
+      // editForId NICHT zurücksetzen, sonst verliert man den Edit-Modus
+    }
+  }
+
+  /*
   @HostListener('document:click', ['$event'])
   closeOnOutsideClick(ev: MouseEvent) {
     if (!this.host.nativeElement.contains(ev.target as Node)) {
       this.editForId = null;
     }
   }
+  */
 
+  /*
   @HostListener('document:keydown.escape')
   closeOnEsc() {
     this.editForId = null;
   }
+  */
 
   private scrollToBottom() {
     const el = this.messagesEl?.nativeElement;
