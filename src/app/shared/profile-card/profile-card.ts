@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-profile-card',
   templateUrl: './profile-card.html',
+  imports: [CommonModule],
   styleUrl: './profile-card.scss',
 })
 export class ProfileCard {
@@ -19,6 +20,7 @@ export class ProfileCard {
   private directChatService = inject(DirectChatService);
   private router = inject(Router);
   public presence = inject(PresenceService);
+  dm: any;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: directMessageContact) {}
 
@@ -31,7 +33,6 @@ export class ProfileCard {
   }
 
   openChatDirectMessage(dm: directMessageContact) {
-    console.log('Starte Chat mit:', dm);
 
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
