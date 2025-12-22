@@ -1,22 +1,40 @@
-.workspace-wrapper {
-  display: flex;
-  width: 100%;
-  height: calc(100vh - 60px); /* Header abziehen */
+body {
+  max-width: 1920px;
+  margin: 0 auto;
 }
 
 .main-content {
   display: flex;
-  gap: 25px;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
+  height: calc(100vh - 160px);
 }
 
+.side.left {
+  flex: 0 0 22%;
+  max-width: 22%;
+  transition: flex-basis 0.3s ease, max-width 0.3s ease;
+}
+
+.side.right {
+  flex: 0 0 28%;
+  max-width: 28%;
+  transition: flex-basis 0.3s ease, max-width 0.3s ease;
+}
+
+.center {
+  flex: 1;
+  transition: flex 0.3s ease;
+  overflow: hidden;
+}
 app-channel-messages {
-  transition: width 0.3s; /* weich animieren beim Öffnen/Schließen */
+  transition: width 0.3s;
 }
 
 app-threads {
   width: 485px;
-  flex-shrink: 0; /* verhindert schrumpfen */
+  flex-shrink: 0;
 }
 
 

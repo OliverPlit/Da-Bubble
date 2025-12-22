@@ -1,10 +1,11 @@
-<app-header></app-header>
+<body>
+  <app-header></app-header>
 
-<div class="workspace-wrapper main-layout">
-  <app-menu></app-menu>
-
-  <div class="main-content">
-    <router-outlet></router-outlet>
-    <app-threads></app-threads>
-  </div>
+<div class="main-content">
+  <app-menu class="side left" *ngIf="showLeft"></app-menu>
+<div class="center-content">
+  <router-outlet></router-outlet>
 </div>
+  <app-threads class="side right" *ngIf="showRight"></app-threads>
+</div>
+</body>
