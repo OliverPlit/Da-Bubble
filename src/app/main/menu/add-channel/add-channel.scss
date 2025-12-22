@@ -113,3 +113,67 @@ button:hover {
   margin: 2px 0;
   margin-left: 40px;
 }
+
+@media (max-width: 650px) {
+  .add-channel-main {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh;
+    padding: 20px;
+    border-radius: 0 !important;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  .add-channel-header h2 {
+    font-size: 20px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 130%;
+  }
+
+  input {
+    width: 230px;
+border-radius: 40px;
+border-width: 1px;
+padding-top: 18px;
+padding-right: 20px;
+padding-bottom: 18px;
+padding-left: 20px;
+gap: 20px;
+angle: 0 deg;
+opacity: 1;
+
+  }
+
+  button {
+    width: 270px;
+  }
+
+  label {
+    font-size: 16px;
+    width: auto;
+    margin-bottom: 10px;
+  }
+
+  input {
+    font-size: 16px;
+  }
+
+  input::placeholder {
+    font-size: 16px;
+  }
+
+  .add-button {
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+  .add-button button {
+    width: 270px;
+    height: 48px;
+    font-size: 16px;
+  }
+}

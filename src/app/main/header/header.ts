@@ -104,7 +104,7 @@ export class Header {
 
   @HostListener('window:resize')
   checkWidth() {
-    this.isMobile = window.innerWidth <= 400;
+    this.isMobile = window.innerWidth <= 600;
     if (!this.isMobile) {
       this.mobileMenuOpen = false;
     }

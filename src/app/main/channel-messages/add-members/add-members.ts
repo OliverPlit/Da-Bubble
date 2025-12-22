@@ -193,7 +193,6 @@ export class AddMembers {
         ...newMemberUids
       ]));
 
-      console.log('🔥 Updating members for all users:', allMemberUids);
 
       const [channelData, allMembersData] = await Promise.all([
         this.fetchChannelData(currentUid, channelId),

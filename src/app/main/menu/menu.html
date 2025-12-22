@@ -1,5 +1,14 @@
 <mat-drawer-container class="container-height" hasBackdrop="false" [class.menu-open]="isMenuOpen" [class.mobile]="isMobile">
+ 
   <mat-drawer #drawer class="sidenav" [mode]="isMobile ? 'side' : 'over'" [(opened)]="isMenuOpen">
+     <input       *ngIf="isMobile"
+ class="search"
+            type="text" 
+            placeholder="Gehe zu..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput()"
+            (focus)="showSearchResults = searchQuery.length > 0"
+            > 
     <div class="header-menu">
       <div>
         <img src="/icons/logo-menu-devspace.png" alt="">

@@ -9,7 +9,7 @@ section {
   @extend %flex-space-between;
   font-family: 'Nunito';
   background-color: #eceefe;
-padding: 15px 25px; // Padding etwas reduziert für Mobile
+padding: 15px 25px; 
   box-sizing: border-box;
   width: 100%;
   overflow: hidden;
@@ -96,12 +96,11 @@ padding: 15px 25px; // Padding etwas reduziert für Mobile
 
 .search-container {
   position: relative;
-  flex: 1;
   max-width: 500px;
 
 
   .clear-search {
-    position: absolute;
+    position: relative;
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
@@ -122,16 +121,15 @@ padding: 15px 25px; // Padding etwas reduziert für Mobile
 }
 
 .search-results {
-  position: absolute;
+  position: relative;
   top: calc(100% + 8px);
-  left: 0;
-  right: 0;
+ 
   background: white;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   max-height: 500px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 21;
 
   .search-loading {
     padding: 20px;
@@ -156,6 +154,7 @@ padding: 15px 25px; // Padding etwas reduziert für Mobile
 
   .results-list {
     padding: 8px 0;
+    z-index: 11 !important;
   }
 
   .search-result-item {

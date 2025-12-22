@@ -47,9 +47,6 @@ section {
         gap: 15px;
     }
 
-    >img {
-        z-index: 2;
-    }
 }
 
 
@@ -75,19 +72,10 @@ section {
         }
     }
 
-    >img {
-        z-index: 2;
-    }
 }
 
 
-.mat-drawer {
-    z-index: 1000 !important;
-}
 
-.mat-drawer-backdrop {
-    z-index: 999;
-}
 
 
 
@@ -99,7 +87,6 @@ section {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 101 !important;
     width: 339px;
     height: 56px;
     background-color: white;
