@@ -5,7 +5,6 @@ body {
 
 .main-content {
   display: flex;
-  justify-content: center;
   gap: 8px;
   width: 100%;
   height: calc(100vh - 160px);
@@ -25,27 +24,28 @@ body {
 
 .center {
   flex: 1;
-  transition: flex 0.3s ease;
+  min-width: 0;
+  height: 100%;
   overflow: hidden;
+  display: flex;
 }
+
 app-channel-messages {
   transition: width 0.3s;
 }
 
 app-threads {
-  width: 485px;
   flex-shrink: 0;
 }
 
+.main-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
 
- .main-layout {
-      display: flex;
-      height: 100vh;
-      width: 100%;
-    }
-
-    .content-area {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
+.content-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
