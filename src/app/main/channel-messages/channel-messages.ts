@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, HostListener } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ChannelMessagesHeader } from './channel-messages-header/channel-messages-header';
 import { ThreadChannelMessages } from './thread-channel-messages/thread-channel-messages';
@@ -21,18 +21,21 @@ export class ChannelMessages implements OnInit, OnDestroy {
   createdBy = '';
   members: any[] = [];
   fullChannel: any = null;
+  isMobile = false;
+  isVisible = true;
+
 
   @Input() showNewMessages = false;
   private subscription?: Subscription;
   constructor(
     private channelState: ChannelStateService,
     private session: CurrentUserService
-  ) { }
+  ) {this.checkWidth();
+ }
   async ngOnInit() {
     await this.session.hydrateFromLocalStorage();
     const u = this.session.getCurrentUser();
     this.currentUid = u?.uid ?? '';
-
     this.subscription = this.channelState.selectedChannel$.subscribe(channel => {
       if (channel) {
         this.fullChannel = channel;
@@ -54,7 +57,13 @@ export class ChannelMessages implements OnInit, OnDestroy {
     this.showNewMessages = false;
   }
 
+
+  @HostListener('window:resize')
+  checkWidth() {
+    this.isMobile = window.innerWidth <= 650;
+    this.isVisible = !this.isMobile;
+
+  }
+
+
 }
-
-
-

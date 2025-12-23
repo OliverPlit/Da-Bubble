@@ -1,15 +1,14 @@
 <section>
     <img src="/icons/logo-menu.png" alt="logo">
- <div class="search-container">
-    
-        <input class="search"
-            type="text" 
-            placeholder="Devspace durchsuchen (# für Channels, @ für Personen)"
-            [(ngModel)]="searchQuery"
-            (input)="onSearchInput()"
-            (focus)="showSearchResults = searchQuery.length > 0"
-            >
-        
+    <div class="mobile-header" *ngIf="isVisible">
+        <img src="/icons/back-mobile" alt="">
+        <img src="/icons/logo-menu-devspace" alt="">
+    </div>
+    <div class="search-container">
+
+        <input class="search" type="text" placeholder="Devspace durchsuchen (# für Channels, @ für Personen)"
+            [(ngModel)]="searchQuery" (input)="onSearchInput()" (focus)="showSearchResults = searchQuery.length > 0">
+
 
         <!-- Search Results Dropdown -->
         <div class="search-results" *ngIf="showSearchResults">
@@ -26,11 +25,9 @@
 
             <!-- Results List -->
             <div class="results-list" *ngIf="!isSearching && searchResults.length > 0">
-                <div 
-                    class="search-result-item" 
-                    *ngFor="let result of searchResults"
+                <div class="search-result-item" *ngFor="let result of searchResults"
                     (click)="selectSearchResult(result)">
-                    
+
                     <!-- Channel Result -->
                     <div class="result-content" *ngIf="result.type === 'channel'">
                         <div class="result-icon channel-icon">#</div>
@@ -43,10 +40,7 @@
 
                     <!-- Direct Message Result -->
                     <div class="result-content" *ngIf="result.type === 'direct'">
-                        <img 
-                            class="result-avatar" 
-                            [src]="'/icons/avatars/' + result.avatar" 
-                            alt="">
+                        <img class="result-avatar" [src]="'/icons/avatars/' + result.avatar" alt="">
                         <div class="result-details">
                             <p class="result-title">{{ result.title }}</p>
                             <small class="result-subtitle">{{ result.subtitle }}</small>
@@ -68,7 +62,8 @@
                 </div>
             </div>
         </div>
-    </div>    <div class="profile-menu" (click)="openMenu()" [matMenuTriggerFor]="!isMobile ? menu : null">
+    </div>
+    <div class="profile-menu" (click)="openMenu()" [matMenuTriggerFor]="!isMobile ? menu : null">
         <p>{{ userName }}</p>
         <img class="profile-img" [src]="'/icons/avatars/' + userAvatar" alt="">
         <span class="status-dot online"></span>

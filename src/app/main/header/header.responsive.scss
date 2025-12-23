@@ -8,7 +8,8 @@
 @media (max-width: 1555px) {
     section {
         >img {
-            margin-right: 10px
+            margin-right: 10px;
+            padding: 0;
         }
     }
 
@@ -66,6 +67,11 @@
 }
 
 @media (max-width: 750px) {
+
+    .mobile-header {
+        display: flex;
+        justify-content: space-between;
+    }
     section {
         >input {
             display: none;
@@ -93,6 +99,7 @@
 }
 
 @media (max-width: 600px) {
+
     .menu-bar-div {
         display: flex;
         justify-content: center;

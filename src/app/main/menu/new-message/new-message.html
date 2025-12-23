@@ -18,7 +18,7 @@
       <!-- Input nur anzeigen, wenn noch keine Person ausgewählt -->
       <input *ngIf="selectedPeople.length === 0"
              type="text"
-             placeholder="An: #channel, oder @jemand oder E-Mail Adresse"
+             placeholder="An: #channel, oder @jemand"
              [(ngModel)]="inputName"
              (input)="filterPeople()"
              (keydown)="onInputKeydown($event)">

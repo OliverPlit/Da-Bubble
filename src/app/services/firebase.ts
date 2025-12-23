@@ -12,6 +12,7 @@ export type Member = {
   status?: string;
 };
 
+export type HeaderView = 'default' | 'new-message' | 'add-channel';
 
 @Injectable({
   providedIn: 'root'
@@ -21,6 +22,8 @@ export class FirebaseService {
 private nameSource = new BehaviorSubject<string>('');
   currentName$ = this.nameSource.asObservable();
   membersSignal = signal<Member[]>([]);
+    private currentViewSubject = new BehaviorSubject<HeaderView>('default');
+  currentView$ = this.currentViewSubject.asObservable();
 
   constructor() {}
 
@@ -65,6 +68,18 @@ private nameSource = new BehaviorSubject<string>('');
    addMembers(channelId: string, newMembers: Member[]) {
     this.membersSignal.update(old => [...old, ...newMembers]);
     // 🔹 Hier kannst du auch Firestore updateDoc() aufrufen
+  }
+
+ setView(view: HeaderView) {
+    this.currentViewSubject.next(view);
+  }
+
+  resetView() {
+    this.currentViewSubject.next('default');
+  }
+
+  getCurrentView(): HeaderView {
+    return this.currentViewSubject.value;
   }
 
 }

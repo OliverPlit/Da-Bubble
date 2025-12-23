@@ -8,9 +8,10 @@ import { FormsModule } from '@angular/forms';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { Firestore, collection, query, where, getDocs, orderBy, limit, doc, getDoc } from '@angular/fire/firestore';
 import { ChangeDetectorRef } from '@angular/core';
-import { FirebaseService } from '../../services/firebase';
+import { FirebaseService, HeaderView  } from '../../services/firebase';
 import { ChannelStateService } from '../menu/channels/channel.service';
 import { DirectChatService } from '../../services/direct-chat-service';
+import { Subscription } from 'rxjs';
 
 interface SearchResult {
   type: 'channel' | 'direct' | 'message';
@@ -39,6 +40,7 @@ export class Header {
   private directChatService = inject(DirectChatService); // 🔥 NEU
   
   isMobile = false;
+  isVisible = true;
   mobileMenuOpen = false;
   userName = '';
   userAvatar = '';
@@ -46,8 +48,37 @@ export class Header {
   searchResults: SearchResult[] = [];
   showSearchResults = false;
   isSearching = false;
+currentView: HeaderView = 'default';
+  private viewSubscription?: Subscription;
 
-  constructor(private firebase: FirebaseService) {}
+  constructor(private firebase: FirebaseService) {    this.checkWidth();
+}
+
+  get currentLogo(): string {
+    // Nur auf Mobile (< 600px) UND wenn New Message/Add Channel offen ist
+    if (this.isMobile && this.currentView !== 'default') {
+      return '/icons/logo-menu-devspace.png'; // Mobile Logo für spezielle Views
+    }
+    return '/icons/logo-menu.png'; // Standard Logo
+  }
+
+  // Getter für Mobile Header Sichtbarkeit
+  get showMobileHeader(): boolean {
+    return this.isMobile && this.currentView !== 'default';
+  }
+
+  async ngOnInit() {
+    await this.loadUser();
+    this.updateName();
+
+    // 🔥 Abonniere View-Änderungen
+    this.viewSubscription = this.firebase.currentView$.subscribe(view => {
+      this.currentView = view;
+      this.cd.detectChanges();
+    });
+  }
+
+
 
   openDialog() {
     const ref = this.dialog.open(Profile, {
@@ -67,11 +98,7 @@ export class Header {
     this.router.navigate(['']);
   }
 
-  async ngOnInit() {
-    this.checkWidth();
-    await this.loadUser();
-    this.updateName();
-  }
+
 
   async loadUser() {
     const storedUser = localStorage.getItem('currentUser');
@@ -108,6 +135,10 @@ export class Header {
     if (!this.isMobile) {
       this.mobileMenuOpen = false;
     }
+
+     this.isMobile = window.innerWidth <= 750;
+    if (!this.isMobile) {
+this.isVisible = !this.isMobile;     }
   }
 
   openMenu() {

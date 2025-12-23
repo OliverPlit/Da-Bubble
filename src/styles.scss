@@ -257,3 +257,14 @@ input::placeholder {
   }
 
 }
+
+
+@media (max-width: 750px) {
+.add-channel-dialog-panel .mat-mdc-dialog-surface {
+  margin: 0 !important;
+  border-radius: 0px !important;
+  overflow: hidden;
+}
+
+}
+
