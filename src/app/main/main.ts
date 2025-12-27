@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Header } from './header/header';
 import { Menu } from './menu/menu';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +12,7 @@ import { directMessageContact } from '../main/menu/direct-messages/direct-messag
 import { ChatDirectYou } from '../main/menu/chat-direct-you/chat-direct-you';
 import { DirectChatService } from '../services/direct-chat-service';
 import { RouterOutlet } from '@angular/router';
+import { LayoutService } from '../services/layout.service';
 
 @Component({
   selector: 'app-main',
@@ -40,6 +41,7 @@ export class Main {
   isChannelMessagesVisible = true;
   selectedChatUser: directMessageContact | null = null;
   activePanel: 'none' | 'chatYou' | 'chatDirect' | 'channel' = 'none';
+  layout = inject(LayoutService);
 
   constructor(private directChatService: DirectChatService) {}
   showLeft = true;
@@ -59,6 +61,11 @@ export class Main {
 
   openChatDirectMessage() {
     this.activePanel = 'chatDirect';
+  }
+
+  toggleMenu() {
+    this.layout.toggleLeft();
+    this.isMenuOpen = this.layout.showLeft();
   }
 
   openChannel() {

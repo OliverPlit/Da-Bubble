@@ -1,11 +1,26 @@
 <body>
   <app-header></app-header>
+  <div
+    class="main-content"
+    [class.menu-closed]="!layout.showLeft()"
+    [class.threads-closed]="!layout.showRight()"
+  >
+    <div class="button-column">
+      <button type="button" class="button-menu" (click)="toggleMenu()">
+        <span class="button-label">
+          {{ isMenuOpen ? 'Workspace-Menü schließen' : 'Workspace-Menü öffnen' }}
+        </span>
 
-<div class="main-content">
-  <app-menu class="side left" *ngIf="showLeft"></app-menu>
-<div class="center">
-  <router-outlet></router-outlet>
-</div>
-  <app-threads class="side right" *ngIf="showRight"></app-threads>
-</div>
+        <img [src]="isMenuOpen ? 'icons/workspace-menu.png' : 'icons/open-menu.png'" alt="" />
+      </button>
+    </div>
+
+    <app-menu class="side left"> </app-menu>
+
+    <div class="center">
+      <router-outlet></router-outlet>
+    </div>
+
+    <app-threads class="side right"> </app-threads>
+  </div>
 </body>

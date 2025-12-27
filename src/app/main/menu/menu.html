@@ -45,8 +45,3 @@
 </mat-drawer-container>
 
 <img src="/icons/mobile-new-message.png" alt="" *ngIf="isMobile" class="mobile-message" (click)="onOpenNewMessage()">
-
-<button type="button" class="button-menu" (click)="onDrawerChange($event)">
-  {{ isMenuOpen ? 'Workspace-Menü schließen' : 'Workspace-Menü öffnen' }}
-  <img [src]="isMenuOpen ? 'icons/workspace-menu.png' : 'icons/open-menu.png'" alt="">
-</button>

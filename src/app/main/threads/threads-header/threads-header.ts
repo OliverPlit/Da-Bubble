@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { LayoutService } from '../../../services/layout.service';
 
 @Component({
   selector: 'app-threads-header',
@@ -11,10 +12,11 @@ import { MatDialog } from '@angular/material/dialog';
 })
 export class ThreadsHeader {
   channel = 'Entwicklerteam';
-  
-  private dialog = inject(MatDialog)
+
+  private dialog = inject(MatDialog);
+  private layout = inject(LayoutService);
 
   closeThread() {
-    
+      this.layout.closeRight();
   }
 }

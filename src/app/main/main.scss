@@ -4,48 +4,117 @@ body {
 }
 
 .main-content {
-  display: flex;
+  display: grid;
+  grid-template-columns:
+    48px
+    19%
+    1fr
+    30%;
+
   gap: 8px;
-  width: 100%;
-  height: calc(100vh - 160px);
+  width: calc(100% - 16px);
+  height: calc(100vh - 172px);
+  margin-bottom: 12px;
+  transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.button-column {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.button-menu {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+
+  width: 56px;
+  height: 339px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  color: black;
+  gap: 8px;
+
+  padding: 12px 20px;
+
+  border-top-right-radius: 30px;
+  border-bottom-right-radius: 30px;
+  border: 1px solid transparent;
+
+  box-shadow: 0 0 5px 1px rgba(128, 128, 128, 0.5);
+  z-index: 10;
+
+  transition: box-shadow 0.2s ease, transform 0.25s ease;
+}
+
+.button-label {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+
+.button-menu:hover {
+  cursor: pointer;
+  color: #797ef3;
+
+  img {
+    filter: invert(43%) sepia(63%) saturate(7492%) hue-rotate(229deg) brightness(97%) contrast(96%);
+  }
+}
+
+.button-menu img {
+  transform: none;
+}
+
+.side {
+  overflow: hidden;
 }
 
 .side.left {
-  flex: 0 0 22%;
-  max-width: 22%;
-  transition: flex-basis 0.3s ease, max-width 0.3s ease;
+  transition: width 0.3s ease;
 }
 
 .side.right {
-  flex: 0 0 28%;
-  max-width: 28%;
-  transition: flex-basis 0.3s ease, max-width 0.3s ease;
+  transition: width 0.3s ease;
 }
 
 .center {
-  flex: 1;
   min-width: 0;
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-}
-
-app-channel-messages {
-  transition: width 0.3s;
-}
-
-app-threads {
-  flex-shrink: 0;
-}
-
-.main-layout {
-  display: flex;
-  height: 100vh;
   width: 100%;
+  height: 100%;
+  max-height: 900px;
+
+  display: flex;
+  overflow: hidden;
+
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.content-area {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
+.main-content.menu-closed {
+  grid-template-columns:
+    48px
+    0
+    1fr
+    30%;
+}
+
+.main-content.threads-closed {
+  grid-template-columns:
+    48px
+    19%
+    1fr
+    0;
+}
+
+.main-content.menu-closed.threads-closed {
+  grid-template-columns:
+    48px
+    0
+    1fr
+    0;
 }
