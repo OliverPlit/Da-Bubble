@@ -1,7 +1,7 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, NgZone } from '@angular/core';
 import {
     Firestore, collection, doc, addDoc, serverTimestamp,
-    query, orderBy, onSnapshot, runTransaction, writeBatch, getDoc, updateDoc
+    query, orderBy, onSnapshot, runTransaction, writeBatch, getDoc, updateDoc, increment
 } from '@angular/fire/firestore';
 import { Timestamp, Unsubscribe } from '@angular/fire/firestore';
 
@@ -29,6 +29,7 @@ export type ReactionUserDoc = {
 @Injectable({ providedIn: 'root' })
 export class MessagesStoreService {
     private firestore = inject(Firestore);
+    private zone = inject(NgZone);
 
     // Collection: users/{uid}/messages/channels/{channelId}
     private channelMsgsCol(uid: string, channelId: string) {
@@ -125,16 +126,20 @@ export class MessagesStoreService {
     ): Unsubscribe {
         const qy = query(this.threadMsgsCol(uid, channelId, messageId), orderBy('createdAt', 'asc'));
         return onSnapshot(qy, snap => {
-            const out = snap.docs.map(d => {
-                const data = d.data() as MessageDoc;
-                return {
-                    ...data,
-                    id: d.id,
-                    createdAt: this.toDate(data.createdAt),
-                    lastReplyTime: data.lastReplyTime ? this.toDate(data.lastReplyTime) : undefined
-                };
+            this.zone.run(() => {
+                const out = snap.docs.map(d => {
+                    const data = d.data() as MessageDoc;
+                    return {
+                        ...data,
+                        id: d.id,
+                        createdAt: this.toDate(data.createdAt),
+                        lastReplyTime: data.lastReplyTime ? this.toDate(data.lastReplyTime) : undefined
+                    };
+                });
+
+                cb(out);
             });
-            cb(out);
+
         });
     }
 
@@ -281,7 +286,7 @@ export class MessagesStoreService {
             if (!snap.exists()) return;
             const data = snap.data() as MessageDoc;
             data.reactions ||= [];
- 
+     
             const idx = data.reactions.findIndex(r => r.emojiId === emojiId);
             if (idx >= 0) {
                 const rx = data.reactions[idx];
@@ -312,6 +317,55 @@ export class MessagesStoreService {
         messageId: string,
         params: { text: string; author: { uid: string; username: string; avatar: string } }
     ) {
+        const memberUids = await this.getMemberUids(uid, channelId);
+        if (!memberUids.length) return;
+
+        const threadMessageId = doc(this.threadMsgsCol(uid, channelId, messageId)).id;
+
+        const payload: MessageDoc = {
+            text: params.text,
+            createdAt: serverTimestamp(),
+            author: params.author,
+            reactions: [],
+            repliesCount: 0,
+            lastReplyTime: null
+        };
+
+        {
+            const MAX = 500;
+            let batch = writeBatch(this.firestore);
+            let count = 0;
+
+            for (const uid of memberUids) {
+                const threadRef = this.threadMsgDoc(uid, channelId, messageId, threadMessageId);
+                batch.set(threadRef, payload, { merge: false });
+
+                if (++count >= MAX) { await batch.commit(); batch = writeBatch(this.firestore); count = 0; }
+            }
+
+            if (count) await batch.commit();
+        }
+
+        {
+            const MAX = 500;
+            let batch = writeBatch(this.firestore);
+            let count = 0;
+
+            for (const uid of memberUids) {
+                const messageRef = this.channelMsgDoc(uid, channelId, messageId);
+                batch.set(messageRef, {
+                    repliesCount: increment(1),
+                    lastReplyTime: serverTimestamp()
+                } as any, { merge: true });
+
+                if (++count >= MAX) { await batch.commit(); batch = writeBatch(this.firestore); count = 0; }
+            }
+
+            if (count) await batch.commit();
+        }
+
+
+        /*
         await addDoc(this.threadMsgsCol(uid, channelId, messageId), {
             text: params.text,
             createdAt: serverTimestamp(),
@@ -332,8 +386,10 @@ export class MessagesStoreService {
                 lastReplyTime: serverTimestamp()
             });
         });
+        */
     }
 
+    /*
     async sendThreadReplyForAll(
         memberUids: string[],
         channelId: string,
@@ -378,6 +434,7 @@ export class MessagesStoreService {
             await Promise.all(updates);
         }
     }
+    */
 
     async updateThreadMessage(uid: string, channelId: string, messageId: string, newText: string) {
         const ref = this.channelMsgDoc(uid, channelId, messageId);
