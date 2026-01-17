@@ -1,7 +1,10 @@
 $primary: #535af1;
 $placeholder: #686868;
 $hoverBg: #eceefe;
+$hoverBgYou: #797ef3;
 $line: #adb0d9;
+$textYou: #ffffff;
+$hoverCard: #444df2;
 
 h2 {
   font-family: 'Nunito';
@@ -14,6 +17,7 @@ h2 {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  min-height: 0;
 }
 
 .main-container {
@@ -21,6 +25,7 @@ h2 {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  min-height: 0;
   border-radius: 30px;
   background-color: white;
   z-index: 100;
@@ -35,11 +40,11 @@ h2 {
   padding-top: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-  > p {
+  >p {
     margin-bottom: 30px;
   }
 
-  > img {
+  >img {
     width: 50px;
     height: 50px;
     border-radius: 100%;
@@ -53,32 +58,529 @@ h2 {
   flex-direction: column;
   justify-content: flex-end;
 
-  > div {
+  >div {
     display: flex;
     justify-content: row;
     gap: 15px;
     align-items: center;
 
-    > img {
+    >img {
       width: 50px;
       height: 50px;
       border-radius: 100%;
     }
   }
 
-  > p {
+  >p {
     font-family: 'Nunito';
     font-weight: 700;
     font-size: 20px;
   }
 
-  > span {
+  >span {
     font-family: 'Nunito';
     font-weight: 400;
     color: #686868;
   }
 }
 
+.messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  display: block;
+  flex-direction: column;
+  gap: 20px;
+  padding-right: 35px;
+  padding-left: 35px;
+}
+
+.messages-inner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+.time-separator {
+  display: flex;
+  align-items: center;
+
+  > span {
+    padding-top: 5px;
+    padding-right: 15px;
+    padding-bottom: 5px;
+    padding-left: 15px;
+    border-radius: 30px;
+    border: 1px solid $line;
+    font-family: 'Nunito';
+    font-weight: 400;
+    font-size: 18px;
+  }
+
+  &:before,
+  &:after {
+    flex: 1;
+    content: '';
+    padding: 1px;
+    background-color: $line;
+  }
+}
+
+.message {
+  position: relative;
+  display: flex;
+  gap: 30px;
+  // padding-top: 10px;
+  // padding-bottom: 10px;
+  padding: 10px;
+
+  .avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .message-body {
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: 'Nunito';
+
+    .meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+
+      strong {
+        font-weight: 700;
+        font-size: 18px;
+      }
+
+      time {
+        font-weight: 400;
+        font-size: 14px;
+        color: #686868;
+      }
+
+      &.you {
+        flex-direction: row-reverse;
+      }
+    }
+
+    .text {
+      max-width: 700px;
+      border-radius: 0 30px 30px 30px;
+      background-color: $hoverBg;
+      padding: 15px;
+
+      &.you {
+        border-radius: 30px 0 30px 30px;
+        background-color: $hoverBgYou;
+        color: $textYou;
+      }
+    }
+
+    .emoji-reactions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .reactions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      // display: flex;
+      // flex-direction: column-reverse;
+      // align-items: end;
+
+      .reaction {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 5px;
+        padding-right: 10px;
+        padding-bottom: 5px;
+        padding-left: 10px;
+        border-radius: 20px;
+        border: 1px solid $line;
+        cursor: pointer;
+
+        .emoji {
+          width: 24px;
+          height: 24px;
+        }
+
+        .count-emoji {
+          font-family: 'Nunito';
+          font-weight: 400;
+          font-size: 16px;
+        }
+
+        &.active {
+          background-color: #ffffff;
+        }
+      }
+
+      .icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 20px;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        background-color: $textYou;
+
+        .hover {
+          position: absolute;
+          opacity: 0;
+        }
+
+        &:hover {
+          background-color: $hoverBg;
+
+          .hover {
+            opacity: 1;
+          }
+
+          .default {
+            opacity: 0;
+          }
+        }
+      }
+
+      .status-div {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: -25px;
+
+        > p {
+          font-size: 20px;
+        }
+      }
+
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-top: 2px;
+      }
+
+      .online {
+        background: #2ecc71;
+        box-shadow: 0 0 8px #2ecc71;
+      }
+
+      .response {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-family: 'Nunito';
+        font-weight: 400;
+
+        .count-answere {
+          font-size: 18px;
+          color: $primary;
+          font-style: bold;
+
+          &:hover {
+            font-weight: 700;
+          }
+        }
+
+        .answere {
+          font-size: 14px;
+          color: $line;
+        }
+      }
+
+      &.you {
+        justify-content: end;
+      }
+    }
+  }
+
+  .reaction-panel {
+    position: absolute;
+    z-index: 10;
+    pointer-events: auto;
+    background: $hoverCard;
+    color: $textYou;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+
+    .panel-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: $textYou;
+      padding-top: 15px;
+      padding-right: 10px;
+      padding-bottom: 15px;
+      padding-left: 10px;
+      gap: 5px;
+
+      .emoji {
+        width: 30px;
+        height: 30px;
+      }
+
+      .panel-text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: 'Nunito';
+        font-size: 16px;
+
+        .title {
+          font-weight: 700;
+          font-style: bold;
+        }
+
+        .subtitle {
+          font-weight: 400;
+          font-style: 'regular';
+        }
+      }
+    }
+  }
+
+  .reaction-bar {
+    position: absolute;
+    top: -24px;
+    right: 20px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    width: auto;
+    height: 46px;
+    background-color: #ffffff;
+    border: 1px solid $line;
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+    border-bottom-left-radius: 25px;
+    padding-top: 3px;
+    padding-right: 15px;
+    padding-bottom: 3px;
+    padding-left: 20px;
+    gap: 5px;
+    opacity: 0;
+
+    .icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+
+      .hover {
+        position: absolute;
+        opacity: 0;
+      }
+
+      &:hover {
+        background-color: $hoverBg;
+
+        .hover {
+          opacity: 1;
+        }
+
+        .default {
+          opacity: 0;
+        }
+      }
+    }
+
+    .d-none {
+      display: none;
+
+      &.you {
+        display: grid;
+      }
+    }
+
+    &.you {
+      right: auto;
+      left: 20px;
+    }
+  }
+
+  .edit-message-panel {
+    position: absolute;
+    top: 0px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    background-color: $textYou;
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    border-bottom-left-radius: 30px;
+    padding-top: 10px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+    padding-left: 20px;
+    box-shadow: 0px 6px 14px 0px rgba(0, 0, 0, 0.2);
+
+    span {
+      background-color: $textYou;
+      border-radius: 100px;
+      padding-top: 10px;
+      padding-right: 20px;
+      padding-bottom: 10px;
+      padding-left: 20px;
+      font-family: 'Nunito';
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    &:hover {
+      span {
+        background-color: $hoverBg;
+        color: $primary;
+      }
+    }
+
+    &.you {
+      right: auto;
+      left: 250px;
+    }
+  }
+
+  &.you {
+    flex-direction: row-reverse;
+  }
+
+  &:hover {
+    background-color: $hoverBg;
+    cursor: pointer;
+
+    .text {
+      background-color: #ffffff !important;
+
+      &.you {
+        background-color: $hoverBgYou !important;
+      }
+    }
+
+    .reaction-bar {
+      opacity: 1;
+    }
+
+    // .count {
+    //   color: #686868;
+    // }
+  }
+}
+
+.composer {
+  flex: 0 0 auto;
+  border: 1px solid $line;
+  border-radius: 20px;
+  margin: 35px;
+
+  .composer-input {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding: 20px;
+
+    textarea {
+      resize: none;
+      border: none;
+      outline: none;
+      font-family: 'Nunito';
+      font-weight: 400;
+      font-size: 18px;
+
+      &::placeholder {
+        color: $placeholder;
+      }
+
+      &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.12);
+        background: #fff;
+      }
+    }
+
+    .composer-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+
+      .d-flex {
+        display: flex;
+        gap: 5px;
+      }
+
+      .icon-box {
+        position: relative;
+        border-radius: 20px;
+        padding: 8px;
+        gap: 10px;
+        background-color: $hoverBg;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+
+        .hover1,
+        .hover2 {
+          position: absolute;
+          opacity: 0;
+        }
+
+        &:hover {
+          .hover1,
+          .hover2 {
+            opacity: 1;
+          }
+
+          .default {
+            opacity: 0;
+          }
+        }
+      }
+
+      .send {
+        border: none;
+        cursor: pointer;
+        padding: 10px 18px;
+        border-radius: 12px;
+        background: $primary;
+        color: #fff;
+        font: 700 14px/1 'Nunito';
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 footer {
   margin-top: 50px;
 }
@@ -142,6 +644,7 @@ footer {
         }
 
         &:hover {
+
           .hover1,
           .hover2 {
             opacity: 1;
@@ -182,3 +685,4 @@ footer {
 .offline {
   background: #e74c3c;
 }
+*/

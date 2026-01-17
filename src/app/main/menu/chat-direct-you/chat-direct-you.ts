@@ -1,34 +1,99 @@
-import { Component, inject, EventEmitter, Output, Input } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import {
+  Component, EventEmitter, ElementRef, HostListener, inject, AfterViewInit,
+  ViewChild, Input, OnInit, OnDestroy, Output,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../../channel-messages/add-emojis/add-emojis';
 import { AtMembers } from '../../channel-messages/at-members/at-members';
-import { CommonModule } from '@angular/common';
+import { Profile } from '../../header/profile/profile';
+import { EmojiService, EmojiId } from '../../../services/emoji.service';
+import { PresenceService } from '../../../services/presence.service';
+import { MessagesStoreService, MessageDoc, ReactionUserDoc } from '../../../services/messages-store.service';
+import { Unsubscribe } from '@angular/fire/firestore';
+import { CurrentUserService, CurrentUser, AvatarUrlPipe } from '../../../services/current-user.service';
+import { OnChanges, SimpleChanges } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { directMessageContact } from '../direct-messages/direct-messages.model';
 import { ProfileCard } from '../../../shared/profile-card/profile-card';
 import { ChangeDetectorRef } from '@angular/core';
 import { Firestore, getDoc, doc } from '@angular/fire/firestore';
 import { FirebaseService } from '../../../services/firebase';
 import { Observable } from 'rxjs';
-import { Profile } from '../../header/profile/profile';
+import { LayoutService } from '../../../services/layout.service';
 
+type Message = {
+  messageId: string;
+  uid: string;
+  username: string;
+  avatar: string;
+  isYou: boolean;
+  createdAt: string | Date;
+  text: string;
+  reactions: Reaction[];
+  repliesCount: number;
+  lastReplyTime?: string | Date;
+  timeSeparator?: string;
+};
 
+type Reaction = {
+  emojiId: EmojiId;
+  emojiCount: number;
+  youReacted: boolean;
+  reactionUsers: ReactionUser[];
+};
 
+type ReactionUser = {
+  userId: string;
+  username: string;
+};
+
+type ReactionPanelState = {
+  show: boolean;
+  x: number;
+  y: number;
+  emoji: string;
+  title: string;
+  subtitle: string;
+  messageId: string;
+};
+
+function isEmojiId(x: unknown): x is EmojiId {
+  return x === 'rocket' || x === 'check' || x === 'nerd' || x === 'thumbs_up';
+}
 
 
 @Component({
   selector: 'app-chat-direct-you',
-  imports: [CommonModule,],
+  imports: [CommonModule, FormsModule, AvatarUrlPipe],
   templateUrl: './chat-direct-you.html',
   styleUrl: './chat-direct-you.scss',
 })
-export class ChatDirectYou {
+export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('messagesEl') messagesEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('composerTextarea') composerTextarea!: ElementRef<HTMLTextAreaElement>;
 
+  @Input() uid!: string;
+  @Input() channelId!: string;
+  @Input() channelName = '';
   @Input() chatUser: directMessageContact | null = null;
   @Output() close = new EventEmitter<void>();
+
   private dialog = inject(MatDialog)
   private firestore = inject(Firestore);
   private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+  private hideTimer: any = null;
+  private editHideTimer: any = null;
+  private host = inject(ElementRef<HTMLElement>);
+  private emojiSvc = inject(EmojiService);
+  public presence = inject(PresenceService);
+  private messageStoreSvc = inject(MessagesStoreService);
+  private unsub: Unsubscribe | null = null;
+  private stateSub: Subscription | null = null;
+  private layout = inject(LayoutService);
+  private currentUserService = inject(CurrentUserService);
+
   userName: string = '';
   userAvatar: string = '';
   isMobile = false;
@@ -36,10 +101,30 @@ export class ChatDirectYou {
   constructor(private firebaseService: FirebaseService) { }
   directMessage$: Observable<directMessageContact[]> | undefined;
 
+  ready = false;
+  draft = '';
+  editForId: string | null = null;
+  showEditPanelForId: string | null = null;
+
+  reactionPanel: ReactionPanelState = {
+    show: false,
+    x: 0,
+    y: 0,
+    emoji: '',
+    title: '',
+    subtitle: '',
+    messageId: '',
+  };
+
+  messages: Message[] = [];
+  messagesView: Message[] = [];
+
+
 
   async ngOnInit() {
     this.directMessage$ = this.firebaseService.getCollection$('directMessages');
 
+    /*
     await this.initUserId();
     this.firebaseService.currentName$.subscribe((name) => {
       if (name) {
@@ -47,8 +132,60 @@ export class ChatDirectYou {
         this.cdr.detectChanges();
       }
     });
+    */
+
+    await this.currentUserService.hydrateFromLocalStorage();
+    const u = this.currentUserService.getCurrentUser();
+    if (u) {
+      this.uid = u.uid;
+      this.userName = u.name;
+      this.userAvatar = u.avatar;
+    }
+
+    this.startListening();
+    this.ready = true;
+    this.cdr.detectChanges();
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['channelId'] || changes['ownerUid']) {
+      this.restartListening();
+    }
+  }
+
+  private restartListening() {
+    this.unsub?.();
+    this.startListening();
+  }
+
+  async startListening() {
+    if (!this.userName || !this.userAvatar) {
+      const userRef = doc(this.firestore, 'directMessages', this.uid);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+        const data: any = snap.data();
+        this.userName = this.userName || data?.name || '';
+        this.userAvatar = this.userAvatar || data?.avatar || '';
+      }
+    }
+
+    if (!this.uid) { this.ready = true; return; }
+
+    this.unsub = this.messageStoreSvc.listenSelfDirectMessages(
+      this.uid,
+      (docs) => {
+        this.messages = docs.map(d => this.mapDocToMessage(d));
+        this.rebuildMessagesView();
+        queueMicrotask(() => this.scrollToBottom());
+      });
+  }
+
+  ngAfterViewInit() {
+    this.rebuildMessagesView();
+    queueMicrotask(() => this.scrollToBottom());
+  }
+
+  ngOnDestroy() { this.unsub?.(); }
 
   async initUserId() {
     const storedUser = localStorage.getItem('currentUser');
@@ -62,7 +199,7 @@ export class ChatDirectYou {
     if (snap.exists()) {
       const data: any = snap.data();
       this.userName = data.name;
-            this.userAvatar = data.avatar;
+      this.userAvatar = data.avatar;
 
       this.firebaseService.setName(this.userName);
       this.cdr.detectChanges();
@@ -70,25 +207,375 @@ export class ChatDirectYou {
 
   }
 
+
+
+  private mapDocToMessage(d: MessageDoc & { id: string }): Message {
+    return {
+      messageId: d.id,
+      uid: d.author.uid,
+      username: d.author.username,
+      avatar: d.author.avatar,
+      isYou: d.author.uid === this.uid,
+      createdAt: (d.createdAt as any) ?? new Date(),
+      text: d.text,
+      reactions: (d.reactions ?? []).map(r => {
+        const emojiId: EmojiId = isEmojiId(r.emojiId) ? r.emojiId : 'rocket'; // Fallback oder throw
+        const reactionUsers: ReactionUser[] = (r.reactionUsers ?? []).map(u => ({
+          userId: u.userId,
+          username: u.username
+        }));
+        return {
+          emojiId,
+          emojiCount: Number(r.emojiCount ?? reactionUsers.length ?? 0),
+          youReacted: reactionUsers.some(u => u.userId === this.uid),
+          reactionUsers
+        };
+      }),
+      repliesCount: d.repliesCount ?? 0,
+      lastReplyTime: d.lastReplyTime ? (d.lastReplyTime as any) : undefined
+    };
+  }
+
+  async sendMessage() {
+    const text = this.draft.trim();
+    if (!text || !this.uid) return;
+
+    const u = this.currentUserService.getCurrentUser();
+    if (!u) return;
+
+    if (this.editForId) {
+      await this.messageStoreSvc.updateSelfDirectMessage(this.uid, this.editForId, text);
+      this.editForId = null;
+      this.draft = '';
+      return;
+    }
+
+    await this.messageStoreSvc.sendSelfDirectMessage(this.uid, {
+      text,
+      author: { uid: this.uid, username: this.userName, avatar: this.userAvatar }
+    });
+    this.draft = '';
+  }
+
+  async toggleReaction(m: any, emojiId: EmojiId) {
+    if (!this.uid) return;
+    const you = { userId: this.uid, username: this.userName };
+    await this.messageStoreSvc.toggleSelfDirectMessageReaction(this.uid, m.messageId, emojiId, you);
+  }
+
+  async toggleEmoji(m: Message, event: MouseEvent) {
+    const btn = event.currentTarget as HTMLElement | null;
+    if (!btn) return;
+
+    const rect = btn.getBoundingClientRect();
+    const dlgW = 350;
+    const gap = 8;
+
+    const dialogRef = this.dialog.open(AddEmojis, {
+      width: dlgW + 'px',
+      panelClass: 'add-emojis-dialog-panel',
+      position: {
+        top: `${Math.round(rect.bottom + gap)}px`,
+        left: `${Math.max(8, Math.round(rect.left - dlgW + btn.offsetWidth))}px`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((emojiId: string | null) => {
+      if (!emojiId) return;
+      if (!this.emojiSvc.isValid(emojiId)) return;
+      this.toggleReaction(m, emojiId as EmojiId);
+    });
+  }
+
+  getEmojiSrc(emojiId: EmojiId | string) {
+    return this.emojiSvc.src(emojiId);
+  }
+
+  private toDate(x: unknown): Date | null {
+    if (!x) return null;
+
+    // Firestore Timestamp (hat .toDate())
+    if (typeof (x as any)?.toDate === 'function') {
+      const d = (x as any).toDate();
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    if (x instanceof Date) return isNaN(x.getTime()) ? null : x;
+
+    if (typeof x === 'string') {
+      const date = new Date(x);
+      if (!isNaN(date.getTime())) return date;
+
+      // erlaubt "HH:MM"
+      const m = /^(\d{1,2}):(\d{2})$/.exec(x.trim());
+      if (m) {
+        const d = new Date();
+        d.setHours(parseInt(m[1], 10), parseInt(m[2], 10), 0, 0);
+        return d;
+      }
+    }
+
+    return null;
+  }
+
+  private getTimeSafe(date: string | Date | null | undefined): number {
+    const d = this.toDate(date);
+    return d ? d.getTime() : Number.POSITIVE_INFINITY;
+  }
+
+  private dayKey(date: Date | null): string | null {
+    if (!date) return null;
+
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const d = date.getDate().toString().padStart(2, '0');
+
+    return `${y}-${m}-${d}`;
+  }
+
+  private startOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private formatDayLabel(date: Date): string {
+    const now = this.startOfDay(new Date());
+    const today = this.startOfDay(date);
+    const diffDays = Math.round((now.getTime() - today.getTime()) / 86400000);
+
+    if (diffDays === 0) return 'heute';
+    if (diffDays === 1) return 'gestern';
+
+    const timeSeparator = new Intl.DateTimeFormat('de-DE', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(date);
+
+    return timeSeparator.charAt(0).toUpperCase() + timeSeparator.slice(1);
+  }
+
+  private compareByCreatedAtAsc = (a: Message, b: Message) =>
+    this.getTimeSafe(a.createdAt) - this.getTimeSafe(b.createdAt);
+
+  private rebuildMessagesView() {
+    const sorted = [...this.messages].sort(this.compareByCreatedAtAsc);
+    const out: Message[] = [];
+    let lastKey: string | null = null;
+
+    for (const m of sorted) {
+      const d = this.toDate(m.createdAt);
+      const key = this.dayKey(d);
+
+      if (!d || !key) {
+        out.push(m);
+        continue;
+      }
+
+      if (key !== lastKey) {
+        out.push({
+          messageId: '',
+          uid: '',
+          username: '',
+          avatar: '',
+          isYou: false,
+          createdAt: d,
+          text: '',
+          reactions: [],
+          repliesCount: 0,
+          timeSeparator: this.formatDayLabel(d),
+        });
+        lastKey = key;
+      }
+
+      out.push({ ...m, timeSeparator: undefined });
+    }
+
+    this.messagesView = out;
+  }
+
+  timeOf(x: string | Date | undefined | null): string {
+    const date = this.toDate(x);
+
+    if (!date) return '';
+
+    return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+  }
+
+  openAddEmojis(trigger: HTMLElement) {
+    // const r = trigger.getBoundingClientRect();
+    const gap = 24;
+    const dlgW = 350;
+    const dlgH = 467;
+
+    this.dialog.open(AddEmojis, {
+      width: dlgW + 'px',
+      panelClass: 'add-emojis-dialog-panel',
+      position: {
+        bottom: `${dlgH + gap}px`,
+        left: `${64 + dlgW}px`,
+      },
+    });
+  }
+
+  openAtMembers(trigger: HTMLElement) {
+    // const r = trigger.getBoundingClientRect();
+    const gap = 24;
+    const dlgW = 350;
+    const dlgH = 467;
+
+    this.dialog.open(AtMembers, {
+      width: dlgW + 'px',
+      panelClass: 'at-members-dialog-panel',
+      position: {
+        bottom: `${dlgH + gap}px`,
+        left: `${100 + dlgW}px`,
+      },
+    });
+  }
+
+  showReactionPanel(m: Message, reaction: Reaction, event: MouseEvent) {
+    const element = event.currentTarget as HTMLElement;
+    const messageElement = element.closest('.message') as HTMLElement;
+    if (!messageElement) return;
+
+    const reactionRect = element.getBoundingClientRect();
+    const messageRect = messageElement.getBoundingClientRect();
+
+    const x = reactionRect.left - messageRect.left + 40;
+    const y = reactionRect.top - messageRect.top - 110;
+
+    const youReacted = reaction.reactionUsers.some((u) => u.userId === this.uid);
+    const reactedUsers = reaction.reactionUsers.map((u) => u.username);
+
+    let title = '';
+    if (youReacted && reactedUsers.length > 0) {
+      const otherUsers = reactedUsers.filter((name) => name !== this.userName);
+      if (otherUsers.length > 0) {
+        title = `${otherUsers.slice(0, 2).join(' und ')} und Du`;
+      } else {
+        title = 'Du';
+      }
+    } else if (reactedUsers.length > 0) {
+      title = reactedUsers.slice(0, 2).join(' und ');
+    } else {
+      title = '';
+    }
+
+    const subtitle = reaction.reactionUsers?.length > 1 ? 'haben reagiert' : 'hat reagiert';
+
+    this.reactionPanel = {
+      show: true,
+      x: Math.max(10, x),
+      y: Math.max(10, y),
+      emoji: this.emojiSvc.src(reaction.emojiId),
+      title,
+      subtitle,
+      messageId: m.messageId,
+    };
+  }
+
+  clearReactionPanelHide() {
+    if (this.hideTimer) {
+      clearTimeout(this.hideTimer);
+      this.hideTimer = null;
+    }
+  }
+
+  scheduleReactionPanelHide(delay = 120) {
+    this.clearReactionPanelHide();
+    this.hideTimer = setTimeout(() => {
+      this.reactionPanel.show = false;
+      this.reactionPanel.messageId = '';
+    }, delay);
+  }
+
+  cancelReactionPanelHide() {
+    if (this.hideTimer) {
+      clearTimeout(this.hideTimer);
+      this.hideTimer = null;
+    }
+  }
+
+  toggleEditMessagePanel(m: Message, ev: MouseEvent) {
+    ev.stopPropagation();
+    this.clearEditMessagePanelHide();
+    this.showEditPanelForId = this.showEditPanelForId === m.messageId ? null : m.messageId;
+  }
+
+  scheduleEditMessagePanelHide(m: Message) {
+    /*
+    if (this.editForId !== m.messageId) return;
+    this.clearEditMessagePanelHide();
+    this.editHideTimer = setTimeout(() => {
+      this.editForId = null;
+    });
+    */
+
+
+    if (this.showEditPanelForId !== m.messageId) return;
+    this.clearEditMessagePanelHide();
+    this.editHideTimer = setTimeout(() => {
+      this.showEditPanelForId = null;
+    });
+  }
+
+  cancelEditMessagePanelHide(_: Message) { this.clearEditMessagePanelHide(); }
+  private clearEditMessagePanelHide() {
+    if (this.editHideTimer) { clearTimeout(this.editHideTimer); this.editHideTimer = null; }
+  }
+
+  editMessage(m: Message, ev: MouseEvent) {
+    ev.stopPropagation();
+    if (!m.isYou) return;
+    this.editForId = m.messageId;
+    this.showEditPanelForId = null;
+    this.draft = m.text;
+    queueMicrotask(() => this.composerTextarea?.nativeElement.focus());
+  }
+
+  @HostListener('document:keydown.escape') closeOnEsc() {
+    this.editForId = null;
+    // optional: this.draft = '';
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeOnOutsideClick(ev: MouseEvent) {
+    if (!this.host.nativeElement.contains(ev.target as Node)) {
+      this.showEditPanelForId = null; // nur Panel zu
+      // editForId NICHT zurücksetzen, sonst verliert man den Edit-Modus
+    }
+  }
+
+  private scrollToBottom() {
+    const el = this.messagesEl?.nativeElement;
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  openEmojiPicker(m: Message, event: MouseEvent) {
+    const btn = event.currentTarget as HTMLElement | null;
+    const rect = btn?.getBoundingClientRect();
+    const dlgW = 350, gap = 8;
+
+    const ref = this.dialog.open(AddEmojis, {
+      width: dlgW + 'px',
+      panelClass: 'add-emojis-dialog-panel',
+      ...(rect ? {
+        position: {
+          top: `${Math.round(rect.bottom + gap)}px`,
+          left: `${Math.max(8, Math.round(rect.left - dlgW + (btn?.offsetWidth || 0)))}px`,
+        }
+      } : {})
+    });
+
+    ref.afterClosed().subscribe((emojiId: string | null) => {
+      if (!emojiId || !this.emojiSvc.isValid(emojiId)) return;
+      this.toggleReaction(m, emojiId as EmojiId);
+    });
+  }
+
   closeMessage() {
     this.close.emit();
-  }
-
-
-  openAddEmojis() {
-    this.dialog.open(AddEmojis, {
-      panelClass: 'add-emojis-dialog-panel'
-    });
-  }
-
-  openAtMembers() {
-    this.dialog.open(AtMembers, {
-      panelClass: 'at-members-dialog-panel'
-    });
-  }
-
-  sendMessage() {
-
   }
 
   openProfile(member: any) {
@@ -111,5 +598,15 @@ export class ChatDirectYou {
       }
     });
   }
-}
 
+  get composerPlaceholder(): string {
+    const messageRecipient =
+      this.userName?.trim() ||
+      this.chatUser?.name?.trim() ||
+      null;
+
+    if (!messageRecipient) return 'Nachricht an @…';
+
+    return `Nachricht an @${messageRecipient}`;
+  }
+}
