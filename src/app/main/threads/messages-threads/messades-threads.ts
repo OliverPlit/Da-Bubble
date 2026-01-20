@@ -3,14 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../../../shared/add-emojis/add-emojis';
-import { AtMembers } from '../at-members/at-members';
+import { AtMembers } from '../../../shared/at-members/at-members';
+import type { User as AtMemberUser } from '../../../shared/at-members/at-members';
 import { CurrentUserService, CurrentUser, AvatarUrlPipe } from '../../../services/current-user.service';
 import { MessagesStoreService, MessageDoc, ReactionUserDoc } from '../../../services/messages-store.service';
 import { EmojiService, EmojiId } from '../../../services/emoji.service';
 import { PresenceService } from '../../../services/presence.service';
 import { ThreadStateService } from '../../../services/thread-state.service';
 import { DateUtilsService, DaySeparated, TimeOfPipe } from '../../../services/date-utils.service';
-import { Unsubscribe } from '@angular/fire/firestore';
+import { Unsubscribe, Firestore, doc, docData } from '@angular/fire/firestore';
+import { firstValueFrom } from 'rxjs';
+import { ChannelStateService } from '../../menu/channels/channel.service';
 
 type RootMessage = {
   messageId: string;
@@ -71,6 +74,7 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   @Input() channelId!: string;
   @Input() channelName = '';
 
+  private firestore = inject(Firestore);
   private dialog = inject(MatDialog);
   private hideTimer: any = null;
   private editHideTimer: any = null;
@@ -81,6 +85,60 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   private session = inject(CurrentUserService);
   private dateUtilsSvc = inject(DateUtilsService);
   private unsub: Unsubscribe | null = null;
+  private channelState = inject(ChannelStateService);
+
+  private toAtMember = (m: any): AtMemberUser => {
+    const uid = m?.uid ?? m?.id ?? '';
+    return {
+      uid,
+      name: m?.name ?? m?.username ?? '',
+      avatar: m?.avatar ?? '',
+      isYou: uid === this.uid
+    };
+  };
+
+  private ensureSelf = (list: AtMemberUser[]): AtMemberUser[] =>
+    (!this.uid || list.some(u => u.uid === this.uid))
+      ? list
+      : [...list, { uid: this.uid, name: this.name, avatar: this.avatar, isYou: true }];
+
+  private getMembersFromState = (): AtMemberUser[] => {
+    const ch = (this.channelState as any)?.selectedChannel?.()
+      ?? (this.channelState as any)?.value
+      ?? null;
+
+    const base = (Array.isArray(ch?.members) ? ch.members : [])
+      .map(this.toAtMember)
+      .filter((u: AtMemberUser) => u.uid && u.name);
+
+    return this.ensureSelf(base);
+  };
+
+  private async getMembersFromFirestore(): Promise<AtMemberUser[]> {
+    if (!this.uid || !this.channelId) return this.ensureSelf([]);
+    const ref = doc(this.firestore, `users/${this.uid}/memberships/${this.channelId}`);
+    const data: any = await firstValueFrom(docData(ref)).catch(() => null);
+    const raw = Array.isArray(data?.members) ? data.members : [];
+    return this.ensureSelf(raw.map(this.toAtMember).filter((u: AtMemberUser) => u.uid && u.name));
+  }
+
+  private getMembersFromContext(ctx: any): AtMemberUser[] {
+    const out: AtMemberUser[] = [];
+    if (this.uid) out.push({ uid: this.uid, name: this.name, avatar: this.avatar, isYou: true });
+    const a = ctx?.root?.author;
+    if (a?.uid && a?.username && a.uid !== this.uid) {
+      out.push({ uid: a.uid, name: a.username, avatar: a.avatar ?? '', isYou: false });
+    }
+    return out;
+  }
+
+  private async resolveMembersWithCtx(ctx: any): Promise<AtMemberUser[]> {
+    const fromState = this.getMembersFromState();
+    if (fromState.length) return fromState;
+    const fromFs = await this.getMembersFromFirestore();
+    if (fromFs.length) return fromFs;
+    return this.getMembersFromContext(ctx);
+  }
 
   draft = '';
   editForId: string | null = null;
@@ -197,8 +255,12 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
     });
   }
 
-  openAtMembers(trigger: HTMLElement) {
-    const r = trigger.getBoundingClientRect();
+  async openAtMembers(trigger: HTMLElement) {
+    const ctx = this.threadStateSvc.value;
+    if (!ctx) return;
+    const members = await this.resolveMembersWithCtx(ctx);
+
+    // const r = trigger.getBoundingClientRect();
     const gap = 24;
     const dlgW = 350;
     const dlgH = 467;
@@ -209,7 +271,15 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
       position: {
         bottom: `${-160 + dlgH + gap}px`,
         right: `${-240 + dlgW}px`
+      },
+      data: {
+        channelId: ctx.channelId,
+        currentUserId: ctx.uid,
+        members
       }
+    }).afterClosed().subscribe(mention => {
+      if (!mention) return;
+      this.draft = (this.draft || '').trimEnd() + (this.draft ? ' ' : '') + mention + ' ';
     });
   }
 

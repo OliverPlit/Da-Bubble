@@ -6,7 +6,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../../../shared/add-emojis/add-emojis';
-import { AtMembers } from '../../channel-messages/at-members/at-members';
+import { AtMembers } from '../../../shared/at-members/at-members';
+import type { User as AtMemberUser } from '../../../shared/at-members/at-members';
 import { EmojiService, EmojiId } from '../../../services/emoji.service';
 import { PresenceService } from '../../../services/presence.service';
 import { MessagesStoreService, MessageDoc, ReactionUserDoc } from '../../../services/messages-store.service';
@@ -19,6 +20,7 @@ import { ProfileCard } from '../../../shared/profile-card/profile-card';
 import { ChangeDetectorRef } from '@angular/core';
 import { DirectChatService } from '../../../services/direct-chat-service';
 import { DateUtilsService, DaySeparated, TimeOfPipe } from '../../../services/date-utils.service';
+import { firstValueFrom } from 'rxjs';
 
 type Message = {
   messageId: string;
@@ -89,6 +91,21 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
   private currentUserService = inject(CurrentUserService);
   private currentDmId: string | null = null;
   private dateUtilsSvc = inject(DateUtilsService);
+
+  private toAtMember = (m: any): AtMemberUser => {
+    const uid = (m?.uid ?? m?.id ?? '').toString();
+    return {
+      uid,
+      name: (m?.name ?? m?.username ?? '').toString(),
+      avatar: (m?.avatar ?? '').toString(),
+      isYou: uid === this.uid,
+    };
+  };
+
+  private ensureSelf = (list: AtMemberUser[]): AtMemberUser[] =>
+    (!this.uid || list.some(u => u.uid === this.uid))
+      ? list
+      : [...list, { uid: this.uid, name: this.userName, avatar: this.userAvatar, isYou: true }];
 
   userName: string = '';
   userAvatar: string = '';
@@ -321,6 +338,15 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openAtMembers(trigger: HTMLElement) {
+    if (!this.uid || !this.userName) return;
+    const me = { uid: this.uid, name: this.userName, avatar: this.userAvatar, isYou: true };
+
+    const partner = this.chatUser
+      ? [{ uid: this.chatUser.id, name: this.chatUser.name, avatar: this.chatUser.avatar ?? '', isYou: false }]
+      : [];
+
+    const members = [me, ...partner];
+
     // const r = trigger.getBoundingClientRect();
     const gap = 24;
     const dlgW = 350;
@@ -333,6 +359,13 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
         bottom: `${dlgH + gap}px`,
         left: `${100 + dlgW}px`,
       },
+      data: {
+        currentUserId: this.uid,
+        members
+      }
+    }).afterClosed().subscribe(mention => {
+      if (!mention) return;
+      this.draft = (this.draft || '').trimEnd() + (this.draft ? ' ' : '') + mention + ' ';
     });
   }
 

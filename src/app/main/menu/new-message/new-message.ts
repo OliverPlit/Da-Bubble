@@ -2,10 +2,12 @@ import { Component, inject, EventEmitter, Output, ViewChild, ElementRef } from '
 import { MatDialog } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { AddEmojis } from '../../../shared/add-emojis/add-emojis';
-import { AtMembers } from '../../channel-messages/at-members/at-members';
+import { AtMembers } from '../../../shared/at-members/at-members';
+import type { User as AtMemberUser } from '../../../shared/at-members/at-members';
 import { setDoc, Firestore, doc, updateDoc, arrayUnion, collection, collectionData, getDoc } from '@angular/fire/firestore';
 import { CommonModule } from '@angular/common';
 import { map } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-new-message',
@@ -79,8 +81,8 @@ export class NewMessage {
       return;
     }
 
-   const searchValue = (startsWithAt || startsWithHash) 
-      ? value.substring(1).toLowerCase() 
+    const searchValue = (startsWithAt || startsWithHash)
+      ? value.substring(1).toLowerCase()
       : value.toLowerCase();
 
     if (searchValue.length < 1) {
@@ -104,12 +106,12 @@ export class NewMessage {
       filteredChannels = this.allChannels
         .filter(c => c.name.toLowerCase().includes(searchValue))
         .filter(c => !this.selectedPeople.some(sp => sp.uid === c.uid))
-        .map(c => ({ 
-          uid: c.uid, 
-          name: c.name, 
-          avatar: '', 
-          email: '', 
-          type: 'channel' as const 
+        .map(c => ({
+          uid: c.uid,
+          name: c.name,
+          avatar: '',
+          email: '',
+          type: 'channel' as const
         }));
     }
     this.filteredPeople = [...filteredChannels, ...filteredUsers];
@@ -142,7 +144,7 @@ export class NewMessage {
 
   removePerson(person: { uid: string, name: string, avatar: string, email: string, type?: 'user' | 'channel' }) {
     this.selectedPeople = this.selectedPeople.filter(p => p.uid !== person.uid);
-    
+
     // Füge zurück zur entsprechenden Liste
     if (person.type === 'channel') {
       this.allChannels.push({ uid: person.uid, name: person.name });
@@ -175,9 +177,36 @@ export class NewMessage {
     });
   }
 
-  openAtMembers() {
+  async openAtMembers(_trigger: HTMLElement) {
+    const currentUid = JSON.parse(localStorage.getItem('currentUser') || '{}')?.uid || '';
+
+    const self = this.allPeople.find(p => p.uid === currentUid);
+    const members = [
+      ...(self ? [{ uid: self.uid, name: self.name, avatar: self.avatar, isYou: true }] : []),
+      ...this.allPeople
+        .filter(p => p.uid !== currentUid)
+        .map(p => ({ uid: p.uid, name: p.name, avatar: p.avatar, isYou: false })),
+    ];
+
+    // const r = trigger.getBoundingClientRect();
+    const gap = 24;
+    const dlgW = 350;
+    const dlgH = 467;
+
     this.dialog.open(AtMembers, {
-      panelClass: 'at-members-dialog-panel'
+      width: dlgW + 'px',
+      panelClass: 'at-members-dialog-panel',
+      position: {
+        bottom: `${dlgH + gap}px`,
+        left: `${100 + dlgW}px`,
+      },
+      data: {
+        currentUserId: currentUid,
+        members
+      }
+    }).afterClosed().subscribe(mention => {
+      if (!mention) return;
+      this.draft = (this.draft || '').trimEnd() + (this.draft ? ' ' : '') + mention + ' ';
     });
   }
 

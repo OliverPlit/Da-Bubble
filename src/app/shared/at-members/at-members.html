@@ -1,0 +1,14 @@
+<div class="at-members-dialog">
+    <ul class="list">
+        <li class="row" *ngFor="let u of orderedMembers()" [class.you]="u.isYou" (click)="choose(u)">
+            <div class="avatar" [class.you]="u.isYou" [style.background-image]="'url(' + (u.avatar | avatarUrl) + ')'">
+                <span *ngIf="!u.avatar"></span>
+
+                <span class="status-dot"
+                    [ngClass]="presence.userStatusMap()[u.uid] === 'online' ? 'online' : 'offline'"></span>
+            </div>
+
+            <span class="name">{{ u.name }}</span>
+        </li>
+    </ul>
+</div>

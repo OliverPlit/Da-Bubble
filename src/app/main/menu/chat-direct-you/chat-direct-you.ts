@@ -6,7 +6,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../../../shared/add-emojis/add-emojis';
-import { AtMembers } from '../../channel-messages/at-members/at-members';
+import { AtMembers } from '../../../shared/at-members/at-members';
+import type { User as AtMemberUser } from '../../../shared/at-members/at-members';
 import { Profile } from '../../header/profile/profile';
 import { EmojiService, EmojiId } from '../../../services/emoji.service';
 import { PresenceService } from '../../../services/presence.service';
@@ -23,6 +24,7 @@ import { FirebaseService } from '../../../services/firebase';
 import { Observable } from 'rxjs';
 import { LayoutService } from '../../../services/layout.service';
 import { DateUtilsService, DaySeparated, TimeOfPipe } from '../../../services/date-utils.service';
+import { firstValueFrom } from 'rxjs';
 
 type Message = {
   messageId: string;
@@ -95,6 +97,21 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
   private layout = inject(LayoutService);
   private currentUserService = inject(CurrentUserService);
   private dateUtilsSvc = inject(DateUtilsService);
+
+  private toAtMember = (m: any): AtMemberUser => {
+    const uid = (m?.uid ?? m?.id ?? '').toString();
+    return {
+      uid,
+      name: (m?.name ?? m?.username ?? '').toString(),
+      avatar: (m?.avatar ?? '').toString(),
+      isYou: uid === this.uid,
+    };
+  };
+
+  private ensureSelf = (list: AtMemberUser[]): AtMemberUser[] =>
+    (!this.uid || list.some(u => u.uid === this.uid))
+      ? list
+      : [...list, { uid: this.uid, name: this.userName, avatar: this.userAvatar, isYou: true }];
 
   userName: string = '';
   userAvatar: string = '';
@@ -319,6 +336,13 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openAtMembers(trigger: HTMLElement) {
+    const members = [
+      { uid: this.uid, name: this.userName, avatar: this.userAvatar, isYou: true },
+      ...(this.chatUser
+        ? [{ uid: this.chatUser.id, name: this.chatUser.name, avatar: this.chatUser.avatar ?? '', isYou: false }]
+        : [])
+    ];
+
     // const r = trigger.getBoundingClientRect();
     const gap = 24;
     const dlgW = 350;
@@ -331,6 +355,13 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
         bottom: `${dlgH + gap}px`,
         left: `${100 + dlgW}px`,
       },
+      data: {
+        currentUserId: this.uid,
+        members
+      }
+    }).afterClosed().subscribe(mention => {
+      if (!mention) return;
+      this.draft = (this.draft || '').trimEnd() + (this.draft ? ' ' : '') + mention + ' ';
     });
   }
 

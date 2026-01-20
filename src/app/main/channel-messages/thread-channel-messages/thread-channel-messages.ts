@@ -6,7 +6,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../../../shared/add-emojis/add-emojis';
-import { AtMembers } from '../at-members/at-members';
+import { AtMembers } from '../../../shared/at-members/at-members';
+import type { User as AtMemberUser } from '../../../shared/at-members/at-members';
+import { Firestore, doc, docData, getDoc } from '@angular/fire/firestore';
 import { EmojiService, EmojiId } from '../../../services/emoji.service';
 import { PresenceService } from '../../../services/presence.service';
 import { MessagesStoreService, MessageDoc, ReactionUserDoc } from '../../../services/messages-store.service';
@@ -18,6 +20,7 @@ import { OnChanges, SimpleChanges } from '@angular/core';
 import { ThreadStateService } from '../../../services/thread-state.service';
 import { LayoutService } from '../../../services/layout.service';
 import { DateUtilsService, DaySeparated, TimeOfPipe } from '../../../services/date-utils.service';
+import { firstValueFrom } from 'rxjs';
 
 type Message = {
   messageId: string;
@@ -73,6 +76,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   @Input() channelId!: string;
   @Input() channelName = '';
 
+  private firestore = inject(Firestore);
   private dialog = inject(MatDialog);
   private hideTimer: any = null;
   private editHideTimer: any = null;
@@ -88,8 +92,62 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   private threadStateSvc = inject(ThreadStateService);
   private dateUtilsSvc = inject(DateUtilsService);
 
-  // channelName = 'Entwicklerteam';
-  // uid = '';
+  private toAtMember = (m: any): AtMemberUser => {
+    const uid = (m?.uid ?? m?.id ?? '').toString();
+    return {
+      uid,
+      name: (m?.name ?? m?.username ?? '').toString(),
+      avatar: (m?.avatar ?? '').toString(),
+      isYou: uid === this.uid,
+    };
+  };
+
+  private ensureSelf = (list: AtMemberUser[]): AtMemberUser[] =>
+    (!this.uid || list.some(u => u.uid === this.uid))
+      ? list
+      : [...list, { uid: this.uid, name: this.name, avatar: this.avatar, isYou: true }];
+
+  private async getMembersFromState(): Promise<AtMemberUser[]> {
+    try {
+      const ch: any = await firstValueFrom(this.channelState.selectedChannel$);
+      if (!ch || (this.channelId && ch.id !== this.channelId)) return [];
+      const raw: any[] = Array.isArray(ch.members) ? ch.members : [];
+      const mapped = raw.map((x: any) => this.toAtMember(x)) as AtMemberUser[];
+      return this.ensureSelf(mapped.filter((u: AtMemberUser) => u.uid && u.name));
+    } catch {
+      return [];
+    }
+  }
+
+  private async getMembersFromFirestore(): Promise<AtMemberUser[]> {
+    if (!this.uid || !this.channelId) return [];
+    const ref = doc(this.firestore, `users/${this.uid}/memberships/${this.channelId}`);
+    const snap = await getDoc(ref);
+    const data: any = snap.exists() ? snap.data() : null;
+    const raw: any[] = Array.isArray(data?.members) ? data.members : [];
+    const mapped = raw.map((x: any) => this.toAtMember(x)) as AtMemberUser[];
+    return this.ensureSelf(mapped.filter((u: AtMemberUser) => u.uid && u.name));
+  }
+
+  private getMembersFromMessages(): AtMemberUser[] {
+    const uniq = new Map<string, AtMemberUser>();
+    for (const m of this.messages) {
+      const u = this.toAtMember({ uid: m.uid, name: m.username, avatar: m.avatar });
+      if (u.uid && u.name && !uniq.has(u.uid)) uniq.set(u.uid, u);
+    }
+    return this.ensureSelf([...uniq.values()]);
+  }
+
+  private async resolveMembers(): Promise<AtMemberUser[]> {
+    const fromState = await this.getMembersFromState();
+    if (fromState.length) return fromState;
+
+    const fromFs = await this.getMembersFromFirestore();
+    if (fromFs.length) return fromFs;
+
+    return this.getMembersFromMessages();
+  }
+
   name = '';
   avatar = '';
 
@@ -148,15 +206,14 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     );
   }
 
-
   ngAfterViewInit() {
     this.rebuildMessagesView();
     queueMicrotask(() => this.scrollToBottom());
   }
 
-
-  ngOnDestroy() { this.unsub?.(); }
-
+  ngOnDestroy() {
+    this.unsub?.();
+  }
 
   private mapDocToMessage(d: MessageDoc & { id: string }): Message {
     return {
@@ -185,7 +242,6 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     };
   }
 
-
   async sendMessage() {
     const text = this.draft.trim();
     if (!text || !this.uid || !this.channelId) return;
@@ -207,13 +263,11 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     this.draft = '';
   }
 
-
   async toggleReaction(m: any, emojiId: EmojiId) {
     if (!this.uid) return;
     const you = { userId: this.uid, username: this.name };
     await this.messageStoreSvc.toggleChannelReaction(this.uid, this.channelId, m.messageId, emojiId, you);
   }
-
 
   async toggleEmoji(m: Message, event: MouseEvent) {
     const btn = event.currentTarget as HTMLElement | null;
@@ -270,7 +324,9 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     });
   }
 
-  openAtMembers(trigger: HTMLElement) {
+  async openAtMembers(_trigger: HTMLElement) {
+    const members = await this.resolveMembers();
+
     // const r = trigger.getBoundingClientRect();
     const gap = 24;
     const dlgW = 350;
@@ -283,6 +339,14 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
         bottom: `${dlgH + gap}px`,
         left: `${100 + dlgW}px`,
       },
+      data: {
+        channelId: this.channelId,
+        currentUserId: this.uid,
+        members
+      }
+    }).afterClosed().subscribe(mention => {
+      if (!mention) return;
+      this.draft = (this.draft || '').trimEnd() + (this.draft ? ' ' : '') + mention + ' ';
     });
   }
 
