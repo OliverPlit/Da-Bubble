@@ -2,7 +2,6 @@ import { Injectable, signal, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { getDocs, query, limit, orderBy, collection, doc, Firestore, getDoc } from '@angular/fire/firestore';
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -13,25 +12,31 @@ export class ChannelStateService {
   private _channels = signal<any[]>([]);
   private _channelsSubject = new BehaviorSubject<any[]>([]);
   channels$ = this._channelsSubject.asObservable();
+  
+  // Cache für vollständig geladene Channels
+  private channelCache = new Map<string, any>();
 
   selectChannel(channel: any) {
-    this.selectedChannelSubject.next(channel);
+    // Wenn wir gecachte Daten haben, diese verwenden
+    const cachedChannel = this.channelCache.get(channel.id);
+    this.selectedChannelSubject.next(cachedChannel || channel);
   }
 
   getSelectedChannel() {
     return this.selectedChannelSubject.value;
   }
 
-
- updateSelectedChannel(channelData: any) {
+  updateSelectedChannel(channelData: any) {
     const currentChannel = this.selectedChannelSubject.value;
+    
+    // Cache aktualisieren
+    this.channelCache.set(channelData.id, channelData);
     
     // Nur aktualisieren wenn es der gleiche Channel ist
     if (currentChannel && currentChannel.id === channelData.id) {
       this.selectedChannelSubject.next(channelData);
     }
   }
-
 
   getCurrentChannel() {
     return this.selectedChannelSubject.value;
@@ -43,25 +48,44 @@ export class ChannelStateService {
   }
 
   async loadFullChannel(channelId: string) {
-  const firestore = this.firestore;
-  const ref = doc(firestore, `channels/${channelId}`);
-  const snap = await getDoc(ref);
+    // Zuerst im Cache nachsehen
+    if (this.channelCache.has(channelId)) {
+      return this.channelCache.get(channelId);
+    }
 
-  if (!snap.exists()) return null;
+    const firestore = this.firestore;
+    const ref = doc(firestore, `channels/${channelId}`);
+    
+    try {
+      const snap = await getDoc(ref);
 
-  const data = snap.data();
+      if (!snap.exists()) return null;
 
-  return {
-    id: channelId,
-    ...data,
-    members: Array.isArray(data['members']) ? data['members'] : [],
-  };
-}
+      const data = snap.data();
+
+      const fullChannel = {
+        id: channelId,
+        ...data,
+        members: Array.isArray(data['members']) ? data['members'] : [],
+      };
+      
+      // Im Cache speichern
+      this.channelCache.set(channelId, fullChannel);
+      
+      return fullChannel;
+    } catch (error) {
+      console.error(`Fehler beim Laden von Channel ${channelId}:`, error);
+      return null;
+    }
+  }
 
   removeChannel(channelId: string) {
     const updated = this._channels().filter(c => c.id !== channelId);
     this._channels.set(updated);
     this._channelsSubject.next(updated); 
+    
+    // Aus Cache entfernen
+    this.channelCache.delete(channelId);
 
     if (this.getCurrentChannel()?.id === channelId) {
       this.selectedChannelSubject.next(null);
@@ -69,28 +93,36 @@ export class ChannelStateService {
   }
 
   async loadFirstAvailableChannel(): Promise<void> {
-  try {
-    const storedUser = localStorage.getItem('currentUser');
-    if (!storedUser) return;
-    const uid = JSON.parse(storedUser).uid;
+    try {
+      const storedUser = localStorage.getItem('currentUser');
+      if (!storedUser) return;
+      const uid = JSON.parse(storedUser).uid;
 
-    const userRef = doc(this.firestore, 'users', uid);
-    const membershipsRef = collection(userRef, 'memberships');
-    
-    const q = query(membershipsRef, orderBy('name'), limit(1));
-    const snapshot = await getDocs(q);
+      const userRef = doc(this.firestore, 'users', uid);
+      const membershipsRef = collection(userRef, 'memberships');
+      
+      const q = query(membershipsRef, orderBy('name'), limit(1));
+      const snapshot = await getDocs(q);
 
-    if (!snapshot.empty) {
-      const firstChannel = {
-        id: snapshot.docs[0].id,
-        ...snapshot.docs[0].data()
-      };
-      this.selectChannel(firstChannel);
-    } else {
-      this.selectChannel(null);
+      if (!snapshot.empty) {
+        const firstChannel = {
+          id: snapshot.docs[0].id,
+          ...snapshot.docs[0].data()
+        };
+        
+        // Vollständige Daten laden
+        const fullChannel = await this.loadFullChannel(firstChannel.id);
+        this.selectChannel(fullChannel || firstChannel);
+      } else {
+        this.selectChannel(null);
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden des ersten Channels:', error);
     }
-  } catch (error) {
-    console.error('Fehler beim Laden des ersten Channels:', error);
   }
-}
+
+  // Cache leeren (z.B. bei Logout)
+  clearCache() {
+    this.channelCache.clear();
+  }
 }

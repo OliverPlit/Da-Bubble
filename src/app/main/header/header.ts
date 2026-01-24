@@ -6,11 +6,13 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatMenuTrigger } from '@angular/material/menu';
-import { Firestore, collection, query, where, getDocs, orderBy, limit, doc, getDoc } from '@angular/fire/firestore';
+import { Firestore, collection, query, where, getDocs, orderBy, limit, doc, getDoc, collectionGroup } from '@angular/fire/firestore';
 import { ChangeDetectorRef } from '@angular/core';
-import { FirebaseService, HeaderView  } from '../../services/firebase';
+import { FirebaseService, HeaderView } from '../../services/firebase';
 import { ChannelStateService } from '../menu/channels/channel.service';
 import { DirectChatService } from '../../services/direct-chat-service';
+import { ThreadStateService } from '../../services/thread-state.service';
+import { LayoutService } from '../../services/layout.service';
 import { Subscription } from 'rxjs';
 
 interface SearchResult {
@@ -22,7 +24,17 @@ interface SearchResult {
   timestamp?: Date;
   content?: string;
   channelData?: any;
-  dmData?: any; 
+  dmData?: any;
+  messageData?: {
+    messageId: string;
+    channelId?: string;
+    channelName?: string;
+    dmId?: string;
+    dmName?: string;
+    text: string;
+    author: { uid: string; username: string; avatar: string };
+    createdAt: any;
+  };
 }
 
 @Component({
@@ -36,8 +48,10 @@ export class Header {
   private router = inject(Router);
   private firestore = inject(Firestore);
   private cd = inject(ChangeDetectorRef);
-  private channelState = inject(ChannelStateService); // 🔥 NEU
-  private directChatService = inject(DirectChatService); // 🔥 NEU
+  private channelState = inject(ChannelStateService);
+  private directChatService = inject(DirectChatService);
+  private threadStateSvc = inject(ThreadStateService);
+  private layout = inject(LayoutService);
   
   isMobile = false;
   isVisible = true;
@@ -48,21 +62,21 @@ export class Header {
   searchResults: SearchResult[] = [];
   showSearchResults = false;
   isSearching = false;
-currentView: HeaderView = 'default';
+  currentView: HeaderView = 'default';
   private viewSubscription?: Subscription;
+  private currentUid = '';
 
-  constructor(private firebase: FirebaseService) {    this.checkWidth();
-}
-
-  get currentLogo(): string {
-    // Nur auf Mobile (< 600px) UND wenn New Message/Add Channel offen ist
-    if (this.isMobile && this.currentView !== 'default') {
-      return '/icons/logo-menu-devspace.png'; // Mobile Logo für spezielle Views
-    }
-    return '/icons/logo-menu.png'; // Standard Logo
+  constructor(private firebase: FirebaseService) {
+    this.checkWidth();
   }
 
-  // Getter für Mobile Header Sichtbarkeit
+  get currentLogo(): string {
+    if (this.isMobile && this.currentView !== 'default') {
+      return '/icons/logo-menu-devspace.png';
+    }
+    return '/icons/logo-menu.png';
+  }
+
   get showMobileHeader(): boolean {
     return this.isMobile && this.currentView !== 'default';
   }
@@ -71,14 +85,11 @@ currentView: HeaderView = 'default';
     await this.loadUser();
     this.updateName();
 
-    // 🔥 Abonniere View-Änderungen
     this.viewSubscription = this.firebase.currentView$.subscribe(view => {
       this.currentView = view;
       this.cd.detectChanges();
     });
   }
-
-
 
   openDialog() {
     const ref = this.dialog.open(Profile, {
@@ -98,14 +109,14 @@ currentView: HeaderView = 'default';
     this.router.navigate(['']);
   }
 
-
-
   async loadUser() {
     const storedUser = localStorage.getItem('currentUser');
     if (!storedUser) return;
 
     const uid = JSON.parse(storedUser).uid;
     if (!uid) return;
+
+    this.currentUid = uid;
 
     const userRef = doc(this.firestore, 'users', uid);
     const snap = await getDoc(userRef);
@@ -136,9 +147,10 @@ currentView: HeaderView = 'default';
       this.mobileMenuOpen = false;
     }
 
-     this.isMobile = window.innerWidth <= 750;
+    this.isMobile = window.innerWidth <= 750;
     if (!this.isMobile) {
-this.isVisible = !this.isMobile;     }
+      this.isVisible = !this.isMobile;
+    }
   }
 
   openMenu() {
@@ -160,24 +172,183 @@ this.isVisible = !this.isMobile;     }
       return;
     }
 
+    // Nur nach 3+ Zeichen suchen
+    if (query.length < 3) {
+      this.searchResults = [];
+      this.showSearchResults = false;
+      return;
+    }
+
     this.isSearching = true;
     this.showSearchResults = true;
 
     try {
+      let results: SearchResult[] = [];
+
       if (query.startsWith('@')) {
         const searchTerm = query.substring(1).toLowerCase();
-        this.searchResults = await this.searchDirectMessages(searchTerm);
-      }
-      else if (query.startsWith('#')) {
+        results = await this.searchDirectMessages(searchTerm);
+      } else if (query.startsWith('#')) {
         const searchTerm = query.substring(1).toLowerCase();
-        this.searchResults = await this.searchChannels(searchTerm);
+        results = await this.searchChannels(searchTerm);
+      } else {
+        // Normale Textsuche: Durchsuche Nachrichten
+        results = await this.searchMessages(query.toLowerCase());
       }
+
+      this.searchResults = results;
     } catch (error) {
       console.error('Fehler bei der Suche:', error);
       this.searchResults = [];
     } finally {
       this.isSearching = false;
       this.cd.detectChanges();
+    }
+  }
+
+  async searchMessages(searchTerm: string): Promise<SearchResult[]> {
+    if (!this.currentUid) return [];
+
+    const results: SearchResult[] = [];
+
+    try {
+      // Suche in Channel-Nachrichten
+      const channelResults = await this.searchChannelMessages(searchTerm);
+      results.push(...channelResults);
+
+      // Suche in Direct Messages
+      const dmResults = await this.searchDirectMessageMessages(searchTerm);
+      results.push(...dmResults);
+
+      // Sortiere nach Datum (neueste zuerst)
+      results.sort((a, b) => {
+        const timeA = a.timestamp ? a.timestamp.getTime() : 0;
+        const timeB = b.timestamp ? b.timestamp.getTime() : 0;
+        return timeB - timeA;
+      });
+
+    } catch (error) {
+      console.error('Fehler beim Durchsuchen der Nachrichten:', error);
+    }
+
+    return results.slice(0, 10); // Max 10 Ergebnisse
+  }
+
+  async searchChannelMessages(searchTerm: string): Promise<SearchResult[]> {
+    const results: SearchResult[] = [];
+
+    try {
+      // Hole alle Channels des Users
+      const userRef = doc(this.firestore, 'users', this.currentUid);
+      const channelsRef = collection(userRef, 'memberships');
+      const channelsSnapshot = await getDocs(channelsRef);
+
+      // Durchsuche jedes Channel
+      for (const channelDoc of channelsSnapshot.docs) {
+        const channelId = channelDoc.id;
+        const channelData = channelDoc.data();
+        const channelName = channelData['name'] || 'Unbekannt';
+
+        // Hole Nachrichten aus diesem Channel
+        const messagesRef = collection(this.firestore, `users/${this.currentUid}/messages/channels/${channelId}`);
+        const messagesSnapshot = await getDocs(messagesRef);
+
+        messagesSnapshot.forEach((msgDoc) => {
+          const msgData = msgDoc.data();
+          const text = (msgData['text'] || '').toLowerCase();
+
+          if (text.includes(searchTerm)) {
+            results.push({
+              type: 'message',
+              id: msgDoc.id,
+              title: `# ${channelName}`,
+              subtitle: msgData['author']?.username || 'Unbekannt',
+              content: this.truncateText(msgData['text'], 80),
+              timestamp: this.toDate(msgData['createdAt']),
+              avatar: msgData['author']?.avatar || '',
+              messageData: {
+                messageId: msgDoc.id,
+                channelId: channelId,
+                channelName: channelName,
+                text: msgData['text'],
+                author: msgData['author'] || { uid: '', username: 'Unbekannt', avatar: '' },
+                createdAt: msgData['createdAt']
+              }
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Fehler beim Durchsuchen der Channel-Nachrichten:', error);
+    }
+
+    return results;
+  }
+
+  async searchDirectMessageMessages(searchTerm: string): Promise<SearchResult[]> {
+    const results: SearchResult[] = [];
+
+    try {
+      // Hole alle Direct Message Konversationen
+      const dmMessagesRef = collection(this.firestore, `users/${this.currentUid}/messages/directMessages`);
+      const dmFolders = await getDocs(dmMessagesRef);
+
+      for (const dmFolder of dmFolders.docs) {
+        const dmId = dmFolder.id;
+        
+        // Hole den Namen des Chat-Partners
+        const otherUid = this.getOtherUidFromDmId(dmId, this.currentUid);
+        const otherUserData = await this.getUserData(otherUid);
+        const otherUserName = otherUserData?.name || 'Unbekannt';
+
+        // Hole Nachrichten aus dieser DM
+        const messagesRef = collection(this.firestore, `users/${this.currentUid}/messages/directMessages/${dmId}`);
+        const messagesSnapshot = await getDocs(messagesRef);
+
+        messagesSnapshot.forEach((msgDoc) => {
+          const msgData = msgDoc.data();
+          const text = (msgData['text'] || '').toLowerCase();
+
+          if (text.includes(searchTerm)) {
+            results.push({
+              type: 'message',
+              id: msgDoc.id,
+              title: `@ ${otherUserName}`,
+              subtitle: msgData['author']?.username || 'Unbekannt',
+              content: this.truncateText(msgData['text'], 80),
+              timestamp: this.toDate(msgData['createdAt']),
+              avatar: msgData['author']?.avatar || '',
+              messageData: {
+                messageId: msgDoc.id,
+                dmId: dmId,
+                dmName: otherUserName,
+                text: msgData['text'],
+                author: msgData['author'] || { uid: '', username: 'Unbekannt', avatar: '' },
+                createdAt: msgData['createdAt']
+              }
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Fehler beim Durchsuchen der Direct Messages:', error);
+    }
+
+    return results;
+  }
+
+  private getOtherUidFromDmId(dmId: string, currentUid: string): string {
+    const parts = dmId.split('__');
+    return parts[0] === currentUid ? parts[1] : parts[0];
+  }
+
+  private async getUserData(uid: string): Promise<any> {
+    try {
+      const userRef = doc(this.firestore, 'users', uid);
+      const snap = await getDoc(userRef);
+      return snap.exists() ? snap.data() : null;
+    } catch {
+      return null;
     }
   }
 
@@ -189,7 +360,7 @@ this.isVisible = !this.isMobile;     }
     const currentUid = JSON.parse(storedUser).uid;
 
     try {
-      const usersRef = collection(this.firestore, 'directMessages');
+      const usersRef = collection(this.firestore, 'users');
       const usersSnapshot = await getDocs(usersRef);
 
       usersSnapshot.forEach((doc) => {
@@ -202,12 +373,11 @@ this.isVisible = !this.isMobile;     }
             id: doc.id,
             title: userData['name'] || 'Unbekannt',
             avatar: userData['avatar'] || 'avatar-1.png',
-            dmData: { 
+            dmData: {
               id: doc.id,
               name: userData['name'] || 'Unbekannt',
               avatar: userData['avatar'] || 'avatar-1.png',
               email: userData['email'] || '',
-              status: userData['status'] || 'offline'
             }
           });
         }
@@ -222,7 +392,7 @@ this.isVisible = !this.isMobile;     }
   async searchChannels(searchTerm: string): Promise<SearchResult[]> {
     const storedUser = localStorage.getItem('currentUser');
     if (!storedUser) return [];
-    
+
     const uid = JSON.parse(storedUser).uid;
     const results: SearchResult[] = [];
 
@@ -262,6 +432,13 @@ this.isVisible = !this.isMobile;     }
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   }
 
+  private toDate(timestamp: any): Date {
+    if (!timestamp) return new Date();
+    if (timestamp.toDate) return timestamp.toDate();
+    if (timestamp instanceof Date) return timestamp;
+    return new Date(timestamp);
+  }
+
   selectSearchResult(result: SearchResult) {
     this.showSearchResults = false;
     this.searchQuery = '';
@@ -282,12 +459,63 @@ this.isVisible = !this.isMobile;     }
         break;
 
       case 'message':
-        console.log('Navigiere zu Message:', result);
+        if (result.messageData) {
+          this.openMessage(result.messageData);
+        }
         break;
+    }
+  }
+
+  private openMessage(messageData: any) {
+    if (messageData.channelId) {
+      // Channel-Nachricht: Öffne Channel und scrolle zur Nachricht
+      const channelData = {
+        id: messageData.channelId,
+        name: messageData.channelName
+      };
+      this.channelState.selectChannel(channelData);
+      this.router.navigate(['/main/channels']);
+
+      // Optional: Öffne Thread-Ansicht für diese Nachricht
+      setTimeout(() => {
+        this.layout.openRight();
+        this.threadStateSvc.open({
+          uid: this.currentUid,
+          channelId: messageData.channelId,
+          channelName: messageData.channelName,
+          messageId: messageData.messageId,
+          root: {
+            author: messageData.author,
+            createdAt: messageData.createdAt,
+            text: messageData.text,
+            reactions: [],
+            isYou: messageData.author.uid === this.currentUid
+          }
+        });
+      }, 300);
+
+    } else if (messageData.dmId) {
+      // Direct Message: Öffne DM-Chat
+      const otherUid = this.getOtherUidFromDmId(messageData.dmId, this.currentUid);
+      this.getUserData(otherUid).then(userData => {
+        if (userData) {
+          const dmData = {
+            id: otherUid,
+            name: userData.name,
+            avatar: userData.avatar,
+            email: userData.email || '',
+          };
+          this.router.navigate(['/main/direct-message', dmData.name]);
+        }
+      });
     }
   }
 
   closeSearch() {
     this.showSearchResults = false;
+  }
+
+  ngOnDestroy() {
+    this.viewSubscription?.unsubscribe();
   }
 }

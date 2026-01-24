@@ -2,8 +2,7 @@ import { Component, inject, signal, computed, ChangeDetectorRef, Input } from '@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Firestore, doc, getDoc, collection, collectionData, writeBatch, getDocs } from '@angular/fire/firestore';
-import { map } from 'rxjs';
+import { Firestore, doc, getDoc, collection, getDocs, writeBatch, query } from '@angular/fire/firestore';
 import { ChannelStateService } from '../../menu/channels/channel.service';
 import { FirebaseService } from "../../../services/firebase";
 
@@ -37,9 +36,11 @@ export class AddMembers {
   private cd = inject(ChangeDetectorRef);
   firestore = inject(Firestore);
   private firebaseService = inject(FirebaseService);
+  
+  currentUserId = '';
   userName = '';
-
   fullChannel: any = null;
+  
   @Input() channel = '';
   @Input() channelId = '';
   @Input() members: Member[] = [];
@@ -52,31 +53,18 @@ export class AddMembers {
   hasFocus = signal(false);
   activeIndex = signal<number>(-1);
   isSubmitting = signal(false);
+  isLoading = signal(true);
 
   constructor(private cdr: ChangeDetectorRef, private channelState: ChannelStateService) {}
 
   async ngOnInit() {
-    await this.initUserId();
+    // Alle Daten parallel laden
+    const [userData, allUsers] = await Promise.all([
+      this.loadCurrentUser(),
+      this.loadAllUsers()
+    ]);
 
-    this.firebaseService.currentName$.subscribe((name) => {
-      if (!name) return;
-      this.userName = name;
-
-      const storedUser = localStorage.getItem('currentUser');
-      if (!storedUser) return;
-      const currentUid = JSON.parse(storedUser).uid;
-
-      this.existingMembers.update(members =>
-        members.map(m => m.uid === currentUid ? { ...m, name: `${name} (Du)` } : m)
-      );
-
-      this.selected.update(members =>
-        members.map(m => m.uid === currentUid ? { ...m, name: `${name} (Du)` } : m)
-      );
-
-      this.cd.detectChanges();
-    });
-
+    // Dialog-Daten setzen
     const data = this.data as DialogData;
     this.channelId = data.channelId || '';
     this.channelName = data.channelName || '';
@@ -88,39 +76,72 @@ export class AddMembers {
       this.existingMembers.set(data.members);
     }
 
-    const dmRef = collection(this.firestore, 'directMessages');
-    collectionData(dmRef, { idField: 'uid' })
-      .pipe(
-        map(users => users.map(u => ({
-          uid: u['uid'] ?? crypto.randomUUID(),
-          name: u['name'] ?? 'Unbekannter Benutzer',
-          avatar: u['avatar'] ?? 'default-avatar.png',
-          status: u['status'] ?? 'offline'
-        } as Member)))
-      )
-      .subscribe(list => {
-        this.allMembers = list;
-        this.members = list;
-        this.cd.detectChanges();
-      });
+    // User-Liste setzen
+    this.allMembers = allUsers;
+    this.members = allUsers;
+    this.isLoading.set(false);
+    this.cd.detectChanges();
+
+    // Name-Updates abonnieren (für spätere Änderungen)
+    this.subscribeToNameChanges();
   }
 
-  async initUserId() {
+  private async loadCurrentUser(): Promise<void> {
     const storedUser = localStorage.getItem('currentUser');
     if (!storedUser) return;
 
     const userData = JSON.parse(storedUser);
-    const currentUserId = userData.uid;
-    if (!currentUserId) return;
+    this.currentUserId = userData.uid;
+    if (!this.currentUserId) return;
 
-    const userRef = doc(this.firestore, 'directMessages', currentUserId);
-    const snap = await getDoc(userRef);
-    if (snap.exists()) {
-      const data: any = snap.data();
-      this.userName = data.name;
-      this.firebaseService.setName(this.userName);
-      this.cd.detectChanges();
+    try {
+      const userRef = doc(this.firestore, 'directMessages', this.currentUserId);
+      const snap = await getDoc(userRef);
+      
+      if (snap.exists()) {
+        const data: any = snap.data();
+        this.userName = data.name;
+        this.firebaseService.setName(this.userName);
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden des aktuellen Users:', error);
     }
+  }
+
+  private async loadAllUsers(): Promise<Member[]> {
+    try {
+      const dmRef = collection(this.firestore, 'directMessages');
+      const q = query(dmRef);
+      const snapshot = await getDocs(q);
+      
+      return snapshot.docs.map(docSnap => ({
+        uid: docSnap.id,
+        name: docSnap.data()['name'] ?? 'Unbekannter Benutzer',
+        avatar: docSnap.data()['avatar'] ?? 'avatar-0.png',
+        status: docSnap.data()['status'] ?? 'offline',
+        email: docSnap.data()['email'] ?? ''
+      } as Member));
+    } catch (error) {
+      console.error('Fehler beim Laden aller User:', error);
+      return [];
+    }
+  }
+
+  private subscribeToNameChanges(): void {
+    this.firebaseService.currentName$.subscribe((name) => {
+      if (!name || !this.currentUserId) return;
+      this.userName = name;
+
+      this.existingMembers.update(members =>
+        members.map(m => m.uid === this.currentUserId ? { ...m, name: `${name} (Du)` } : m)
+      );
+
+      this.selected.update(members =>
+        members.map(m => m.uid === this.currentUserId ? { ...m, name: `${name} (Du)` } : m)
+      );
+
+      this.cd.detectChanges();
+    });
   }
 
   suggestions = computed(() => {
@@ -179,9 +200,6 @@ export class AddMembers {
     if (!this.selected().length) { this.close(); return; }
     this.isSubmitting.set(true);
 
-    const storedUser = localStorage.getItem('currentUser');
-    if (!storedUser) return;
-    const currentUid = JSON.parse(storedUser).uid;
     const channelId = this.channelId;
 
     try {
@@ -193,22 +211,25 @@ export class AddMembers {
         ...newMemberUids
       ]));
 
-
+      // Parallel: Channel-Daten und Member-Details laden
       const [channelData, allMembersData] = await Promise.all([
-        this.fetchChannelData(currentUid, channelId),
-        this.fetchAllMemberDetailsBatch(currentUid, allMemberUids)
+        this.fetchChannelData(this.currentUserId, channelId),
+        this.fetchAllMemberDetailsBatch(allMemberUids)
       ]);
 
+      // Batch-Update aller Memberships
       await this.updateAllUserMembershipsBatch(allMemberUids, channelId, channelData, allMembersData);
 
-      const membershipRef = doc(this.firestore, `users/${currentUid}/memberships/${channelId}`);
+      // Channel-State aktualisieren
+      const membershipRef = doc(this.firestore, `users/${this.currentUserId}/memberships/${channelId}`);
       const snap = await getDoc(membershipRef);
+      
       if (snap.exists()) {
         const freshChannelData = snap.data();
         this.channelState.selectChannel({ ...freshChannelData, id: channelId });
       }
 
-      await new Promise(r => setTimeout(r, 200));
+      // Dialog schließen
       this.dialogRef.close({ success: true, added: this.selected() });
 
     } catch (err) {
@@ -217,36 +238,38 @@ export class AddMembers {
     }
   }
 
-  async fetchChannelData(currentUid: string, channelId: string) {
+  private async fetchChannelData(currentUid: string, channelId: string) {
     const ref = doc(this.firestore, `users/${currentUid}/memberships/${channelId}`);
     const snap = await getDoc(ref);
     return snap.exists() ? snap.data() : {};
   }
 
-  async fetchAllMemberDetailsBatch(currentUid: string, allMemberUids: string[]): Promise<Member[]> {
-    const memberPromises = allMemberUids.map(async (uid) => {
-      const dmRef = doc(this.firestore, `directMessages/${uid}`);
-      const dmSnap = await getDoc(dmRef);
-      
-      if (dmSnap.exists()) {
-        const userData = dmSnap.data();
+  private async fetchAllMemberDetailsBatch(allMemberUids: string[]): Promise<Member[]> {
+    // Alle bereits in allMembers geladenen User verwenden
+    const memberMap = new Map(this.allMembers.map(m => [m.uid, m]));
+    
+    return allMemberUids.map(uid => {
+      const member = memberMap.get(uid);
+      if (!member) {
         return {
           uid,
-          name: uid === currentUid ? `${userData['name']} (Du)` : userData['name'],
-          avatar: userData['avatar'] || 'avatar-0.png',
-          email: userData['email'] || '',
-          status: 'online',
-          isYou: uid === currentUid
+          name: 'Unbekannter Benutzer',
+          avatar: 'avatar-0.png',
+          email: '',
+          status: 'offline',
+          isYou: uid === this.currentUserId
         } as Member;
       }
-      return null;
+      
+      return {
+        ...member,
+        name: uid === this.currentUserId ? `${member.name} (Du)` : member.name,
+        isYou: uid === this.currentUserId
+      };
     });
-
-    const results = await Promise.all(memberPromises);
-    return results.filter(m => m !== null) as Member[];
   }
 
-  async updateAllUserMembershipsBatch(
+  private async updateAllUserMembershipsBatch(
     allMemberUids: string[],
     channelId: string,
     channelData: any,
