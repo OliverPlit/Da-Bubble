@@ -151,6 +151,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   name = '';
   avatar = '';
 
+  isSending = false;
   draft = '';
   editForId: string | null = null;
   showEditPanelForId: string | null = null;
@@ -243,27 +244,34 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   }
 
   async sendMessage() {
-    const raw = (this.draft ?? '').trim();
-    const text = this.emojiSvc.normalizeShortcodes(raw);
+    const text = this.emojiSvc.normalizeShortcodes((this.draft ?? '').trim());
     if (!text || !this.uid || !this.channelId) return;
 
-    const u = this.currentUserService.getCurrentUser();
-    if (!u) return;
+    if (this.isSending) return;
+    this.isSending = true;
 
-    if (this.editForId) {
-      await this.messageStoreSvc.updateChannelMessage(
-        this.uid, this.channelId, this.editForId, text
-      );
-      this.editForId = null;
+    try {
+      const u = this.currentUserService.getCurrentUser();
+      if (!u) return;
+
+      if (this.editForId) {
+        await this.messageStoreSvc.updateChannelMessage(
+          this.uid, this.channelId, this.editForId, text
+        );
+        this.editForId = null;
+        this.draft = '';
+        return;
+      }
+
+      await this.messageStoreSvc.sendChannelMessage(this.uid, this.channelId, {
+        text,
+        author: { uid: u.uid, username: u.name, avatar: u.avatar },
+      });
+
       this.draft = '';
-      return;
-    }
-
-    await this.messageStoreSvc.sendChannelMessage(this.uid, this.channelId, {
-      text,
-      author: { uid: u.uid, username: u.name, avatar: u.avatar },
-    });
-    this.draft = '';
+    } finally {
+      this.isSending = false;
+    }   
   }
 
   async toggleReaction(m: any, emojiId: EmojiId) {

@@ -80,6 +80,7 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   private editHideTimer: any = null;
   private host = inject(ElementRef<HTMLElement>);
   private emojiSvc = inject(EmojiService);
+  public presence = inject(PresenceService);
   private messageStoreSvc = inject(MessagesStoreService);
   private threadStateSvc = inject(ThreadStateService);
   private session = inject(CurrentUserService);
@@ -140,6 +141,7 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
     return this.getMembersFromContext(ctx);
   }
 
+  isSending = false;
   draft = '';
   editForId: string | null = null;
   showEditPanelForId: string | null = null;
@@ -286,25 +288,31 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
     });
   }
 
-  sendMessage() {
+  async sendMessage() {
     const ctx = this.threadStateSvc.value;
-    const raw = (this.draft ?? '').trim();
-    const text = this.emojiSvc.normalizeShortcodes(raw);
+    const text = this.emojiSvc.normalizeShortcodes((this.draft ?? '').trim());
     if (!ctx || !text) return;
 
-    if (this.editForId) {
-      this.messageStoreSvc
-        .updateThreadMessage(ctx.uid, ctx.channelId, ctx.messageId, this.editForId, text)
-        .then(() => {
-          this.editForId = null;
-          this.draft = '';
-        });
-      return;
-    }
+    if (this.isSending) return;
+    this.isSending = true;
 
-    const author = ctx.root?.author!;
-    this.messageStoreSvc.sendThreadReply(ctx.uid, ctx.channelId, ctx.messageId, { text, author });
-    this.draft = '';
+    try {
+      if (this.editForId) {
+        await this.messageStoreSvc
+          .updateThreadMessage(ctx.uid, ctx.channelId, ctx.messageId, this.editForId, text)
+          .then(() => {
+            this.editForId = null;
+            this.draft = '';
+          });
+        return;
+      }
+
+      const author = ctx.root?.author!;
+      await this.messageStoreSvc.sendThreadReply(ctx.uid, ctx.channelId, ctx.messageId, { text, author });
+      this.draft = '';
+    } finally {
+      this.isSending = false;
+    }
   }
 
   async toggleReaction(reply: Reply, emojiId: EmojiId) {

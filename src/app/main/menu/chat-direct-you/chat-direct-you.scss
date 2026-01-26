@@ -145,6 +145,20 @@ h2 {
     background-position: center;
   }
 
+  .status-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 56px;
+    margin-left: 58px;
+  }
+
+  .online {
+    background: #2ecc71;
+    box-shadow: 0 0 8px #2ecc71;
+  }
+
   .message-body {
     width: fit-content;
     display: flex;

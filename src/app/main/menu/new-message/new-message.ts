@@ -1,4 +1,4 @@
-import { Component, inject, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, EventEmitter, Input, Output, ViewChild, ElementRef } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { AddEmojis } from '../../../shared/add-emojis/add-emojis';
@@ -19,11 +19,13 @@ import { firstValueFrom } from 'rxjs';
   styleUrl: './new-message.scss',
 })
 export class NewMessage {
+  @Input() uid!: string;
   @Output() close = new EventEmitter<void>();
   private dialog = inject(MatDialog)
   firestore: Firestore = inject(Firestore);
   private emojiSvc = inject(EmojiService);
   private messageStoreSvc = inject(MessagesStoreService);
+  private currentUserService = inject(CurrentUserService);
   selectedPeople: { uid: string, name: string, avatar: string, email: string, type?: 'user' | 'channel' }[] = [];
   allPeople: { uid: string, name: string, avatar: string, email: string }[] = [];
   filteredPeople: { uid: string, name: string, avatar: string, email: string, type: 'user' | 'channel' }[] = [];
@@ -31,10 +33,21 @@ export class NewMessage {
   allChannels: { uid: string, name: string }[] = [];
   filteredChannel: { uid: string, name: string }[] = [];
   inputName: string = "";
+  name = '';
+  avatar = '';
+  isSending = false;
   draft = '';
   search = true;
 
-  ngOnInit() {
+  async ngOnInit() {
+    await this.currentUserService.hydrateFromLocalStorage();
+    const u = this.currentUserService.getCurrentUser();
+    if (u) {
+      this.uid = u.uid;
+      this.name = u.name;
+      this.avatar = u.avatar;
+    }
+
     const storedUser = localStorage.getItem('currentUser');
     if (!storedUser) return;
 
@@ -222,40 +235,45 @@ export class NewMessage {
     const text = this.emojiSvc.normalizeShortcodes((this.draft ?? '').trim());
     if (!text) return;
 
-    const stored = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    const author = {
-      uid: stored?.uid || '',
-      username: stored?.name || '',
-      avatar: stored?.avatar || ''
-    };
-    if (!author.uid) return;
-
-    const channel = this.selectedPeople.find(p => p.type === 'channel');
-    const users = this.selectedPeople.filter(p => (p.type ?? 'user') === 'user');
+    if (this.isSending) return;
+    this.isSending = true;
 
     try {
-      if (channel) {
-        await this.messageStoreSvc.sendChannelMessage(author.uid, channel.uid, {
-          text,
-          author: { uid: author.uid, username: author.username, avatar: author.avatar }
-        });
-      } else if (users.length > 0) {
-        await Promise.all(
-          users.map(u =>
-            this.messageStoreSvc.sendDirectMessageBetween(author.uid, u.uid, {
-              text,
-              author: { uid: author.uid, username: author.username, avatar: author.avatar }
-            })
-          )
-        );
-      } else {
+      if (!this.uid || !this.name) {
+        console.warn('Kein CurrentUser geladen – Author-Daten fehlen.');
         return;
       }
 
-      this.draft = '';
-      this.close.emit();
-    } catch (err) {
-      console.error('sendMessage failed', err);
+      const channel = this.selectedPeople.find(p => p.type === 'channel');
+      const users = this.selectedPeople.filter(p => (p.type ?? 'user') === 'user');
+
+      const payload = {
+        text,
+        author: { uid: this.uid, username: this.name, avatar: this.avatar }
+      };
+
+      try {
+        if (channel) {
+          await this.messageStoreSvc
+            .sendChannelMessage(this.uid, channel.uid, payload);
+        } else if (users.length > 0) {
+          await Promise.all(
+            users.map(u =>
+              this.messageStoreSvc
+                .sendDirectMessageBetween(this.uid, u.uid, payload)
+            )
+          );
+        } else {
+          return;
+        }
+
+        this.draft = '';
+        this.close.emit();
+      } catch (err) {
+        console.error('sendMessage failed', err);
+      }
+    } finally {
+      this.isSending = false;
     }
   }
 

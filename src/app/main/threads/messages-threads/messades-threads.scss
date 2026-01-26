@@ -76,6 +76,20 @@ $hoverCard: #444DF2;
     background-position: center;
   }
 
+  .status-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 56px;
+    margin-left: 58px;
+  }
+
+  .online {
+    background: #2ecc71;
+    box-shadow: 0 0 8px #2ecc71;
+  }
+
   .message-body {
     width: fit-content;
     display: flex;
@@ -348,7 +362,6 @@ $hoverCard: #444DF2;
     .text {
       background-color: #FFFFFF !important;
 
-      // ← DAS HAT GEFEHLT!
       &.you {
         background-color: $hoverBgYou !important;
       }

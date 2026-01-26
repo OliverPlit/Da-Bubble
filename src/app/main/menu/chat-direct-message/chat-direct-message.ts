@@ -114,6 +114,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
   constructor(private directChatService: DirectChatService) { }
 
   ready = false;
+  isSending = false;
   draft = '';
   editForId: string | null = null;
   showEditPanelForId: string | null = null;
@@ -256,25 +257,32 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async sendMessage() {
-    const raw = (this.draft ?? '').trim();
-    const text = this.emojiSvc.normalizeShortcodes(raw);
+    const text = this.emojiSvc.normalizeShortcodes((this.draft ?? '').trim());
     if (!text || !this.uid || !this.chatUser?.id) return;
 
-    const u = this.currentUserService.getCurrentUser();
-    if (!u) return;
+    if (this.isSending) return;
+    this.isSending = true;
 
-    if (this.editForId) {
-      await this.messageStoreSvc.updateDirectMessageBetween(this.uid, this.chatUser.id, this.editForId, text);
-      this.editForId = null;
+    try {
+      const u = this.currentUserService.getCurrentUser();
+      if (!u) return;
+
+      if (this.editForId) {
+        await this.messageStoreSvc.updateDirectMessageBetween(this.uid, this.chatUser.id, this.editForId, text);
+        this.editForId = null;
+        this.draft = '';
+        return;
+      }
+
+      await this.messageStoreSvc.sendDirectMessageBetween(this.uid, this.chatUser.id, {
+        text,
+        author: { uid: this.uid, username: this.userName, avatar: this.userAvatar }
+      });
+
       this.draft = '';
-      return;
+    } finally {
+      this.isSending = false;
     }
-
-    await this.messageStoreSvc.sendDirectMessageBetween(this.uid, this.chatUser.id, {
-      text,
-      author: { uid: this.uid, username: this.userName, avatar: this.userAvatar }
-    });
-    this.draft = '';
   }
 
   async toggleReaction(m: any, emojiId: EmojiId) {

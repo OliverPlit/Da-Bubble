@@ -121,6 +121,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
   directMessage$: Observable<directMessageContact[]> | undefined;
 
   ready = false;
+  isSending = false;
   draft = '';
   editForId: string | null = null;
   showEditPanelForId: string | null = null;
@@ -254,25 +255,32 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async sendMessage() {
-    const raw = (this.draft ?? '').trim();
-    const text = this.emojiSvc.normalizeShortcodes(raw);
+    const text = this.emojiSvc.normalizeShortcodes((this.draft ?? '').trim());
     if (!text || !this.uid) return;
 
-    const u = this.currentUserService.getCurrentUser();
-    if (!u) return;
+    if (this.isSending) return;
+    this.isSending = true;
 
-    if (this.editForId) {
-      await this.messageStoreSvc.updateSelfDirectMessage(this.uid, this.editForId, text);
-      this.editForId = null;
+    try {
+      const u = this.currentUserService.getCurrentUser();
+      if (!u) return;
+
+      if (this.editForId) {
+        await this.messageStoreSvc.updateSelfDirectMessage(this.uid, this.editForId, text);
+        this.editForId = null;
+        this.draft = '';
+        return;
+      }
+
+      await this.messageStoreSvc.sendSelfDirectMessage(this.uid, {
+        text,
+        author: { uid: this.uid, username: this.userName, avatar: this.userAvatar }
+      });
+
       this.draft = '';
-      return;
+    } finally {
+      this.isSending = false;
     }
-
-    await this.messageStoreSvc.sendSelfDirectMessage(this.uid, {
-      text,
-      author: { uid: this.uid, username: this.userName, avatar: this.userAvatar }
-    });
-    this.draft = '';
   }
 
   async toggleReaction(m: any, emojiId: EmojiId) {
