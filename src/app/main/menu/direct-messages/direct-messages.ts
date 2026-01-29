@@ -2,7 +2,7 @@ import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { directMessageContact } from './direct-messages.model';
 import { FirebaseService } from '../../../services/firebase';
-import { Observable, combineLatest } from 'rxjs';
+import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { Firestore, getDoc, doc } from '@angular/fire/firestore';
 import { DirectChatService } from '../../../services/direct-chat-service';
@@ -22,14 +22,11 @@ export class DirectMessages {
   private cdr = inject(ChangeDetectorRef);
   private directChatService = inject(DirectChatService);
   public presence = inject(PresenceService);
-
   userName: string = '';
   userAvatar: string = '';
   currentUserId: string = '';
-
   selectedDmId: string = '';
   isYouSelected: boolean = false;
-  
   directMessage$: Observable<directMessageContact[]> | undefined;
 
   constructor(
@@ -38,24 +35,19 @@ export class DirectMessages {
   ) { }
 
   async ngOnInit() {
-    // User-Daten parallel laden
     const userDataPromise = this.initUserId();
     
-    // Direct Messages Observable vorbereiten (startet sofort)
     this.directMessage$ = this.firebaseService.getCollection$('directMessages').pipe(
-      startWith([]), // Sofort mit leerem Array starten
+      startWith([]), 
       map(users => {
-        // Filter erst anwenden wenn currentUserId verfügbar
         if (!this.currentUserId) return users;
         return users.filter(user => user.id !== this.currentUserId);
       }),
-      shareReplay(1) // Ergebnis cachen
+      shareReplay(1) 
     );
     
-    // Auf User-Daten warten
     await userDataPromise;
     
-    // Name-Updates abonnieren
     this.firebaseService.currentName$.subscribe((name) => {
       if (name) {
         this.userName = name;
@@ -72,10 +64,8 @@ export class DirectMessages {
   async initUserId() {
     const storedUser = localStorage.getItem('currentUser');
     if (!storedUser) return;
-    
     const userData = JSON.parse(storedUser);
     this.currentUserId = userData.uid;
-    
     if (!this.currentUserId) return;
 
     try {
@@ -97,11 +87,8 @@ export class DirectMessages {
   openChatDirectMessage(dm: directMessageContact) {
     this.selectedDmId = dm.id;
     this.isYouSelected = false;
-    
-    // Sofort navigieren
     this.router.navigate(['/main/direct-message', dm.name]);
     
-    // Chat im Hintergrund öffnen
     requestAnimationFrame(() => {
       this.directChatService.openChat(dm);
     });

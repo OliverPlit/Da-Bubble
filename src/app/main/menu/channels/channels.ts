@@ -26,7 +26,6 @@ export class Channels implements OnInit {
   ) { }
 
   ngOnInit() {
-    // Zuerst den aktuell ausgewählten Channel laden (falls vorhanden)
     const currentChannel = this.channelState.getSelectedChannel();
     if (currentChannel) {
       this.selectedChannelId = currentChannel.id;
@@ -54,14 +53,11 @@ export class Channels implements OnInit {
 
     collectionData(membershipsRef, { idField: 'id' }).subscribe(async memberships => {
       this.memberships = memberships;
-      
-      // Vollständige Channel-Daten im Hintergrund vorladen
-      this.preloadChannelData(memberships);
+            this.preloadChannelData(memberships);
       
       const currentChannel = this.channelState.getSelectedChannel();
 
       if (memberships.length > 0 && !currentChannel) {
-        // Ersten Channel auswählen ohne auf vollständige Daten zu warten
         this.onChannelClick(memberships[0]);
       }
       
@@ -69,7 +65,6 @@ export class Channels implements OnInit {
     });
   }
 
-  // Vollständige Channel-Daten im Hintergrund laden
   private async preloadChannelData(memberships: any[]) {
     const loadPromises = memberships.map(async (membership) => {
       try {
@@ -78,9 +73,7 @@ export class Channels implements OnInit {
         console.error(`Fehler beim Vorladen von Channel ${membership.id}:`, error);
       }
     });
-    
-    // Alle Channels parallel laden
-    await Promise.all(loadPromises);
+        await Promise.all(loadPromises);
   }
 
   openDialog() {
@@ -89,13 +82,9 @@ export class Channels implements OnInit {
 
   onChannelClick(channel: any) {
     this.selectedChannelId = channel.id;
-    
-    // Sofort mit den verfügbaren Daten navigieren
-    this.channelState.selectChannel(channel);
+        this.channelState.selectChannel(channel);
     this.router.navigate(['/main/channels']);
-    
-    // Vollständige Daten im Hintergrund nachladen falls noch nicht vorhanden
-    this.loadChannelDataInBackground(channel.id);
+        this.loadChannelDataInBackground(channel.id);
   }
 
   private async loadChannelDataInBackground(channelId: string) {
