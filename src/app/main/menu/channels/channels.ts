@@ -78,11 +78,13 @@ export class Channels implements OnInit {
   // Vollständige Channel-Daten im Hintergrund laden
   private async preloadChannelData(memberships: any[]) {
     const loadPromises = memberships.map(async (membership) => {
+      try {
+        await this.loadChannelDataInBackground(membership.id);
       } catch (error) {
         console.error(`Fehler beim Vorladen von Channel ${membership.id}:`, error);
       }
     });
-        await Promise.all(loadPromises);
+    await Promise.all(loadPromises);
   }
 
   openDialog() {
