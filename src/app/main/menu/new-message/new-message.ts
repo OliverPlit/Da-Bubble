@@ -187,10 +187,10 @@ export class NewMessage {
   }
 
   openAddEmojis(trigger: HTMLElement) {
-    // const r = trigger.getBoundingClientRect();
+    const r = trigger.getBoundingClientRect();
     const gap = 24;
-    const dlgW = 350;
-    const dlgH = 467;
+    const dlgW = 400;
+    const dlgH = 100;
 
     this.dialog.open(AddEmojis, {
       width: dlgW + 'px',
@@ -205,7 +205,7 @@ export class NewMessage {
     });
   }
 
-  async openAtMembers(_trigger: HTMLElement) {
+  async openAtMembers(trigger: HTMLElement) {
     const currentUid = JSON.parse(localStorage.getItem('currentUser') || '{}')?.uid || '';
 
     const self = this.allPeople.find(p => p.uid === currentUid);
@@ -216,10 +216,10 @@ export class NewMessage {
         .map(p => ({ uid: p.uid, name: p.name, avatar: p.avatar, isYou: false })),
     ];
 
-    // const r = trigger.getBoundingClientRect();
+    const r = trigger.getBoundingClientRect();
     const gap = 24;
-    const dlgW = 350;
-    const dlgH = 467;
+    const dlgW = 425;
+    const dlgH = 100;
 
     this.dialog.open(AtMembers, {
       width: dlgW + 'px',

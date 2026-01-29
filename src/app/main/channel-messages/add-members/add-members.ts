@@ -33,285 +33,220 @@ type DialogData = {
 export class AddMembers {
   private dialogRef = inject(MatDialogRef<AddMembers>);
   data = inject(MAT_DIALOG_DATA);
-  private cd = inject(ChangeDetectorRef);
   firestore = inject(Firestore);
   private firebaseService = inject(FirebaseService);
-  
+  private cd = inject(ChangeDetectorRef);
+
   currentUserId = '';
   userName = '';
   fullChannel: any = null;
-  
+
   @Input() channel = '';
   @Input() channelId = '';
   @Input() members: Member[] = [];
 
   allMembers: Member[] = [];
   channelName = this.data.channelName;
+
   existingMembers = signal<Member[]>([]);
   selected = signal<Member[]>([]);
   query = signal('');
   hasFocus = signal(false);
-  activeIndex = signal<number>(-1);
+  activeIndex = signal(-1);
   isSubmitting = signal(false);
   isLoading = signal(true);
 
-  constructor(private cdr: ChangeDetectorRef, private channelState: ChannelStateService) {}
+  constructor(private channelState: ChannelStateService) {}
 
   async ngOnInit() {
-    // Alle Daten parallel laden
-    const [userData, allUsers] = await Promise.all([
+    const [_, users] = await Promise.all([
       this.loadCurrentUser(),
       this.loadAllUsers()
     ]);
-
-    // Dialog-Daten setzen
-    const data = this.data as DialogData;
-    this.channelId = data.channelId || '';
-    this.channelName = data.channelName || '';
-    this.fullChannel = data.fullChannel;
-    
-    if (data.existingMembers) {
-      this.existingMembers.set(data.existingMembers);
-    } else if (data.members) {
-      this.existingMembers.set(data.members);
-    }
-
-    // User-Liste setzen
-    this.allMembers = allUsers;
-    this.members = allUsers;
+    this.initDialogData();
+    this.allMembers = users;
+    this.members = users;
     this.isLoading.set(false);
     this.cd.detectChanges();
-
-    // Name-Updates abonnieren (für spätere Änderungen)
     this.subscribeToNameChanges();
   }
 
-  private async loadCurrentUser(): Promise<void> {
-    const storedUser = localStorage.getItem('currentUser');
-    if (!storedUser) return;
+  private initDialogData() {
+    const d = this.data as DialogData;
+    this.channelId = d.channelId || '';
+    this.channelName = d.channelName || '';
+    this.fullChannel = d.fullChannel;
+    this.existingMembers.set(d.existingMembers || d.members || []);
+  }
 
-    const userData = JSON.parse(storedUser);
-    this.currentUserId = userData.uid;
+  private async loadCurrentUser() {
+    const raw = localStorage.getItem('currentUser');
+    if (!raw) return;
+    const u = JSON.parse(raw);
+    this.currentUserId = u.uid || '';
     if (!this.currentUserId) return;
-
-    try {
-      const userRef = doc(this.firestore, 'directMessages', this.currentUserId);
-      const snap = await getDoc(userRef);
-      
-      if (snap.exists()) {
-        const data: any = snap.data();
-        this.userName = data.name;
-        this.firebaseService.setName(this.userName);
-      }
-    } catch (error) {
-      console.error('Fehler beim Laden des aktuellen Users:', error);
-    }
+    const snap = await getDoc(doc(this.firestore, 'directMessages', this.currentUserId));
+    if (!snap.exists()) return;
+    this.userName = snap.data()['name'];
+    this.firebaseService.setName(this.userName);
   }
 
   private async loadAllUsers(): Promise<Member[]> {
-    try {
-      const dmRef = collection(this.firestore, 'directMessages');
-      const q = query(dmRef);
-      const snapshot = await getDocs(q);
-      
-      return snapshot.docs.map(docSnap => ({
-        uid: docSnap.id,
-        name: docSnap.data()['name'] ?? 'Unbekannter Benutzer',
-        avatar: docSnap.data()['avatar'] ?? 'avatar-0.png',
-        status: docSnap.data()['status'] ?? 'offline',
-        email: docSnap.data()['email'] ?? ''
-      } as Member));
-    } catch (error) {
-      console.error('Fehler beim Laden aller User:', error);
-      return [];
-    }
+    const snap = await getDocs(query(collection(this.firestore, 'directMessages')));
+    return snap.docs.map(d => ({
+      uid: d.id,
+      name: d.data()['name'] ?? 'Unbekannter Benutzer',
+      avatar: d.data()['avatar'] ?? 'avatar-0.png',
+      status: d.data()['status'] ?? 'offline',
+      email: d.data()['email'] ?? ''
+    }));
   }
 
-  private subscribeToNameChanges(): void {
-    this.firebaseService.currentName$.subscribe((name) => {
-      if (!name || !this.currentUserId) return;
-      this.userName = name;
-
-      this.existingMembers.update(members =>
-        members.map(m => m.uid === this.currentUserId ? { ...m, name: `${name} (Du)` } : m)
-      );
-
-      this.selected.update(members =>
-        members.map(m => m.uid === this.currentUserId ? { ...m, name: `${name} (Du)` } : m)
-      );
-
+  private subscribeToNameChanges() {
+    this.firebaseService.currentName$.subscribe(n => {
+      if (!n || !this.currentUserId) return;
+      this.userName = n;
+      this.updateNames(this.existingMembers);
+      this.updateNames(this.selected);
       this.cd.detectChanges();
     });
+  }
+
+  private updateNames(sig: any) {
+    sig.update((m: Member[]) =>
+      m.map(x => x.uid === this.currentUserId
+        ? { ...x, name: `${this.userName} (Du)` }
+        : x)
+    );
   }
 
   suggestions = computed(() => {
     const q = this.query().trim().toLowerCase();
     if (!q) return [];
-
-    const excluded = new Set([
-      ...this.existingMembers().map(u => u.uid),
-      ...this.selected().map(u => u.uid)
-    ]);
-
-    return this.members
-      .filter(m => !excluded.has(m.uid) && m.name.toLowerCase().includes(q))
-      .slice(0, 6);
+    const ex = new Set([...this.existingMembers(), ...this.selected()].map(u => u.uid));
+    return this.members.filter(m => !ex.has(m.uid) && m.name.toLowerCase().includes(q)).slice(0, 6);
   });
 
   showDropdown = computed(() =>
-    this.hasFocus() && this.query().trim().length > 0 && this.suggestions().length > 0
+    this.hasFocus() && this.query().trim() && this.suggestions().length > 0
   );
 
   onKeyDown(e: KeyboardEvent) {
-    const list = this.suggestions();
-    if (!list.length) return;
+    const l = this.suggestions();
+    if (!l.length) return;
+    if (e.key === 'ArrowDown') this.moveIndex(1, l.length, e);
+    if (e.key === 'ArrowUp') this.moveIndex(-1, l.length, e);
+    if (e.key === 'Enter') this.pickActive(l, e);
+    if (e.key === 'Escape') this.resetFocus();
+  }
 
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      this.activeIndex.set((this.activeIndex() + 1) % list.length);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      this.activeIndex.set((this.activeIndex() - 1 + list.length) % list.length);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      const idx = this.activeIndex();
-      if (idx >= 0 && idx < list.length) this.selectUser(list[idx]);
-    } else if (e.key === 'Escape') {
-      this.hasFocus.set(false);
-      this.activeIndex.set(-1);
-    }
+  private moveIndex(d: number, len: number, e: Event) {
+    e.preventDefault();
+    this.activeIndex.set((this.activeIndex() + d + len) % len);
+  }
+
+  private pickActive(list: Member[], e: Event) {
+    e.preventDefault();
+    const i = this.activeIndex();
+    if (i >= 0) this.selectUser(list[i]);
+  }
+
+  private resetFocus() {
+    this.hasFocus.set(false);
+    this.activeIndex.set(-1);
   }
 
   selectUser(u: Member) {
-    if (this.selected().find(x => x.uid === u.uid)) return;
-    if (this.existingMembers().find(x => x.uid === u.uid)) return;
-
-    this.selected.update(arr => [...arr, u]);
+    if (this.selected().some(x => x.uid === u.uid)) return;
+    if (this.existingMembers().some(x => x.uid === u.uid)) return;
+    this.selected.update(a => [...a, u]);
     this.query.set('');
     this.activeIndex.set(-1);
   }
 
   removeSelected(uid: string) {
-    this.selected.update(arr => arr.filter(u => u.uid !== uid));
+    this.selected.update(a => a.filter(u => u.uid !== uid));
   }
 
   async addMembers() {
     if (this.isSubmitting()) return;
-    if (!this.selected().length) { this.close(); return; }
+    if (!this.selected().length) return this.close();
     this.isSubmitting.set(true);
-
-    const channelId = this.channelId;
-
     try {
-      const newMemberUids = this.selected().map(u => u.uid);
-      const existingMemberUids = this.existingMembers().map(u => u.uid);
-      
-      const allMemberUids = Array.from(new Set([
-        ...existingMemberUids,
-        ...newMemberUids
-      ]));
-
-      // Parallel: Channel-Daten und Member-Details laden
-      const [channelData, allMembersData] = await Promise.all([
-        this.fetchChannelData(this.currentUserId, channelId),
-        this.fetchAllMemberDetailsBatch(allMemberUids)
+      const uids = this.mergeUids();
+      const [c, m] = await Promise.all([
+        this.fetchChannelData(),
+        this.fetchAllMemberDetails(uids)
       ]);
-
-      // Batch-Update aller Memberships
-      await this.updateAllUserMembershipsBatch(allMemberUids, channelId, channelData, allMembersData);
-
-      // Channel-State aktualisieren
-      const membershipRef = doc(this.firestore, `users/${this.currentUserId}/memberships/${channelId}`);
-      const snap = await getDoc(membershipRef);
-      
-      if (snap.exists()) {
-        const freshChannelData = snap.data();
-        this.channelState.selectChannel({ ...freshChannelData, id: channelId });
-      }
-
-      // Dialog schließen
+      await this.updateMemberships(uids, c, m);
+      await this.refreshChannel();
       this.dialogRef.close({ success: true, added: this.selected() });
-
-    } catch (err) {
-      console.error('Fehler beim Hinzufügen von Mitgliedern:', err);
+    } catch {
       this.isSubmitting.set(false);
     }
   }
 
-  private async fetchChannelData(currentUid: string, channelId: string) {
-    const ref = doc(this.firestore, `users/${currentUid}/memberships/${channelId}`);
-    const snap = await getDoc(ref);
+  private mergeUids() {
+    return Array.from(new Set([
+      ...this.existingMembers().map(u => u.uid),
+      ...this.selected().map(u => u.uid)
+    ]));
+  }
+
+  private async fetchChannelData() {
+    const snap = await getDoc(doc(this.firestore, `users/${this.currentUserId}/memberships/${this.channelId}`));
     return snap.exists() ? snap.data() : {};
   }
 
-  private async fetchAllMemberDetailsBatch(allMemberUids: string[]): Promise<Member[]> {
-    // Alle bereits in allMembers geladenen User verwenden
-    const memberMap = new Map(this.allMembers.map(m => [m.uid, m]));
-    
-    return allMemberUids.map(uid => {
-      const member = memberMap.get(uid);
-      if (!member) {
-        return {
-          uid,
-          name: 'Unbekannter Benutzer',
-          avatar: 'avatar-0.png',
-          email: '',
-          status: 'offline',
-          isYou: uid === this.currentUserId
-        } as Member;
-      }
-      
+  private async fetchAllMemberDetails(uids: string[]) {
+    const map = new Map(this.allMembers.map(m => [m.uid, m]));
+    return uids.map(uid => {
+      const m = map.get(uid);
       return {
-        ...member,
-        name: uid === this.currentUserId ? `${member.name} (Du)` : member.name,
+        uid,
+        name: uid === this.currentUserId ? `${m?.name || 'Unbekannt'} (Du)` : m?.name || 'Unbekannt',
+        avatar: m?.avatar || 'avatar-0.png',
+        email: m?.email || '',
+        status: m?.status || 'offline',
         isYou: uid === this.currentUserId
       };
     });
   }
 
-  private async updateAllUserMembershipsBatch(
-    allMemberUids: string[],
-    channelId: string,
-    channelData: any,
-    allMembers: Member[]
-  ) {
-    const MAX_BATCH_SIZE = 500;
-    const batches: Promise<void>[] = [];
-    let currentBatch = writeBatch(this.firestore);
-    let operationCount = 0;
-
-    for (const userUid of allMemberUids) {
-      const ref = doc(this.firestore, `users/${userUid}/memberships/${channelId}`);
-      
-      const personalizedMembers = allMembers.map(m => 
-        m.uid === userUid 
-          ? { ...m, name: m.name.includes('(Du)') ? m.name : `${m.name.replace(' (Du)', '')} (Du)`, isYou: true }
-          : { ...m, name: m.name.replace(' (Du)', ''), isYou: false }
-      );
-
-      currentBatch.set(ref, {
-        channelId,
-        name: channelData['name'] || 'Neuer Channel',
-        description: channelData['description'] || '',
-        joinedAt: channelData['joinedAt'] || new Date(),
-        createdBy: channelData['createdBy'] || 'Unbekannt',
-        members: personalizedMembers
-      }, { merge: false });
-
-      operationCount++;
-
-      if (operationCount >= MAX_BATCH_SIZE) {
-        batches.push(currentBatch.commit());
-        currentBatch = writeBatch(this.firestore);
-        operationCount = 0;
-      }
+  private async updateMemberships(uids: string[], channel: any, members: Member[]) {
+    let batch = writeBatch(this.firestore);
+    let count = 0;
+    for (const uid of uids) {
+      const ref = doc(this.firestore, `users/${uid}/memberships/${this.channelId}`);
+      batch.set(ref, this.buildPayload(uid, channel, members));
+      if (++count === 500) await this.commit(batch);
     }
+    if (count % 500) await this.commit(batch);
+  }
 
-    if (operationCount > 0) {
-      batches.push(currentBatch.commit());
-    }
+  private buildPayload(uid: string, c: any, m: Member[]) {
+    return {
+      channelId: this.channelId,
+      name: c['name'] || 'Neuer Channel',
+      description: c['description'] || '',
+      joinedAt: c['joinedAt'] || new Date(),
+      createdBy: c['createdBy'] || 'Unbekannt',
+      members: m.map(x => ({
+        ...x,
+        isYou: x.uid === uid,
+        name: x.uid === uid ? `${x.name.replace(' (Du)', '')} (Du)` : x.name.replace(' (Du)', '')
+      }))
+    };
+  }
 
-    await Promise.all(batches);
+  private async commit(b: any) {
+    await b.commit();
+    b = writeBatch(this.firestore);
+  }
+
+  private async refreshChannel() {
+    const snap = await getDoc(doc(this.firestore, `users/${this.currentUserId}/memberships/${this.channelId}`));
+    if (snap.exists()) this.channelState.selectChannel({ ...snap.data(), id: this.channelId });
   }
 
   close() {

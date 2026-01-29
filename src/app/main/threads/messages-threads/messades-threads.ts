@@ -244,8 +244,8 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   openAddEmojis(trigger: HTMLElement) {
     const r = trigger.getBoundingClientRect();
     const gap = 24;
-    const dlgW = 350;
-    const dlgH = 467;
+    const dlgW = 1225;
+    const dlgH = 100;
 
     this.dialog.open(AddEmojis, {
       width: dlgW + 'px',
@@ -265,17 +265,17 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
     if (!ctx) return;
     const members = await this.resolveMembersWithCtx(ctx);
 
-    // const r = trigger.getBoundingClientRect();
+    const r = trigger.getBoundingClientRect();
     const gap = 24;
-    const dlgW = 350;
-    const dlgH = 467;
+    const dlgW = 1250;
+    const dlgH = 100;
 
     this.dialog.open(AtMembers, {
       width: dlgW + 'px',
       panelClass: 'at-members-dialog-panel',
       position: {
-        bottom: `${-160 + dlgH + gap}px`,
-        right: `${-240 + dlgW}px`
+        bottom: `${dlgH + gap}px`,
+        left: `${100 + dlgW}px`
       },
       data: {
         channelId: ctx.channelId,
@@ -335,16 +335,20 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
     if (!btn) return;
 
     const rect = btn.getBoundingClientRect();
-    const dlgW = 350;
-    const gap = 8;
+    const gap = 0;
+    const dlgW = 0;
+    const dlgH = 0;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const isYou = reply.isYou;
 
     const dialogRef = this.dialog.open(AddEmojis, {
       width: dlgW + 'px',
       panelClass: 'add-emojis-dialog-panel',
-      position: {
-        top: `${Math.round(rect.bottom + gap)}px`,
-        left: `${Math.max(8, Math.round(rect.left - dlgW + btn.offsetWidth))}px`,
-      },
+      position: isYou
+        ? { top: `${rect.bottom + gap}px`, left: `${rect.left - dlgW + btn.offsetWidth}px` } 
+        : { top: `${rect.bottom + gap}px`, right: `${vw - rect.right + gap}px` },
     });
 
     dialogRef.afterClosed().subscribe((emojiId: string | null) => {

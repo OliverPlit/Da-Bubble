@@ -157,7 +157,7 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
       panelClass: 'edit-members-dialog-panel',
       position: {
         top: `${r.bottom + gap}px`,
-        left: `${460 + dlgW}px`
+        left: `${r.right - dlgW}px`
       },
       data: {
         channelId: this.channelId,

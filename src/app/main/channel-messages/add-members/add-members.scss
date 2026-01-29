@@ -7,7 +7,7 @@ $text: #000000;
 
 :host ::ng-deep .mat-mdc-dialog-container,
 :host ::ng-deep .mat-mdc-dialog-surface {
-  overflow: visible !important;
+    overflow: visible !important;
 }
 
 .add-members-dialog {
@@ -43,20 +43,20 @@ $text: #000000;
     }
 
     .icon-box {
-        position: relative;
-        display: inline-block;
         width: 40px;
         height: 40px;
         border-radius: 50%;
+        display: grid;
+        place-items: center;
 
         img {
-            background-size: cover;
-            background-position: center;
+            width: 24px;
+            height: 24px;
+            display: block;
+            grid-area: 1 / 1;
         }
 
         .hover {
-            position: absolute;
-            inset: 0;
             opacity: 0;
         }
 
@@ -211,7 +211,7 @@ $text: #000000;
     display: flex;
     align-items: center;
     border: none;
-    background: transparent;   
+    background: transparent;
     cursor: pointer;
 
     .avatar {

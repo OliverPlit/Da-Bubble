@@ -214,27 +214,6 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
     this.stateSub?.unsubscribe();
   }
 
-  /*
-  async initUserId() {
-    const storedUser = localStorage.getItem('currentUser');
-    if (!storedUser) return;
-    const uid = JSON.parse(storedUser).uid;
-
-    if (!uid) return;
-
-    const userRef = doc(this.firestore, 'directMessages', uid);
-    const snap = await getDoc(userRef);
-    if (snap.exists()) {
-      const data: any = snap.data();
-      this.userName = data.name;
-      this.userAvatar = data.avatar;
-
-      this.firebaseService.setName(this.userName);
-      this.cdr.detectChanges();
-    }
-  }
-  */
-
   private mapDocToMessage(d: MessageDoc & { id: string }): Message {
     return {
       messageId: d.id,
@@ -302,19 +281,20 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
     if (!btn) return;
 
     const rect = btn.getBoundingClientRect();
-    const dlgW = 350;
-    const gap = 8;
+    const gap = 0;
+    const dlgW = 0;
+    const dlgH = 0;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
-    const dialogRef = this.dialog.open(AddEmojis, {
+    this.dialog.open(AddEmojis, {
       width: dlgW + 'px',
       panelClass: 'add-emojis-dialog-panel',
       position: {
-        top: `${Math.round(rect.bottom + gap)}px`,
-        left: `${Math.max(8, Math.round(rect.left - dlgW + btn.offsetWidth))}px`,
+        top: `${rect.bottom + gap}px`,
+        left: `${rect.left - dlgW + btn.offsetWidth}px`,
       },
-    });
-
-    dialogRef.afterClosed().subscribe((emojiId: string | null) => {
+    }).afterClosed().subscribe((emojiId: string | null) => {
       if (!emojiId) return;
       if (!this.emojiSvc.isValid(emojiId)) return;
       this.toggleReaction(m, emojiId as EmojiId);
@@ -337,10 +317,10 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openAddEmojis(trigger: HTMLElement) {
-    // const r = trigger.getBoundingClientRect();
+    const r = trigger.getBoundingClientRect();
     const gap = 24;
-    const dlgW = 350;
-    const dlgH = 467;
+    const dlgW = 400;
+    const dlgH = 100;
 
     this.dialog.open(AddEmojis, {
       width: dlgW + 'px',
@@ -365,10 +345,10 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
 
     const members = [me, ...partner];
 
-    // const r = trigger.getBoundingClientRect();
+    const r = trigger.getBoundingClientRect();
     const gap = 24;
-    const dlgW = 350;
-    const dlgH = 467;
+    const dlgW = 425;
+    const dlgH = 100;
 
     this.dialog.open(AtMembers, {
       width: dlgW + 'px',

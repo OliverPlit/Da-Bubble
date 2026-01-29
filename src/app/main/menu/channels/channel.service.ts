@@ -12,12 +12,9 @@ export class ChannelStateService {
   private _channels = signal<any[]>([]);
   private _channelsSubject = new BehaviorSubject<any[]>([]);
   channels$ = this._channelsSubject.asObservable();
-  
-  // Cache für vollständig geladene Channels
-  private channelCache = new Map<string, any>();
+    private channelCache = new Map<string, any>();
 
   selectChannel(channel: any) {
-    // Wenn wir gecachte Daten haben, diese verwenden
     const cachedChannel = this.channelCache.get(channel.id);
     this.selectedChannelSubject.next(cachedChannel || channel);
   }
@@ -28,11 +25,8 @@ export class ChannelStateService {
 
   updateSelectedChannel(channelData: any) {
     const currentChannel = this.selectedChannelSubject.value;
+        this.channelCache.set(channelData.id, channelData);
     
-    // Cache aktualisieren
-    this.channelCache.set(channelData.id, channelData);
-    
-    // Nur aktualisieren wenn es der gleiche Channel ist
     if (currentChannel && currentChannel.id === channelData.id) {
       this.selectedChannelSubject.next(channelData);
     }
@@ -48,7 +42,6 @@ export class ChannelStateService {
   }
 
   async loadFullChannel(channelId: string) {
-    // Zuerst im Cache nachsehen
     if (this.channelCache.has(channelId)) {
       return this.channelCache.get(channelId);
     }
@@ -58,19 +51,14 @@ export class ChannelStateService {
     
     try {
       const snap = await getDoc(ref);
-
       if (!snap.exists()) return null;
-
       const data = snap.data();
-
       const fullChannel = {
         id: channelId,
         ...data,
         members: Array.isArray(data['members']) ? data['members'] : [],
       };
-      
-      // Im Cache speichern
-      this.channelCache.set(channelId, fullChannel);
+            this.channelCache.set(channelId, fullChannel);
       
       return fullChannel;
     } catch (error) {
@@ -83,8 +71,6 @@ export class ChannelStateService {
     const updated = this._channels().filter(c => c.id !== channelId);
     this._channels.set(updated);
     this._channelsSubject.next(updated); 
-    
-    // Aus Cache entfernen
     this.channelCache.delete(channelId);
 
     if (this.getCurrentChannel()?.id === channelId) {
@@ -97,10 +83,8 @@ export class ChannelStateService {
       const storedUser = localStorage.getItem('currentUser');
       if (!storedUser) return;
       const uid = JSON.parse(storedUser).uid;
-
       const userRef = doc(this.firestore, 'users', uid);
       const membershipsRef = collection(userRef, 'memberships');
-      
       const q = query(membershipsRef, orderBy('name'), limit(1));
       const snapshot = await getDocs(q);
 
@@ -110,7 +94,6 @@ export class ChannelStateService {
           ...snapshot.docs[0].data()
         };
         
-        // Vollständige Daten laden
         const fullChannel = await this.loadFullChannel(firstChannel.id);
         this.selectChannel(fullChannel || firstChannel);
       } else {
@@ -121,7 +104,6 @@ export class ChannelStateService {
     }
   }
 
-  // Cache leeren (z.B. bei Logout)
   clearCache() {
     this.channelCache.clear();
   }

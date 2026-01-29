@@ -271,7 +271,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       this.draft = '';
     } finally {
       this.isSending = false;
-    }   
+    }
   }
 
   async toggleReaction(m: any, emojiId: EmojiId) {
@@ -285,19 +285,20 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     if (!btn) return;
 
     const rect = btn.getBoundingClientRect();
-    const dlgW = 350;
-    const gap = 8;
+    const gap = 0;
+    const dlgW = 0;
+    const dlgH = 0;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const isYou = m.isYou;
 
-    const dialogRef = this.dialog.open(AddEmojis, {
+    this.dialog.open(AddEmojis, {
       width: dlgW + 'px',
       panelClass: 'add-emojis-dialog-panel',
-      position: {
-        top: `${Math.round(rect.bottom + gap)}px`,
-        left: `${Math.max(8, Math.round(rect.left - dlgW + btn.offsetWidth))}px`,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((emojiId: string | null) => {
+      position: isYou
+        ? { top: `${rect.bottom + gap}px`, left: `${rect.left - dlgW + btn.offsetWidth}px` }
+        : { top: `${rect.bottom + gap}px`, right: `${vw - rect.right + gap}px` },
+    }).afterClosed().subscribe((emojiId: string | null) => {
       if (!emojiId) return;
       if (!this.emojiSvc.isValid(emojiId)) return;
       this.toggleReaction(m, emojiId as EmojiId);
@@ -320,10 +321,10 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   }
 
   openAddEmojis(trigger: HTMLElement) {
-    // const r = trigger.getBoundingClientRect();
+    const r = trigger.getBoundingClientRect();
     const gap = 24;
-    const dlgW = 350;
-    const dlgH = 467;
+    const dlgW = 400;
+    const dlgH = 100;
 
     this.dialog.open(AddEmojis, {
       width: dlgW + 'px',
@@ -338,13 +339,13 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     });
   }
 
-  async openAtMembers(_trigger: HTMLElement) {
+  async openAtMembers(trigger: HTMLElement) {
     const members = await this.resolveMembers();
 
-    // const r = trigger.getBoundingClientRect();
+    const r = trigger.getBoundingClientRect();
     const gap = 24;
-    const dlgW = 350;
-    const dlgH = 467;
+    const dlgW = 425;
+    const dlgH = 100;
 
     this.dialog.open(AtMembers, {
       width: dlgW + 'px',
