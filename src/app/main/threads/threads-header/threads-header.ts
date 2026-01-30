@@ -15,7 +15,7 @@ export class ThreadsHeader {
   channel = 'Entwicklerteam';
 
   private dialog = inject(MatDialog);
-  private layout = inject(LayoutService);
+  public layout = inject(LayoutService);
   private state = inject(ThreadStateService);
 
   get channelName() {
@@ -23,6 +23,7 @@ export class ThreadsHeader {
   }
 
   closeThread() {
-    this.layout.closeRight();
+    // Schließe Thread - auf Mobile wird dann automatisch der Content wieder sichtbar
+    this.layout.closeThread();
   }
 }
