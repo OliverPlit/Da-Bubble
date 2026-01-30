@@ -1,6 +1,6 @@
 import {
   Component, ElementRef, HostListener, inject, AfterViewInit,
-  ViewChild, Input, OnInit, OnDestroy
+  ViewChild, Input, OnInit, OnDestroy, ChangeDetectorRef, OnChanges, SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,7 +16,6 @@ import { Unsubscribe } from '@angular/fire/firestore';
 import { CurrentUserService, CurrentUser, AvatarUrlPipe } from '../../../services/current-user.service';
 import { Subscription } from 'rxjs';
 import { ChannelStateService } from '../../menu/channels/channel.service';
-import { OnChanges, SimpleChanges } from '@angular/core';
 import { ThreadStateService } from '../../../services/thread-state.service';
 import { LayoutService } from '../../../services/layout.service';
 import { DateUtilsService, DaySeparated, TimeOfPipe } from '../../../services/date-utils.service';
@@ -85,12 +84,13 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   public presence = inject(PresenceService);
   private messageStoreSvc = inject(MessagesStoreService);
   private unsub: Unsubscribe | null = null;
-  private stateSub: Subscription | null = null;
+  private channelSubscription: Subscription | null = null;
   private layout = inject(LayoutService);
   private currentUserService = inject(CurrentUserService);
   private channelState = inject(ChannelStateService);
   private threadStateSvc = inject(ThreadStateService);
   private dateUtilsSvc = inject(DateUtilsService);
+  private cdr = inject(ChangeDetectorRef);
 
   private toAtMember = (m: any): AtMemberUser => {
     const uid = (m?.uid ?? m?.id ?? '').toString();
@@ -172,6 +172,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   timeOf = (x: any) => this.dateUtilsSvc.timeOf(x);
 
   async ngOnInit() {
+    
     await this.currentUserService.hydrateFromLocalStorage();
     const u = this.currentUserService.getCurrentUser();
     if (u) {
@@ -180,18 +181,62 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       this.avatar = u.avatar;
     }
 
-    this.startListening();
+    this.initializeSubscriptions();
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['channelId'] || changes['ownerUid']) {
-      this.restartListening();
+    // Reagiere auf channelId-Änderungen (Channel-Wechsel)
+    if (changes['channelId'] && !changes['channelId'].firstChange) {
+      console.log('Channel gewechselt:', changes['channelId'].currentValue);
+      this.restartSubscriptions();
     }
   }
 
-  private restartListening() {
-    this.unsub?.();
+  private initializeSubscriptions() {
+    if (!this.uid || !this.channelId) return;
+    
+    // Alte Subscriptions aufräumen falls vorhanden
+    this.cleanupSubscriptions();
+    
+    // Channel-Updates abonnieren
+    this.listenToChannelUpdates();
+    
+    // Messages laden
     this.startListening();
+  }
+
+  private restartSubscriptions() {
+    console.log('Starte Subscriptions neu für Channel:', this.channelId);
+    this.initializeSubscriptions();
+  }
+
+  private cleanupSubscriptions() {
+    this.unsub?.();
+    this.unsub = null;
+    this.channelSubscription?.unsubscribe();
+    this.channelSubscription = null;
+    
+    // Messages zurücksetzen
+    this.messages = [];
+    this.messagesView = [];
+  }
+
+  private listenToChannelUpdates() {
+    if (!this.uid || !this.channelId) return;
+
+    const membershipRef = doc(
+      this.firestore,
+      `users/${this.uid}/memberships/${this.channelId}`
+    );
+
+    // 🔥 LIVE-SUBSCRIPTION: Automatische Updates bei Änderungen
+    this.channelSubscription = docData(membershipRef).subscribe((channelData: any) => {
+      if (channelData) {
+        this.channelName = channelData.name || this.channelName;
+        // Manuelle Change Detection triggern
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private startListening() {
@@ -202,6 +247,8 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       (docs) => {
         this.messages = docs.map(d => this.mapDocToMessage(d));
         this.rebuildMessagesView();
+        // Manuelle Change Detection triggern
+        this.cdr.detectChanges();
         queueMicrotask(() => this.scrollToBottom());
       }
     );
@@ -213,7 +260,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   }
 
   ngOnDestroy() {
-    this.unsub?.();
+    this.cleanupSubscriptions();
   }
 
   private mapDocToMessage(d: MessageDoc & { id: string }): Message {
@@ -226,7 +273,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       createdAt: (d.createdAt as any) ?? new Date(),
       text: d.text,
       reactions: (d.reactions ?? []).map(r => {
-        const emojiId: EmojiId = isEmojiId(r.emojiId) ? r.emojiId : 'rocket'; // Fallback oder throw
+        const emojiId: EmojiId = isEmojiId(r.emojiId) ? r.emojiId : 'rocket';
         const reactionUsers: ReactionUser[] = (r.reactionUsers ?? []).map(u => ({
           userId: u.userId,
           username: u.username
@@ -260,6 +307,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
         );
         this.editForId = null;
         this.draft = '';
+        this.cdr.detectChanges();
         return;
       }
 
@@ -269,8 +317,10 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       });
 
       this.draft = '';
+      this.cdr.detectChanges();
     } finally {
       this.isSending = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -404,6 +454,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       subtitle,
       messageId: m.messageId,
     };
+    this.cdr.detectChanges();
   }
 
   clearReactionPanelHide() {
@@ -418,6 +469,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     this.hideTimer = setTimeout(() => {
       this.reactionPanel.show = false;
       this.reactionPanel.messageId = '';
+      this.cdr.detectChanges();
     }, delay);
   }
 
@@ -454,6 +506,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     ev.stopPropagation();
     this.clearEditMessagePanelHide();
     this.showEditPanelForId = this.showEditPanelForId === m.messageId ? null : m.messageId;
+    this.cdr.detectChanges();
   }
 
   scheduleEditMessagePanelHide(m: Message) {
@@ -461,6 +514,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     this.clearEditMessagePanelHide();
     this.editHideTimer = setTimeout(() => {
       this.showEditPanelForId = null;
+      this.cdr.detectChanges();
     });
   }
 
@@ -475,19 +529,20 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     this.editForId = m.messageId;
     this.showEditPanelForId = null;
     this.draft = m.text;
+    this.cdr.detectChanges();
     queueMicrotask(() => this.composerTextarea?.nativeElement.focus());
   }
 
   @HostListener('document:keydown.escape') closeOnEsc() {
     this.editForId = null;
-    // optional: this.draft = '';
+    this.cdr.detectChanges();
   }
 
   @HostListener('document:click', ['$event'])
   closeOnOutsideClick(ev: MouseEvent) {
     if (!this.host.nativeElement.contains(ev.target as Node)) {
-      this.showEditPanelForId = null; // nur Panel zu
-      // editForId NICHT zurücksetzen, sonst verliert man den Edit-Modus
+      this.showEditPanelForId = null;
+      this.cdr.detectChanges();
     }
   }
 

@@ -1,6 +1,6 @@
 import {
   Component, EventEmitter, ElementRef, HostListener, inject, AfterViewInit,
-  ViewChild, Input, OnInit, OnDestroy, Output
+  ViewChild, Input, OnInit, OnDestroy, Output, OnChanges, SimpleChanges, ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,11 +13,9 @@ import { PresenceService } from '../../../services/presence.service';
 import { MessagesStoreService, MessageDoc, ReactionUserDoc } from '../../../services/messages-store.service';
 import { Unsubscribe } from '@angular/fire/firestore';
 import { CurrentUserService, CurrentUser, AvatarUrlPipe } from '../../../services/current-user.service';
-import { OnChanges, SimpleChanges } from '@angular/core';
 import { Observable, Subscription, filter, distinctUntilChanged } from 'rxjs';
 import { directMessageContact } from '../direct-messages/direct-messages.model';
 import { ProfileCard } from '../../../shared/profile-card/profile-card';
-import { ChangeDetectorRef } from '@angular/core';
 import { DirectChatService } from '../../../services/direct-chat-service';
 import { DateUtilsService, DaySeparated, TimeOfPipe } from '../../../services/date-utils.service';
 import { LayoutService } from '../../../services/layout.service';
@@ -69,7 +67,7 @@ function isEmojiId(x: unknown): x is EmojiId {
   templateUrl: './chat-direct-message.html',
   styleUrl: './chat-direct-message.scss',
 })
-export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
+export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('messagesEl') messagesEl!: ElementRef<HTMLDivElement>;
   @ViewChild('composerTextarea') composerTextarea!: ElementRef<HTMLTextAreaElement>;
 
@@ -80,7 +78,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
 
   private dialog = inject(MatDialog);
-  private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+  private cdr = inject(ChangeDetectorRef);
   private hideTimer: any = null;
   private editHideTimer: any = null;
   private host = inject(ElementRef<HTMLElement>);
@@ -93,6 +91,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
   private currentDmId: string | null = null;
   private dateUtilsSvc = inject(DateUtilsService);
   layout = inject(LayoutService);
+  private directChatService = inject(DirectChatService);
 
   goBack() {
     this.layout.showMenu();
@@ -115,10 +114,6 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
 
   userName: string = '';
   userAvatar: string = '';
-  // isMobile = false;
-  // mobileMenuOpen = false;
-  constructor(private directChatService: DirectChatService) { }
-
   ready = false;
   isSending = false;
   draft = '';
@@ -149,7 +144,25 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
       this.userAvatar = u.avatar;
     }
 
+    this.initializeSubscriptions();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    // Reagiere auf chatUser-Änderungen (DM-Wechsel)
+    if (changes['chatUser'] && !changes['chatUser'].firstChange) {
+      console.log('DM gewechselt:', changes['chatUser'].currentValue);
+      this.restartSubscriptions();
+    }
+  }
+
+  private initializeSubscriptions() {
+    if (!this.uid) return;
+
+    // Alte Subscriptions aufräumen falls vorhanden
+    this.cleanupSubscriptions();
+
     if (!this.chatUser) {
+      // Wenn kein chatUser als Input kommt, abonniere den Service
       this.stateSub = (this.directChatService.chatUser$ as Observable<directMessageContact | null>)
         .pipe(
           filter((u): u is directMessageContact => !!u),
@@ -171,8 +184,20 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    this.restartListening();
+  private restartSubscriptions() {
+    console.log('Starte Subscriptions neu für DM:', this.chatUser?.id);
+    this.initializeSubscriptions();
+  }
+
+  private cleanupSubscriptions() {
+    this.unsub?.();
+    this.unsub = null;
+    this.stateSub?.unsubscribe();
+    this.stateSub = null;
+
+    // Messages zurücksetzen
+    this.messages = [];
+    this.messagesView = [];
   }
 
   private restartListening() {
@@ -199,6 +224,8 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
         if (this.currentDmId !== nextDmId) return;
         this.messages = docs.map(d => this.mapDocToMessage(d));
         this.rebuildMessagesView();
+        // Manuelle Change Detection triggern
+        this.cdr.detectChanges();
         queueMicrotask(() => this.scrollToBottom());
       }
     );
@@ -210,8 +237,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.unsub?.();
-    this.stateSub?.unsubscribe();
+    this.cleanupSubscriptions();
   }
 
   private mapDocToMessage(d: MessageDoc & { id: string }): Message {
@@ -224,7 +250,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
       createdAt: (d.createdAt as any) ?? new Date(),
       text: d.text,
       reactions: (d.reactions ?? []).map(r => {
-        const emojiId: EmojiId = isEmojiId(r.emojiId) ? r.emojiId : 'rocket'; // Fallback oder throw
+        const emojiId: EmojiId = isEmojiId(r.emojiId) ? r.emojiId : 'rocket';
         const reactionUsers: ReactionUser[] = (r.reactionUsers ?? []).map(u => ({
           userId: u.userId,
           username: u.username
@@ -256,6 +282,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
         await this.messageStoreSvc.updateDirectMessageBetween(this.uid, this.chatUser.id, this.editForId, text);
         this.editForId = null;
         this.draft = '';
+        this.cdr.detectChanges();
         return;
       }
 
@@ -265,8 +292,10 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
       });
 
       this.draft = '';
+      this.cdr.detectChanges();
     } finally {
       this.isSending = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -406,6 +435,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
       subtitle,
       messageId: m.messageId,
     };
+    this.cdr.detectChanges();
   }
 
   clearReactionPanelHide() {
@@ -420,6 +450,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
     this.hideTimer = setTimeout(() => {
       this.reactionPanel.show = false;
       this.reactionPanel.messageId = '';
+      this.cdr.detectChanges();
     }, delay);
   }
 
@@ -434,6 +465,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
     ev.stopPropagation();
     this.clearEditMessagePanelHide();
     this.showEditPanelForId = this.showEditPanelForId === m.messageId ? null : m.messageId;
+    this.cdr.detectChanges();
   }
 
   scheduleEditMessagePanelHide(m: Message) {
@@ -441,6 +473,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
     this.clearEditMessagePanelHide();
     this.editHideTimer = setTimeout(() => {
       this.showEditPanelForId = null;
+      this.cdr.detectChanges();
     });
   }
 
@@ -456,19 +489,20 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy {
     this.editForId = m.messageId;
     this.showEditPanelForId = null;
     this.draft = m.text;
+    this.cdr.detectChanges();
     queueMicrotask(() => this.composerTextarea?.nativeElement.focus());
   }
 
   @HostListener('document:keydown.escape') closeOnEsc() {
     this.editForId = null;
-    // optional: this.draft = '';
+    this.cdr.detectChanges();
   }
 
   @HostListener('document:click', ['$event'])
   closeOnOutsideClick(ev: MouseEvent) {
     if (!this.host.nativeElement.contains(ev.target as Node)) {
-      this.showEditPanelForId = null; // nur Panel zu
-      // editForId NICHT zurücksetzen, sonst verliert man den Edit-Modus
+      this.showEditPanelForId = null;
+      this.cdr.detectChanges();
     }
   }
 

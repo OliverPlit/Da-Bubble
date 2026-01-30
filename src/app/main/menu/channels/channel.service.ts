@@ -8,8 +8,7 @@ import { getDocs, query, limit, orderBy, collection, doc, Firestore, getDoc } fr
 export class ChannelStateService {
   private selectedChannelSubject = new BehaviorSubject<any>(null);
   selectedChannel$ = this.selectedChannelSubject.asObservable();
-  firestore: Firestore = inject(Firestore);
-  private _channels = signal<any[]>([]);
+private firestore = inject(Firestore);  private _channels = signal<any[]>([]);
   private _channelsSubject = new BehaviorSubject<any[]>([]);
   channels$ = this._channelsSubject.asObservable();
     private channelCache = new Map<string, any>();

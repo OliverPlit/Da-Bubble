@@ -1,6 +1,6 @@
 import {
   Component, EventEmitter, ElementRef, HostListener, inject, AfterViewInit,
-  ViewChild, Input, OnInit, OnDestroy, Output,
+  ViewChild, Input, OnInit, OnDestroy, Output, OnChanges, SimpleChanges, ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,11 +14,9 @@ import { PresenceService } from '../../../services/presence.service';
 import { MessagesStoreService, MessageDoc, ReactionUserDoc } from '../../../services/messages-store.service';
 import { Unsubscribe } from '@angular/fire/firestore';
 import { CurrentUserService, CurrentUser, AvatarUrlPipe } from '../../../services/current-user.service';
-import { OnChanges, SimpleChanges } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { directMessageContact } from '../direct-messages/direct-messages.model';
 import { ProfileCard } from '../../../shared/profile-card/profile-card';
-import { ChangeDetectorRef } from '@angular/core';
 import { Firestore, getDoc, doc } from '@angular/fire/firestore';
 import { FirebaseService } from '../../../services/firebase';
 import { Observable } from 'rxjs';
@@ -73,7 +71,7 @@ function isEmojiId(x: unknown): x is EmojiId {
   templateUrl: './chat-direct-you.html',
   styleUrl: './chat-direct-you.scss',
 })
-export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
+export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('messagesEl') messagesEl!: ElementRef<HTMLDivElement>;
   @ViewChild('composerTextarea') composerTextarea!: ElementRef<HTMLTextAreaElement>;
 
@@ -83,9 +81,9 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
   @Input() chatUser: directMessageContact | null = null;
   @Output() close = new EventEmitter<void>();
 
-  private dialog = inject(MatDialog)
+  private dialog = inject(MatDialog);
   private firestore = inject(Firestore);
-  private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+  private cdr = inject(ChangeDetectorRef);
   private hideTimer: any = null;
   private editHideTimer: any = null;
   private host = inject(ElementRef<HTMLElement>);
@@ -97,6 +95,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
   layout = inject(LayoutService);
   private currentUserService = inject(CurrentUserService);
   private dateUtilsSvc = inject(DateUtilsService);
+  private firebaseService = inject(FirebaseService);
 
   goBack() {
     this.layout.showMenu();
@@ -121,7 +120,6 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
   userAvatar: string = '';
   isMobile = false;
   mobileMenuOpen = false;
-  constructor(private firebaseService: FirebaseService) { }
   directMessage$: Observable<directMessageContact[]> | undefined;
 
   ready = false;
@@ -156,15 +154,39 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
       this.userAvatar = u.avatar;
     }
 
+    this.initializeSubscriptions();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    // Reagiere auf Input-Änderungen
+    if ((changes['channelId'] || changes['uid']) && !changes['channelId']?.firstChange && !changes['uid']?.firstChange) {
+      console.log('Self-DM Kontext gewechselt');
+      this.restartSubscriptions();
+    }
+  }
+
+  private initializeSubscriptions() {
+    // Alte Subscriptions aufräumen falls vorhanden
+    this.cleanupSubscriptions();
+
     this.startListening();
     this.ready = true;
     this.cdr.detectChanges();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['channelId'] || changes['ownerUid']) {
-      this.restartListening();
-    }
+  private restartSubscriptions() {
+    console.log('Starte Subscriptions neu für Self-DM');
+    this.initializeSubscriptions();
+  }
+
+  private cleanupSubscriptions() {
+    this.unsub?.();
+    this.unsub = null;
+    this.stateSub?.unsubscribe();
+    this.stateSub = null;
+
+    this.messages = [];
+    this.messagesView = [];
   }
 
   private restartListening() {
@@ -183,13 +205,18 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    if (!this.uid) { this.ready = true; return; }
+    if (!this.uid) { 
+      this.ready = true; 
+      this.cdr.detectChanges();
+      return; 
+    }
 
     this.unsub = this.messageStoreSvc.listenSelfDirectMessages(
       this.uid,
       (docs) => {
         this.messages = docs.map(d => this.mapDocToMessage(d));
         this.rebuildMessagesView();
+        this.cdr.detectChanges();
         queueMicrotask(() => this.scrollToBottom());
       });
   }
@@ -199,7 +226,9 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
     queueMicrotask(() => this.scrollToBottom());
   }
 
-  ngOnDestroy() { this.unsub?.(); }
+  ngOnDestroy() { 
+    this.cleanupSubscriptions();
+  }
 
   async initUserId() {
     const storedUser = localStorage.getItem('currentUser');
@@ -218,7 +247,6 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
       this.firebaseService.setName(this.userName);
       this.cdr.detectChanges();
     }
-
   }
 
   private mapDocToMessage(d: MessageDoc & { id: string }): Message {
@@ -231,7 +259,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
       createdAt: (d.createdAt as any) ?? new Date(),
       text: d.text,
       reactions: (d.reactions ?? []).map(r => {
-        const emojiId: EmojiId = isEmojiId(r.emojiId) ? r.emojiId : 'rocket'; // Fallback oder throw
+        const emojiId: EmojiId = isEmojiId(r.emojiId) ? r.emojiId : 'rocket';
         const reactionUsers: ReactionUser[] = (r.reactionUsers ?? []).map(u => ({
           userId: u.userId,
           username: u.username
@@ -263,6 +291,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
         await this.messageStoreSvc.updateSelfDirectMessage(this.uid, this.editForId, text);
         this.editForId = null;
         this.draft = '';
+        this.cdr.detectChanges();
         return;
       }
 
@@ -272,8 +301,10 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
       });
 
       this.draft = '';
+      this.cdr.detectChanges();
     } finally {
       this.isSending = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -411,6 +442,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
       subtitle,
       messageId: m.messageId,
     };
+    this.cdr.detectChanges();
   }
 
   clearReactionPanelHide() {
@@ -425,6 +457,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
     this.hideTimer = setTimeout(() => {
       this.reactionPanel.show = false;
       this.reactionPanel.messageId = '';
+      this.cdr.detectChanges();
     }, delay);
   }
 
@@ -439,6 +472,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
     ev.stopPropagation();
     this.clearEditMessagePanelHide();
     this.showEditPanelForId = this.showEditPanelForId === m.messageId ? null : m.messageId;
+    this.cdr.detectChanges();
   }
 
   scheduleEditMessagePanelHide(m: Message) {
@@ -446,10 +480,12 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
     this.clearEditMessagePanelHide();
     this.editHideTimer = setTimeout(() => {
       this.showEditPanelForId = null;
+      this.cdr.detectChanges();
     });
   }
 
   cancelEditMessagePanelHide(_: Message) { this.clearEditMessagePanelHide(); }
+  
   private clearEditMessagePanelHide() {
     if (this.editHideTimer) { clearTimeout(this.editHideTimer); this.editHideTimer = null; }
   }
@@ -460,19 +496,20 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy {
     this.editForId = m.messageId;
     this.showEditPanelForId = null;
     this.draft = m.text;
+    this.cdr.detectChanges();
     queueMicrotask(() => this.composerTextarea?.nativeElement.focus());
   }
 
   @HostListener('document:keydown.escape') closeOnEsc() {
     this.editForId = null;
-    // optional: this.draft = '';
+    this.cdr.detectChanges();
   }
 
   @HostListener('document:click', ['$event'])
   closeOnOutsideClick(ev: MouseEvent) {
     if (!this.host.nativeElement.contains(ev.target as Node)) {
-      this.showEditPanelForId = null; // nur Panel zu
-      // editForId NICHT zurücksetzen, sonst verliert man den Edit-Modus
+      this.showEditPanelForId = null;
+      this.cdr.detectChanges();
     }
   }
 

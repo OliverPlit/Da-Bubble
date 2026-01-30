@@ -96,10 +96,8 @@ export class Channels implements OnInit {
         this.channelState.selectChannel(channel);
     this.router.navigate(['/main/channels']);
     
-    // Auf Mobile: Zeige Content und verstecke Menu
     this.layout.showContent();
     
-    // Vollständige Daten im Hintergrund nachladen falls noch nicht vorhanden
     this.loadChannelDataInBackground(channel.id);
   }
 
