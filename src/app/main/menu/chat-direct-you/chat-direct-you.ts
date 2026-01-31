@@ -23,6 +23,7 @@ import { Observable } from 'rxjs';
 import { LayoutService } from '../../../services/layout.service';
 import { DateUtilsService, DaySeparated, TimeOfPipe } from '../../../services/date-utils.service';
 import { firstValueFrom } from 'rxjs';
+import { AnchorOverlayService } from '../../../services/anchor-overlay.service';
 
 type Message = {
   messageId: string;
@@ -96,6 +97,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
   private currentUserService = inject(CurrentUserService);
   private dateUtilsSvc = inject(DateUtilsService);
   private firebaseService = inject(FirebaseService);
+  private anchorOverlaySvc = inject(AnchorOverlayService);
 
   goBack() {
     this.layout.showMenu();
@@ -205,10 +207,10 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
       }
     }
 
-    if (!this.uid) { 
-      this.ready = true; 
+    if (!this.uid) {
+      this.ready = true;
       this.cdr.detectChanges();
-      return; 
+      return;
     }
 
     this.unsub = this.messageStoreSvc.listenSelfDirectMessages(
@@ -226,7 +228,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
     queueMicrotask(() => this.scrollToBottom());
   }
 
-  ngOnDestroy() { 
+  ngOnDestroy() {
     this.cleanupSubscriptions();
   }
 
@@ -314,28 +316,39 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
     await this.messageStoreSvc.toggleSelfDirectMessageReaction(this.uid, m.messageId, emojiId, you);
   }
 
-  async toggleEmoji(m: Message, event: MouseEvent) {
-    const btn = event.currentTarget as HTMLElement | null;
-    if (!btn) return;
+  async toggleEmojiFromReactions(m: Message, event: MouseEvent) {
+    const origin = event.currentTarget as HTMLElement | null;
+    if (!origin) return;
 
-    const rect = btn.getBoundingClientRect();
-    const gap = 0;
-    const dlgW = 0;
-    const dlgH = 0;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    this.dialog.open(AddEmojis, {
-      width: dlgW + 'px',
-      panelClass: 'add-emojis-dialog-panel',
-      position: {
-        top: `${rect.bottom + gap}px`,
-        left: `${rect.left - dlgW + btn.offsetWidth}px`,
-      },
+    this.anchorOverlaySvc.openAnchored(this.dialog, AddEmojis, origin, {
+      width: 350,
+      height: 420,
+      preferredSide: 'bottom',
+      align: 'end',
+      offset: 8,
+      dialogConfig: { panelClass: 'add-emojis-dialog-panel' }
     }).afterClosed().subscribe((emojiId: string | null) => {
-      if (!emojiId) return;
-      if (!this.emojiSvc.isValid(emojiId)) return;
-      this.toggleReaction(m, emojiId as EmojiId);
+      if (emojiId && this.emojiSvc.isValid(emojiId)) {
+        this.toggleReaction(m, emojiId as EmojiId);
+      }
+    });
+  }
+
+  async toggleEmojiFromReactionBar(m: Message, event: MouseEvent) {
+    const origin = event.currentTarget as HTMLElement | null;
+    if (!origin) return;
+
+    this.anchorOverlaySvc.openAnchored(this.dialog, AddEmojis, origin, {
+      width: 350,
+      height: 420,
+      preferredSide: 'bottom',
+      align: 'start',
+      offset: 8,
+      dialogConfig: { panelClass: 'add-emojis-dialog-panel' }
+    }).afterClosed().subscribe((emojiId: string | null) => {
+      if (emojiId && this.emojiSvc.isValid(emojiId)) {
+        this.toggleReaction(m, emojiId as EmojiId);
+      }
     });
   }
 
@@ -355,25 +368,23 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
   }
 
   openAddEmojis(trigger: HTMLElement) {
-    const r = trigger.getBoundingClientRect();
-    const gap = 24;
-    const dlgW = 400;
-    const dlgH = 100;
+    const origin = trigger as HTMLElement | null;
+    if (!origin) return;
 
-    this.dialog.open(AddEmojis, {
-      width: dlgW + 'px',
-      panelClass: 'add-emojis-dialog-panel',
-      position: {
-        bottom: `${dlgH + gap}px`,
-        left: `${64 + dlgW}px`,
-      },
+    this.anchorOverlaySvc.openAnchored(this.dialog, AddEmojis, origin, {
+      width: 350,
+      height: 100,
+      preferredSide: 'top',
+      align: 'start',
+      offset: 8,
+      dialogConfig: { panelClass: 'add-emojis-dialog-panel' }
     }).afterClosed().subscribe((emojiId: string | null) => {
       if (!emojiId || !this.emojiSvc.isValid(emojiId)) return;
       this.draft = this.emojiSvc.appendById(this.draft, emojiId as EmojiId);
     });
   }
 
-  openAtMembers(trigger: HTMLElement) {
+  async openAtMembers(trigger: HTMLElement) {
     const members = [
       { uid: this.uid, name: this.userName, avatar: this.userAvatar, isYou: true },
       ...(this.chatUser
@@ -381,21 +392,21 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
         : [])
     ];
 
-    const r = trigger.getBoundingClientRect();
-    const gap = 24;
-    const dlgW = 425;
-    const dlgH = 100;
+    const origin = trigger as HTMLElement | null;
+    if (!origin) return;
 
-    this.dialog.open(AtMembers, {
-      width: dlgW + 'px',
-      panelClass: 'at-members-dialog-panel',
-      position: {
-        bottom: `${dlgH + gap}px`,
-        left: `${100 + dlgW}px`,
-      },
-      data: {
-        currentUserId: this.uid,
-        members
+    this.anchorOverlaySvc.openAnchored(this.dialog, AtMembers, origin, {
+      width: 400,
+      height: 100,
+      preferredSide: 'top',
+      align: 'start',
+      offset: 400,
+      dialogConfig: {
+        panelClass: 'at-members-dialog-panel',
+        data: {
+          currentUserId: this.uid,
+          members
+        }
       }
     }).afterClosed().subscribe(mention => {
       if (!mention) return;
@@ -485,7 +496,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
   }
 
   cancelEditMessagePanelHide(_: Message) { this.clearEditMessagePanelHide(); }
-  
+
   private clearEditMessagePanelHide() {
     if (this.editHideTimer) { clearTimeout(this.editHideTimer); this.editHideTimer = null; }
   }

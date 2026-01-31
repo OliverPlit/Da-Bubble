@@ -67,7 +67,7 @@
                   <span class="count-emoji">{{ r.emojiCount }}</span>
                 </div>
 
-                <span #emojiBtn class="icon-box" (click)="toggleEmoji(m, $event)">
+                <span #emojiBtn class="icon-box" (click)="toggleEmojiFromReactions(m, $event)">
                   <img class="default" src="icons/add_reaction.png" alt="">
                   <img class="hover" src="icons/add_reaction_purple.png" alt="">
                 </span>
@@ -107,7 +107,7 @@
               <img class="hover" src="icons/emojis/emoji_person raising both hands in celebration.png" alt="">
             </span>
 
-            <span #barEmojiBtn class="icon-box" (click)="toggleEmoji(m, $event)">
+            <span #barEmojiBtn class="icon-box" (click)="toggleEmojiFromReactionBar(m, $event)">
               <img class="default" src="icons/add_reaction.png" alt="">
               <img class="hover" src="icons/add_reaction_purple.png" alt="">
             </span>

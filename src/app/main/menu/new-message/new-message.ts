@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { map } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
 import { LayoutService } from '../../../services/layout.service';
+import { AnchorOverlayService } from '../../../services/anchor-overlay.service';
 
 @Component({
   selector: 'app-new-message',
@@ -28,6 +29,7 @@ export class NewMessage {
   private messageStoreSvc = inject(MessagesStoreService);
   private currentUserService = inject(CurrentUserService);
   public layout = inject(LayoutService);
+  private anchorOverlaySvc = inject(AnchorOverlayService);
   selectedPeople: { uid: string, name: string, avatar: string, email: string, type?: 'user' | 'channel' }[] = [];
   allPeople: { uid: string, name: string, avatar: string, email: string }[] = [];
   filteredPeople: { uid: string, name: string, avatar: string, email: string, type: 'user' | 'channel' }[] = [];
@@ -187,18 +189,16 @@ export class NewMessage {
   }
 
   openAddEmojis(trigger: HTMLElement) {
-    const r = trigger.getBoundingClientRect();
-    const gap = 24;
-    const dlgW = 400;
-    const dlgH = 100;
+    const origin = trigger as HTMLElement | null;
+    if (!origin) return;
 
-    this.dialog.open(AddEmojis, {
-      width: dlgW + 'px',
-      panelClass: 'add-emojis-dialog-panel',
-      position: {
-        bottom: `${dlgH + gap}px`,
-        left: `${64 + dlgW}px`,
-      },
+    this.anchorOverlaySvc.openAnchored(this.dialog, AddEmojis, origin, {
+      width: 350,
+      height: 100,
+      preferredSide: 'top',
+      align: 'start',
+      offset: 8,
+      dialogConfig: { panelClass: 'add-emojis-dialog-panel' }
     }).afterClosed().subscribe((emojiId: string | null) => {
       if (!emojiId || !this.emojiSvc.isValid(emojiId)) return;
       this.draft = this.emojiSvc.appendById(this.draft, emojiId as EmojiId);
@@ -216,21 +216,21 @@ export class NewMessage {
         .map(p => ({ uid: p.uid, name: p.name, avatar: p.avatar, isYou: false })),
     ];
 
-    const r = trigger.getBoundingClientRect();
-    const gap = 24;
-    const dlgW = 425;
-    const dlgH = 100;
+    const origin = trigger as HTMLElement | null;
+    if (!origin) return;
 
-    this.dialog.open(AtMembers, {
-      width: dlgW + 'px',
-      panelClass: 'at-members-dialog-panel',
-      position: {
-        bottom: `${dlgH + gap}px`,
-        left: `${100 + dlgW}px`,
-      },
-      data: {
-        currentUserId: currentUid,
-        members
+    this.anchorOverlaySvc.openAnchored(this.dialog, AtMembers, origin, {
+      width: 400,
+      height: 100,
+      preferredSide: 'top',
+      align: 'start',
+      offset: 400,
+      dialogConfig: {
+        panelClass: 'at-members-dialog-panel',
+        data: {
+          currentUserId: currentUid,
+          members
+        }
       }
     }).afterClosed().subscribe(mention => {
       if (!mention) return;

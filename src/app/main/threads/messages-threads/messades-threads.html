@@ -91,7 +91,7 @@
                                 <span class="count-emoji">{{ x.emojiCount }}</span>
                             </div>
 
-                            <span #emojiBtn class="icon-box" (click)="toggleEmoji(r, $event)">
+                            <span #emojiBtn class="icon-box" (click)="toggleEmojiFromReactions(r, $event)">
                                 <img class="default" src="icons/add_reaction.png" alt="">
                                 <img class="hover" src="icons/add_reaction_purple.png" alt="">
                             </span>
@@ -113,7 +113,7 @@
                 </div>
 
                 <div class="reaction-bar" [class.you]="r.isYou">
-                    <span #barEmojiBtn class="icon-box" (click)="toggleEmoji(r, $event)">
+                    <span #barEmojiBtn class="icon-box" (click)="toggleEmojiFromReactionBar(r, $event)">
                         <img class="default" src="icons/add_reaction.png" alt="">
                         <img class="hover" src="icons/add_reaction_purple.png" alt="">
                     </span>
