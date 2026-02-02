@@ -61,6 +61,19 @@ body {
   z-index: 2000 !important;
 }
 
+// Mobile: Dialog Overlay Pane auf volle Breite
+@media (max-width: 750px) {
+  .cdk-overlay-pane {
+    max-width: 100vw !important;
+    width: 100vw !important;
+  }
+
+  .cdk-global-overlay-wrapper {
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+  }
+}
+
 ::ng-deep .menu .mat-mdc-menu-content {
   display: flex;
   flex-direction: column;
@@ -259,10 +272,89 @@ input::placeholder {
     box-sizing: border-box;
   }
 
-  .add-channel-dialog-panel .mat-mdc-dialog-surface {
+  // Dialog Panels auf Mobile als Vollbild
+  .add-channel-dialog-panel {
+    max-width: 100vw !important;
+    width: 100vw !important;
     margin: 0 !important;
-    border-radius: 0px !important;
-    overflow: hidden;
+    padding: 0 !important;
+
+    .mat-mdc-dialog-surface {
+      width: 100vw !important;
+      max-width: 100vw !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      overflow: auto;
+    }
+  }
+
+  .add-people-dialog-panel {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    .mat-mdc-dialog-surface {
+      width: 100vw !important;
+      max-width: 100vw !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      overflow: auto;
+    }
+  }
+
+  .edit-channel-dialog-panel .mat-mdc-dialog-surface {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow: auto;
+  }
+
+  .edit-members-dialog-panel .mat-mdc-dialog-surface {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow: auto;
+  }
+
+  .add-members-dialog-panel .mat-mdc-dialog-surface {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow: auto;
+  }
+
+  .profile-card-dialog-panel .mat-mdc-dialog-surface {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow: auto;
+  }
+
+  .edit-profil-dialog-panel .mat-mdc-dialog-surface {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow: auto;
   }
 
   // Input auf Mobile anpassen

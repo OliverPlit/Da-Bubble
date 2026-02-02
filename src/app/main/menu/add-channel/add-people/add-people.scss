@@ -290,3 +290,206 @@ label>input:checked+.checkmark::after {
         background: $hoverBg;
     }
 }
+
+// Mobile Responsive Styles
+@media (max-width: 750px) {
+    .dialog {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        min-height: 100vh;
+        height: auto;
+        padding: 24px 16px;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box;
+        position: relative;
+        left: 0;
+        right: 0;
+    }
+
+    .header {
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+
+        > h2 {
+            font-size: 20px;
+            order: 2;
+        }
+
+        > img {
+            order: 1;
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    .checkboxen {
+        margin-left: 0;
+        width: 100%;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+
+        // Container für die Radio Buttons - nebeneinander
+        > label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            margin: 0;
+            cursor: pointer;
+            position: relative;
+            background-color: #ECEEFE;
+            border-radius: 30px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            flex: 1 1 calc(50% - 6px);
+            min-width: 140px;
+
+            > input[type="radio"] {
+                position: absolute;
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            > p {
+                font-size: 14px;
+                line-height: 130%;
+                margin: 0;
+            }
+
+            &:has(input[type="radio"]:checked) {
+                border-color: #444df2;
+                background-color: #fff;
+            }
+        }
+
+        // Diese Elemente sollen volle Breite haben
+        > .error,
+        > .multi-select,
+        > .button-end {
+            flex: 1 1 100%;
+            width: 100%;
+        }
+    }
+
+    // Custom Radio Button Style
+    .checkmark {
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        border: 2px solid #ADB0D9;
+        border-radius: 50%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .checkmark::after {
+        content: "";
+        width: 12px;
+        height: 12px;
+        background-color: #444df2;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        transition: transform 0.2s ease;
+    }
+
+    label > input[type="radio"]:checked + .checkmark {
+        border-color: #444df2;
+    }
+
+    label > input[type="radio"]:checked + .checkmark::after {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .multi-select {
+        padding-left: 0;
+        width: 100%;
+        margin-top: 16px;
+    }
+
+    .input-name {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0;
+        margin-top: 12px;
+        margin-bottom: 12px;
+        box-sizing: border-box;
+        font-size: 16px;
+        padding: 14px 16px;
+    }
+
+    .chip {
+        padding: 4px 12px 4px 12px;
+        gap: 8px;
+        margin-bottom: 8px;
+        flex-wrap: nowrap;
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+        }
+
+        .name {
+            font-size: 14px;
+        }
+
+        .icon-box-remove {
+            width: 24px;
+            height: 24px;
+        }
+    }
+
+    .dropdown {
+        position: relative;
+        top: 0;
+        width: 100% !important;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin-top: 8px;
+    }
+
+    .option {
+        padding: 8px 12px;
+        gap: 12px;
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+        }
+
+        .name {
+            font-size: 14px;
+        }
+    }
+
+    .error p {
+        margin-left: 0;
+        font-size: 12px;
+        padding-left: 36px;
+    }
+
+    .button-end {
+        justify-content: center;
+        margin-top: 32px;
+
+        button {
+            width: 100%;
+            max-width: 300px;
+            height: 48px;
+            font-size: 16px;
+        }
+    }
+}
