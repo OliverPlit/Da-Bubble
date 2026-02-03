@@ -27,13 +27,13 @@
             <div *ngIf="showExtraFields" class="multi-select">
                 <ng-container *ngFor="let person of selectedPeople">
                     <span class="chip">
-                        <img class="avatar" [src]="'/icons/avatars/' + person.avatar" [alt]="person.name" />
+                        <img class="avatar" [src]="'./assets//icons/avatars/' + person.avatar" [alt]="person.name" />
 
                         <span class="name">{{ person.name }}</span>
 
                         <span class="icon-box-remove" (click)="removePerson(person)">
-                            <img class="default" src="/icons/close.png" alt="">
-                            <img class="hover" src="/icons/close_purple.png" alt="">
+                            <img class="default" src="./assets//icons/close.png" alt="">
+                            <img class="hover" src="./assets//icons/close_purple.png" alt="">
                         </span>
                     </span>
                 </ng-container>
@@ -50,7 +50,7 @@
                     <button class="option" *ngFor="let p of filteredPeople" (mousedown)="$event.preventDefault()"
                         (click)="selectPerson(p)">
 
-                        <img class="avatar" [src]="'/icons/avatars/' + p.avatar" [alt]="p.name">
+                        <img class="avatar" [src]="'./assets//icons/avatars/' + p.avatar" [alt]="p.name">
 
                         <div class="meta">
                             <div class="row">

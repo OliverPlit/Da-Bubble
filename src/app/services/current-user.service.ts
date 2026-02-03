@@ -14,11 +14,11 @@ export type CurrentUser = {
 @Pipe({ name: 'avatarUrl', standalone: true })
 export class AvatarUrlPipe implements PipeTransform {
   transform(src?: string): string {
-    if (!src) return '/icons/avatars/avatar1.png';
+    if (!src) return './assets/icons/avatars/avatar1.png';
     if (src.startsWith('http')) return src;
-    if (src.startsWith('/icons/avatars/') || src.startsWith('assets/avatars/')) return src;
+    if (src.startsWith('./assets/icons/avatars/')) return src;
     
-    return `/icons/avatars/${src}`;
+    return `./assets/icons/avatars/${src}`;
   }
 }
 

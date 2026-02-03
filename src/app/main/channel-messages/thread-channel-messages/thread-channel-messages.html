@@ -34,8 +34,8 @@
                         </div>
 
                         <span #emojiBtn class="icon-box" (click)="toggleEmojiFromReactions(m, $event)">
-                            <img class="default" src="icons/add_reaction.png" alt="">
-                            <img class="hover" src="icons/add_reaction_purple.png" alt="">
+                            <img class="default" src="./assets/icons/add_reaction.png" alt="">
+                            <img class="hover" src="./assets/icons/add_reaction_purple.png" alt="">
                         </span>
                     </div>
 
@@ -61,28 +61,28 @@
 
             <div class="reaction-bar" [class.you]="m.isYou">
                 <span class="icon-box" (click)="toggleReaction(m, 'check')">
-                    <img class="default" src="icons/emojis/emoji_white heavy check mark.png" alt="">
-                    <img class="hover" src="icons/emojis/emoji_white heavy check mark.png" alt="">
+                    <img class="default" src="./assets/icons/emojis/emoji_white heavy check mark.png" alt="">
+                    <img class="hover" src="./assets/icons/emojis/emoji_white heavy check mark.png" alt="">
                 </span>
 
                 <span class="icon-box" (click)="toggleReaction(m, 'thumbs_up')">
-                    <img class="default" src="icons/emojis/emoji_person raising both hands in celebration.png" alt="">
-                    <img class="hover" src="icons/emojis/emoji_person raising both hands in celebration.png" alt="">
+                    <img class="default" src="./assets/icons/emojis/emoji_person raising both hands in celebration.png" alt="">
+                    <img class="hover" src="./assets/icons/emojis/emoji_person raising both hands in celebration.png" alt="">
                 </span>
 
                 <span #barEmojiBtn class="icon-box" (click)="toggleEmojiFromReactionBar(m, $event)">
-                    <img class="default" src="icons/add_reaction.png" alt="">
-                    <img class="hover" src="icons/add_reaction_purple.png" alt="">
+                    <img class="default" src="./assets/icons/add_reaction.png" alt="">
+                    <img class="hover" src="./assets/icons/add_reaction_purple.png" alt="">
                 </span>
 
                 <span class="icon-box" (click)="openThread(m)">
-                    <img class="default" src="icons/comment.png" alt="">
-                    <img class="hover" src="icons/comment_purple.png" alt="">
+                    <img class="default" src="./assets/icons/comment.png" alt="">
+                    <img class="hover" src="./assets/icons/comment_purple.png" alt="">
                 </span>
 
                 <span class="icon-box d-none" [class.you]="m.isYou" (click)="toggleEditMessagePanel(m, $event)">
-                    <img class="default" src="icons/more_vert.png" alt="">
-                    <img class="hover" src="icons/more_vert_purple.png" alt="">
+                    <img class="default" src="./assets/icons/more_vert.png" alt="">
+                    <img class="hover" src="./assets/icons/more_vert_purple.png" alt="">
                 </span>
             </div>
 
@@ -102,21 +102,21 @@
         <div class="composer-actions">
             <div class="d-flex">
                 <span #addEmojiBtn class="icon-box" (click)="openAddEmojis(addEmojiBtn)">
-                    <img class="default" src="icons/emoji_grey.png" alt="">
-                    <img class="hover1" src="icons/emoji_black.png" alt="">
-                    <img class="hover2" src="icons/emoji_purple.png" alt="">
+                    <img class="default" src="./assets/icons/emoji_grey.png" alt="">
+                    <img class="hover1" src="./assets/icons/emoji_black.png" alt="">
+                    <img class="hover2" src="./assets/icons/emoji_purple.png" alt="">
                 </span>
                 <span #atMemberBtn class="icon-box" (click)="openAtMembers(atMemberBtn)">
-                    <img class="default" src="icons/at_grey.png" alt="">
-                    <img class="hover1" src="icons/at_black.png" alt="">
-                    <img class="hover2" src="icons/at_purple.png" alt="">
+                    <img class="default" src="./assets/icons/at_grey.png" alt="">
+                    <img class="hover1" src="./assets/icons/at_black.png" alt="">
+                    <img class="hover2" src="./assets/icons/at_purple.png" alt="">
                 </span>
             </div>
 
             <div>
                 <span class="icon-box" (click)="sendMessage()">
-                    <img class="default" src="icons/Send icon.png" alt="">
-                    <img class="hover1" src="icons/Send icon_light.png" alt="">
+                    <img class="default" src="./assets/icons/Send icon.png" alt="">
+                    <img class="hover1" src="./assets/icons/Send icon_light.png" alt="">
                 </span>
             </div>
         </div>

@@ -1,22 +1,22 @@
 <header>
     <!-- Mobile Zurück-Button -->
     <button class="back-button" *ngIf="layout.isMobile()" (click)="goBack()">
-        <img src="icons/back-mobile.png" alt="Zurück">
+        <img src="./assets/icons/back-mobile.png" alt="Zurück">
     </button>
 
     <div #btn1 class="channel-title" (click)="openEditChannel(btn1)">
         <h2>
             <span class="icon-box">
-                <img class="icon default" src="icons/tag.png" alt="">
-                <img class="icon hover" src="icons/tag_purple.png" alt="">
+                <img class="icon default" src="./assets/icons/tag.png" alt="">
+                <img class="icon hover" src="./assets/icons/tag_purple.png" alt="">
             </span>
 
             {{ channel}}
         </h2>
 
         <span class="icon-box drop-down">
-            <img class="icon default" src="icons/keyboard_arrow_down.png" alt="">
-            <img class="icon hover" src="icons/expand_more.png" alt="">
+            <img class="icon default" src="./assets/icons/keyboard_arrow_down.png" alt="">
+            <img class="icon hover" src="./assets/icons/expand_more.png" alt="">
         </span>
     </div>
 
@@ -24,7 +24,7 @@
         <div #btn2 class="preview-members" (click)="openEditMembers(btn2)">
             <ng-container *ngFor="let m of renderMembers()">
                 <div class="avatar" role="img" [attr.aria-label]="m.name" [class.you]="m.isYou"
-     [style.background-image]="m.avatar ? 'url(/icons/avatars/' + m.avatar + ')' : ''">
+     [style.background-image]="m.avatar ? 'url(./assets/icons/avatars/' + m.avatar + ')' : ''">
                     <span *ngIf="!m.avatar">{{ m.name.charAt(0) }}</span>
                 </div>
             </ng-container>
@@ -33,8 +33,8 @@
         </div>
 
         <span #btn3 class="icon-box" (click)="openAddMembers(btn3)">
-            <img class="default" src="icons/person_add.png" alt="">
-            <img class="hover" src="icons/person_add_purple.png" alt="">
+            <img class="default" src="./assets/icons/person_add.png" alt="">
+            <img class="hover" src="./assets/icons/person_add_purple.png" alt="">
         </span>
     </div>
 </header>
