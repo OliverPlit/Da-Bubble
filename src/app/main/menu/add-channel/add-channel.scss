@@ -1,111 +1,104 @@
 .add-channel-main {
-    width: 872px !important;
-    max-width: 872px !important;
-    border-radius: 30px !important;
-    height: 539px;
-    display: flex;
-    padding: 40px;
-    gap: 20px;
-    opacity: 1;
-    display: block;
-    margin: 0 auto;
-    box-sizing: border-box;
-    font-family: 'Nunito';
-
+  width: 872px !important;
+  max-width: 872px !important;
+  border-radius: 30px !important;
+  height: 539px;
+  display: flex;
+  padding: 40px;
+  gap: 20px;
+  opacity: 1;
+  display: block;
+  margin: 0 auto;
+  box-sizing: border-box;
+  font-family: 'Nunito';
 }
 
-
 .add-channel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
-    >h2 {
-        font-size: 24px;
-        line-height: 100%;
-        letter-spacing: 0%;
+  > h2 {
+    font-size: 24px;
+    line-height: 100%;
+    letter-spacing: 0%;
+  }
 
+  > img {
+    width: 24px;
+    height: 24px;
+
+    &:hover {
+      cursor: pointer;
+      filter: invert(43%) sepia(63%) saturate(7492%) hue-rotate(229deg) brightness(97%)
+        contrast(96%);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 4px rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: scale(1.1);
     }
-
-    >img {
-        width: 24px;
-        height: 24px;
-
-
-        &:hover {
-            cursor: pointer;
-            filter: invert(43%) sepia(63%) saturate(7492%) hue-rotate(229deg) brightness(97%) contrast(96%);
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 4px rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            transform: scale(1.1);
-        }
-    }
+  }
 }
 
 p {
-    font-family: 'Nunito-noBold';
-    font-weight: 400;
-    font-style: Regular;
-    font-size: 18px;
-    line-height: 100%;
-    letter-spacing: 0%;
-
+  font-family: 'Nunito-noBold';
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 18px;
+  line-height: 100%;
+  letter-spacing: 0%;
 }
-
 
 label {
-    display: flex;
-    justify-content: row;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 20px;
-    margin-top: 10px;
-    width: 126px;
-    height: 25px;
-    font-size: 18px;
-    line-height: 100%;
-    letter-spacing: 0%;
+  display: flex;
+  justify-content: row;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 20px;
+  margin-top: 10px;
+  width: 126px;
+  height: 25px;
+  font-size: 18px;
+  line-height: 100%;
+  letter-spacing: 0%;
 }
 
-
 .description {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 
 .add-button {
-    display: flex;
-    justify-content: end;
-    margin-top: 20px;
+  display: flex;
+  justify-content: end;
+  margin-top: 20px;
 
-    >button:disabled {
-        background-color: #5a57f5;
-        box-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 4px rgba(255, 255, 255, 0.2);
-    }
+  > button:disabled {
+    background-color: #5a57f5;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 4px rgba(255, 255, 255, 0.2);
+  }
 }
 
 .input-channel {
-    background-image: url('/icons/tag.png');
-    background-repeat: no-repeat;
-    background-position: 20px center;
-    background-size: 15px 15px;
-    text-indent: 30px;
+  background-image: url('/icons/tag.png');
+  background-repeat: no-repeat;
+  background-position: 20px center;
+  background-size: 15px 15px;
+  text-indent: 30px;
 }
 
 input::placeholder {
-    color: #686868;
-    font-size: 20px;
-    font-family: 'Nunito-noBold';
-    font-weight: 400 !important;
-    opacity: 1;
-    margin-left: 10px;
+  color: #686868;
+  font-size: 20px;
+  font-family: 'Nunito-noBold';
+  font-weight: 400 !important;
+  opacity: 1;
+  margin-left: 10px;
 }
 
 button:hover {
-    background-color: #5a57f5;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 4px rgba(255, 255, 255, 0.2);
-    cursor: pointer;
+  background-color: #5a57f5;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 4px rgba(255, 255, 255, 0.2);
+  cursor: pointer;
 }
-
 
 .error p {
   color: red;
@@ -114,97 +107,68 @@ button:hover {
   margin-left: 40px;
 }
 
-@media (max-width: 750px) {
+@media (max-width: 650px) {
   .add-channel-main {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-height: 100vh;
-    height: auto;
-    padding: 24px 16px;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh;
+    padding: 20px;
     border-radius: 0 !important;
-    margin: 0 !important;
+    margin: 0;
     box-sizing: border-box;
-    position: relative;
-    left: 0;
-    right: 0;
   }
 
   .add-channel-header {
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
+    justify-content: start;
+    gap: 30px;
+  }
 
-    > h2 {
-      font-size: 20px;
-      order: 2;
-    }
-
-    > img {
-      order: 1;
-      width: 20px;
-      height: 20px;
-    }
+  .add-channel-header h2 {
+    font-size: 20px;
   }
 
   p {
-    font-size: 14px;
-    line-height: 140%;
-    width: 100%;
-    max-width: 100%;
-    margin-bottom: 16px;
-  }
-
-  form {
+    font-size: 16px;
+    line-height: 130%;
+    max-width: 440px;
     width: 100%;
   }
 
-  form > div {
-    width: 100%;
+  input {
+    width: 230px;
+    border-radius: 40px;
+    border-width: 1px;
+    padding-top: 18px;
+    padding-right: 20px;
+    padding-bottom: 18px;
+    padding-left: 20px;
+    gap: 20px;
+  }
+
+  button {
+    width: 270px;
   }
 
   label {
     font-size: 16px;
     width: auto;
-    margin-bottom: 8px;
-    margin-top: 16px;
+    margin-bottom: 10px;
   }
 
   input {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box;
-    border-radius: 40px;
-    border-width: 1px;
-    padding: 14px 16px;
-    padding-left: 40px;
     font-size: 16px;
-    gap: 20px;
-  }
-
-  .input-channel {
-    background-position: 16px center;
-    text-indent: 24px;
   }
 
   input::placeholder {
     font-size: 16px;
   }
 
-  .error p {
-    margin-left: 16px;
-    font-size: 11px;
-  }
-
   .add-button {
-    justify-content: center !important;
-    margin-top: 32px;
+    justify-content: start !important;
   }
 
   .add-button button {
-    width: 100%;
-    max-width: 300px;
+    width: 270px;
     height: 48px;
     font-size: 16px;
   }

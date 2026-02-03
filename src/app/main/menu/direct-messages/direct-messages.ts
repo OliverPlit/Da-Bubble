@@ -40,7 +40,8 @@ export class DirectMessages {
   async ngOnInit() {
     const userDataPromise = this.initUserId();
     
-    this.directMessage$ = this.firebaseService.getCollection$('directMessages').pipe(
+    // Fetch from 'users' collection to get correct avatars
+    this.directMessage$ = this.firebaseService.getCollection$('users').pipe(
       startWith([]), 
       map(users => {
         if (!this.currentUserId) return users;
@@ -71,19 +72,25 @@ export class DirectMessages {
     this.currentUserId = userData.uid;
     if (!this.currentUserId) return;
 
+    // Set initial values from localStorage (important for guest user)
+    this.userName = userData.name || 'Guest';
+    this.userAvatar = userData.avatar || 'avatar1.png';
+
     try {
-      const userRef = doc(this.firestore, 'directMessages', this.currentUserId);
+      // Fetch from 'users' collection (same as header/profile)
+      const userRef = doc(this.firestore, 'users', this.currentUserId);
       const snap = await getDoc(userRef);
       
       if (snap.exists()) {
         const data: any = snap.data();
         this.userName = data.name;
-        this.userAvatar = data.avatar || 'avatar-0.png';
+        this.userAvatar = data.avatar || 'avatar1.png';
         this.firebaseService.setName(this.userName);
-        this.cdr.detectChanges();
       }
+      this.cdr.detectChanges();
     } catch (error) {
       console.error('Fehler beim Laden der User-Daten:', error);
+      this.cdr.detectChanges();
     }
   }
 
