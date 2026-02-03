@@ -1,7 +1,7 @@
 <div class="dialog">
     <div class="header">
         <h2>Leute hinzufügen</h2>
-        <img src="/icons/close.png" alt="" (click)="closeDialog()">
+        <img src="/img/close.png" alt="" (click)="closeDialog()">
     </div>
 
     <form #peopleForm="ngForm">
@@ -27,13 +27,13 @@
             <div *ngIf="showExtraFields" class="multi-select">
                 <ng-container *ngFor="let person of selectedPeople">
                     <span class="chip">
-                        <img class="avatar" [src]="'/icons/avatars/' + person.avatar" [alt]="person.name" />
+                        <img class="avatar" [src]="'/img/avatars/' + person.avatar" [alt]="person.name" />
 
                         <span class="name">{{ person.name }}</span>
 
                         <span class="icon-box-remove" (click)="removePerson(person)">
-                            <img class="default" src="/icons/close.png" alt="">
-                            <img class="hover" src="/icons/close_purple.png" alt="">
+                            <img class="default" src="/img/close.png" alt="">
+                            <img class="hover" src="/img/close_purple.png" alt="">
                         </span>
                     </span>
                 </ng-container>
@@ -50,7 +50,7 @@
                     <button class="option" *ngFor="let p of filteredPeople" (mousedown)="$event.preventDefault()"
                         (click)="selectPerson(p)">
 
-                        <img class="avatar" [src]="'/icons/avatars/' + p.avatar" [alt]="p.name">
+                        <img class="avatar" [src]="'/img/avatars/' + p.avatar" [alt]="p.name">
 
                         <div class="meta">
                             <div class="row">

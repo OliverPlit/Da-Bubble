@@ -72,9 +72,9 @@ export class Header {
 
   get currentLogo(): string {
     if (this.isMobile && this.currentView !== 'default') {
-      return '/icons/logo-menu-devspace.png';
+      return '/img/logo-menu-devspace.png';
     }
-    return '/icons/logo-menu.png';
+    return '/img/logo-menu.png';
   }
 
   get showMobileHeader(): boolean {

@@ -4,8 +4,8 @@
       <h2>Mitglieder</h2>
 
       <span class="icon-box" (click)="close()">
-        <img class="default" src="/icons/close.png" alt="" />
-        <img class="hover" src="/icons/close_purple.png" alt="" />
+        <img class="default" src="/img/close.png" alt="" />
+        <img class="hover" src="/img/close_purple.png" alt="" />
       </span>
     </div>
   </header>
@@ -17,7 +17,7 @@
       (click)="openProfile(u)"
       [class.you]="isYou(u)"
     >
-      <img class="avatar" [src]="'/icons/avatars/' + u.avatar" [alt]="u.name" />
+      <img class="avatar" [src]="'/img/avatars/' + u.avatar" [alt]="u.name" />
       <span
         class="status-dot"
         [ngClass]="presence.userStatusMap()[u.uid] === 'online' ? 'online' : 'offline'"
@@ -28,8 +28,8 @@
 
   <footer class="footer" (click)="openAddMembers()">
     <span class="icon-box">
-      <img class="default" src="/icons/person_add.png" alt="" />
-      <img class="hover" src="/icons/person_add_purple.png" alt="" />
+      <img class="default" src="/img/person_add.png" alt="" />
+      <img class="hover" src="/img/person_add_purple.png" alt="" />
     </span>
 
     <span> Mitglieder hinzufügen </span>

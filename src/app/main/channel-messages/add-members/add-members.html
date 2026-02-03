@@ -5,13 +5,13 @@
                 <h2>Leute hinzufügen</h2>
 
                 <span class="icon-box" (click)="close()">
-                    <img class="default" src="/icons/close.png" alt="">
-                    <img class="hover" src="/icons/close_purple.png" alt="">
+                    <img class="default" src="/img/close.png" alt="">
+                    <img class="hover" src="/img/close_purple.png" alt="">
                 </span>
             </div>
 
             <div class="subheading">
-                <img src="/icons/tag_purple.png" alt="" />
+                <img src="/img/tag_purple.png" alt="" />
                 <span>{{ channelName }}</span>
             </div>
         </header>
@@ -19,12 +19,12 @@
         <div class="input-wrap" [class.has-chip]="selected().length > 0">
             <ng-container *ngFor="let u of selected()">
                 <span class="chip">
-                    <img class="avatar" [src]="'/icons/avatars/' + u.avatar" [alt]="u.name" />
+                    <img class="avatar" [src]="'/img/avatars/' + u.avatar" [alt]="u.name" />
                     <span class="name">{{ u.name }}</span>
 
                     <span class="icon-box-remove" (click)="removeSelected(u.uid)">
-                        <img class="default" src="/icons/close.png" alt="">
-                        <img class="hover" src="/icons/close_purple.png" alt="">
+                        <img class="default" src="/img/close.png" alt="">
+                        <img class="hover" src="/img/close_purple.png" alt="">
                     </span>
                 </span>
             </ng-container>
@@ -36,7 +36,7 @@
             <div class="dropdown" *ngIf="showDropdown()">
                 <button class="option" *ngFor="let u of suggestions(); let i = index"
                     [class.active]="i === activeIndex()" (mousedown)="$event.preventDefault()" (click)="selectUser(u)">
-                    <img class="avatar" [src]="'/icons/avatars/' + u.avatar" [alt]="u.name" />
+                    <img class="avatar" [src]="'/img/avatars/' + u.avatar" [alt]="u.name" />
                     <div class="meta">
                         <div class="row">
                             <span class="name">{{ u.name }}</span>

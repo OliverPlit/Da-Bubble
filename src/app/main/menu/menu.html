@@ -3,19 +3,19 @@
   <mat-drawer #drawer class="sidenav" mode="side" [(opened)]="isMenuOpen">
     <div class="header-menu">
       <div>
-        <img src="/icons/logo-menu-devspace.png" alt="">
+        <img src="/img/logo-menu-devspace.png" alt="">
         <h2>Devspace</h2>
       </div>
-      <img src="/icons/edit-square.png" alt="" class="write-message" (click)="onOpenNewMessage()">
+      <img src="/img/edit-square.png" alt="" class="write-message" (click)="onOpenNewMessage()">
     </div>
 
     <div class="header-menu-channels">
       <div (click)="toggleChannels()">
-        <img src="/icons/arrow-drop-menu.png" alt="">
-        <img src="/icons/channel.png" alt="">
+        <img src="/img/arrow-drop-menu.png" alt="">
+        <img src="/img/channel.png" alt="">
         <h3>Channels</h3>
       </div>
-      <img src="/icons/add-channel.png" alt="" class="write-message" matButton (click)="openDialog()">
+      <img src="/img/add-channel.png" alt="" class="write-message" matButton (click)="openDialog()">
     </div>
     
     <div class="channel-list" *ngIf="showChannels">
@@ -24,8 +24,8 @@
 
     <div class="header-menu-channels" (click)="toggleMessages()">
       <div>
-        <img src="/icons/arrow-drop-menu.png" alt="">
-        <img src="/icons/direct-person.png" alt="">
+        <img src="/img/arrow-drop-menu.png" alt="">
+        <img src="/img/direct-person.png" alt="">
         <h3>Direktnachrichten</h3>
       </div>
     </div>
@@ -49,19 +49,19 @@
   
   <div class="header-menu">
     <div>
-      <img src="/icons/logo-menu-devspace.png" alt="">
+      <img src="/img/logo-menu-devspace.png" alt="">
       <h2>Devspace</h2>
     </div>
-    <img src="/icons/edit-square.png" alt="" class="write-message" (click)="onOpenNewMessage()">
+    <img src="/img/edit-square.png" alt="" class="write-message" (click)="onOpenNewMessage()">
   </div>
 
   <div class="header-menu-channels">
     <div (click)="toggleChannels()">
-      <img src="/icons/arrow-drop-menu.png" alt="">
-      <img src="/icons/channel.png" alt="">
+      <img src="/img/arrow-drop-menu.png" alt="">
+      <img src="/img/channel.png" alt="">
       <h3>Channels</h3>
     </div>
-    <img src="/icons/add-channel.png" alt="" class="write-message" matButton (click)="openDialog()">
+    <img src="/img/add-channel.png" alt="" class="write-message" matButton (click)="openDialog()">
   </div>
   
   <div class="channel-list" *ngIf="showChannels">
@@ -70,8 +70,8 @@
 
   <div class="header-menu-channels" (click)="toggleMessages()">
     <div>
-      <img src="/icons/arrow-drop-menu.png" alt="">
-      <img src="/icons/direct-person.png" alt="">
+      <img src="/img/arrow-drop-menu.png" alt="">
+      <img src="/img/direct-person.png" alt="">
       <h3>Direktnachrichten</h3>
     </div>
   </div>
@@ -81,4 +81,4 @@
   </div>
 </div>
 
-<img src="/icons/mobile-new-message.png" alt="" *ngIf="isMobile" class="mobile-message" (click)="onOpenNewMessage()">
+<img src="/img/mobile-new-message.png" alt="" *ngIf="isMobile" class="mobile-message" (click)="onOpenNewMessage()">

@@ -1,7 +1,7 @@
 <div class="add-channel-main" *ngIf="channel">
   <div class="add-channel-header">
     <h2># {{ channel.name }}</h2>
-    <img src="/icons/close-channel.png" alt="Schließen" (click)="close()">
+    <img src="/img/close-channel.png" alt="Schließen" (click)="close()">
   </div>
 <div *ngIf="!channel" class="error-message">
   <p>Fehler: Keine Channel-Daten verfügbar</p>

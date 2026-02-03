@@ -13,28 +13,28 @@ export const EMOJIS_LIBRARY = [
     {
         emojiId: 'rocket',
         emojiname: 'Rocket',
-        emojiSrc: '/icons/emojis/emoji_rocket.png',
+        emojiSrc: '/img/emojis/emoji_rocket.png',
         unicode: '🚀',
         shortcode: [':rocket:']
     },
     {
         emojiId: 'check',
         emojiname: 'Check',
-        emojiSrc: '/icons/emojis/emoji_white heavy check mark.png',
+        emojiSrc: '/img/emojis/emoji_white heavy check mark.png',
         unicode: '✅',
         shortcode: [':check:']
     },
     {
         emojiId: 'nerd',
         emojiname: 'Nerd',
-        emojiSrc: '/icons/emojis/emoji_nerd face.png',
+        emojiSrc: '/img/emojis/emoji_nerd face.png',
         unicode: '🤓',
         shortcode: [':nerd:']
     },
     {
         emojiId: 'thumbs_up',
         emojiname: 'ThumbsUp',
-        emojiSrc: '/icons/emojis/emoji_person raising both hands in celebration.png',
+        emojiSrc: '/img/emojis/emoji_person raising both hands in celebration.png',
         unicode: '👍',
         shortcode: [':thumbs_up:']
     },

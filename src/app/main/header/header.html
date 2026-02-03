@@ -1,8 +1,8 @@
 <section>
-    <img src="/icons/logo-menu.png" alt="logo">
+    <img src="/img/logo-menu.png" alt="logo">
     <div class="mobile-header" *ngIf="isVisible">
-        <img src="/icons/back-mobile" alt="">
-        <img src="/icons/logo-menu-devspace" alt="">
+        <img src="/img/back-mobile" alt="">
+        <img src="/img/logo-menu-devspace" alt="">
     </div>
     <div class="search-container">
 
@@ -40,7 +40,7 @@
 
                     <!-- Direct Message Result -->
                     <div class="result-content" *ngIf="result.type === 'direct'">
-                        <img class="result-avatar" [src]="'/icons/avatars/' + result.avatar" alt="">
+                        <img class="result-avatar" [src]="'/img/avatars/' + result.avatar" alt="">
                         <div class="result-details">
                             <p class="result-title">{{ result.title }}</p>
                             <small class="result-subtitle">{{ result.subtitle }}</small>
@@ -65,9 +65,9 @@
     </div>
     <div class="profile-menu" (click)="openMenu()" [matMenuTriggerFor]="!isMobile ? menu : null">
         <p>{{ userName }}</p>
-        <img class="profile-img" [src]="'/icons/avatars/' + userAvatar" alt="">
+        <img class="profile-img" [src]="'/img/avatars/' + userAvatar" alt="">
         <span class="status-dot online"></span>
-        <img src="/icons/dropdown-menu.png" alt="" class="dropdown">
+        <img src="/img/dropdown-menu.png" alt="" class="dropdown">
         <mat-menu #menu="matMenu" class="menu" xPosition="before" yPosition="below">
             <p (click)="openDialog()" class="dialog-select">Profile</p>
             <p (click)="logout()" class="dialog-select">Log out</p>
@@ -77,15 +77,15 @@
     <div class="mobile-menu" *ngIf="mobileMenuOpen">
         <div class="mobile-menu-content">
             <div class="menu-bar-div">
-                <img src="/icons/mobile-menu.png" alt="" class="menu-bar" (click)="closeMobileMenu()">
+                <img src="/img/mobile-menu.png" alt="" class="menu-bar" (click)="closeMobileMenu()">
             </div>
             <div class="profile-logo">
-                <img src="/icons/direct-person.png" alt="">
+                <img src="/img/direct-person.png" alt="">
                 <p (click)="openDialog()">Profile</p>
 
             </div>
             <div class="profile-logo">
-                <img src="/icons/logout.png" alt="">
+                <img src="/img/logout.png" alt="">
                 <p (click)="logout()">Log out</p>
 
             </div>

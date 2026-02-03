@@ -25,6 +25,11 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": ""
+              },
+              {
+                "glob": ".htaccess",
+                "input": "src",
+                "output": ""
               }
             ],
             "styles": [

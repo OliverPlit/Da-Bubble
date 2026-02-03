@@ -1,5 +1,5 @@
 <div class="main-container" (click)="openChatYou()" [class.active]="isYouSelected">
-  <img [src]="'/icons/avatars/' + userAvatar" alt="Avatar" />
+  <img [src]="'/img/avatars/' + userAvatar" alt="Avatar" />
   <span class="status-dot online"></span>
   <p>{{ userName }} (Du)</p>
 </div>
@@ -10,7 +10,7 @@
   (click)="openChatDirectMessage(dm)"
   [class.active]="selectedDmId === dm.id"
 >
-  <img [src]="'/icons/avatars/' + dm.avatar" alt="" />
+  <img [src]="'/img/avatars/' + dm.avatar" alt="" />
   <span
     class="status-dot"
     [ngClass]="presence.userStatusMap()[dm.id] === 'online' ? 'online' : 'offline'"

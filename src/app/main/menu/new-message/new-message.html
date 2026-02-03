@@ -2,7 +2,7 @@
   <div class="header">
     <div class="header-title">
       <button *ngIf="layout.isMobile()" class="back-button" (click)="goBack()">
-        <img src="/icons/arrow_back.png" alt="Back">
+        <img src="/img/arrow_back.png" alt="Back">
       </button>
       <p>Neue Nachricht</p>
     </div>
@@ -11,11 +11,11 @@
       <!-- Chip direkt im Input -->
       <ng-container *ngFor="let person of selectedPeople">
         <span class="chip">
-          <img class="avatar" [src]="'/icons/avatars/' + person.avatar" [alt]="person.name">
+          <img class="avatar" [src]="'/img/avatars/' + person.avatar" [alt]="person.name">
           <span class="name">{{ person.name }}</span>
           <span class="icon-box-remove" (click)="removePerson(person)">
-            <img class="default" src="/icons/close.png" alt="">
-            <img class="hover" src="/icons/close_purple.png" alt="">
+            <img class="default" src="/img/close.png" alt="">
+            <img class="hover" src="/img/close_purple.png" alt="">
           </span>
         </span>
       </ng-container>
@@ -29,7 +29,7 @@
     <div class="dropdown" *ngIf="search && filteredPeople.length > 0">
       <button class="option" *ngFor="let p of filteredPeople" (mousedown)="$event.preventDefault()"
         (click)="selectPerson(p)">
-        <img class="avatar" [src]="'/icons/avatars/' + p.avatar" [alt]="p.name">
+        <img class="avatar" [src]="'/img/avatars/' + p.avatar" [alt]="p.name">
         <div class="meta">
           <div class="row">
             <span class="name">{{ p.name }}</span>
@@ -47,21 +47,21 @@
       <div class="composer-actions">
         <div class="d-flex">
           <span #addEmojiBtn class="icon-box" (click)="openAddEmojis(addEmojiBtn)">
-            <img class="default" src="/icons/emoji_grey.png" alt="">
-            <img class="hover1" src="/icons/emoji_black.png" alt="">
-            <img class="hover2" src="/icons/emoji_purple.png" alt="">
+            <img class="default" src="/img/emoji_grey.png" alt="">
+            <img class="hover1" src="/img/emoji_black.png" alt="">
+            <img class="hover2" src="/img/emoji_purple.png" alt="">
           </span>
           <span #atMemberBtn class="icon-box" (click)="openAtMembers(atMemberBtn)">
-            <img class="default" src="/icons/at_grey.png" alt="">
-            <img class="hover1" src="/icons/at_black.png" alt="">
-            <img class="hover2" src="/icons/at_purple.png" alt="">
+            <img class="default" src="/img/at_grey.png" alt="">
+            <img class="hover1" src="/img/at_black.png" alt="">
+            <img class="hover2" src="/img/at_purple.png" alt="">
           </span>
         </div>
         
         <div>
           <span class="icon-box" (click)="sendMessage()">
-            <img class="default" src="/icons/Send icon.png" alt="">
-            <img class="hover1" src="/icons/Send icon_light.png" alt="">
+            <img class="default" src="/img/Send icon.png" alt="">
+            <img class="hover1" src="/img/Send icon_light.png" alt="">
           </span>
         </div>
       </div>
