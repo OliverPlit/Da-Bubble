@@ -1,10 +1,11 @@
 // Container für max-width 1440px
-body {
+:host {
+  display: flex;
+  flex-direction: column;
   max-width: 1440px;
   margin: 0 auto;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  width: 100%;
 }
 
 main {
@@ -29,6 +30,12 @@ header {
   transition: opacity 3s ease;
   animation: showHeaderLogo 0.1s ease forwards;
   animation-delay: 3.55s;
+
+  img {
+    height: 70px;
+    width: auto;
+  }
+
   p {
     font-size: 32px;
     font-weight: 700;
@@ -253,6 +260,14 @@ footer {
 
   .header-logo {
     animation-delay: 3.5s !important;
+
+    img {
+      height: 50px;
+    }
+
+    p {
+      font-size: 24px;
+    }
   }
 
   .header-text-responsive {
