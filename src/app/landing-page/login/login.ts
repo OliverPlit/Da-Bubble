@@ -37,20 +37,29 @@ export class Login {
   emailError = signal(false);
   loginError = signal(false);
 
+  private emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
   constructor(private router: Router, private auth: Auth, private firestore: Firestore) {}
+
+  isValidEmail(email: string): boolean {
+    return this.emailRegex.test(email);
+  }
 
   async login() {
     this.submitted.set(true);
-
-    this.emailError.set(!this.email || !this.email.includes('@'));
     this.loginError.set(false);
-    if (this.emailError() || !this.password) {
-      this.loginError.set(true);
+
+    const isEmailValid = this.email.trim() !== '' && this.isValidEmail(this.email.trim());
+    const isPasswordValid = this.password.trim() !== '';
+
+    this.emailError.set(!isEmailValid);
+
+    if (!isEmailValid || !isPasswordValid) {
       return;
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(this.auth, this.email, this.password);
+      const userCredential = await signInWithEmailAndPassword(this.auth, this.email.trim(), this.password);
 
       localStorage.setItem('currentUser', JSON.stringify(userCredential.user));
 

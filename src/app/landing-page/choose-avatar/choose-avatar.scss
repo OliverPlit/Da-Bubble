@@ -1,15 +1,15 @@
 .login-container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: 'Nunito', sans-serif;
+  flex: 1;
+  padding: 12px 16px;
+  box-sizing: border-box;
 }
 
 .login-card {
+  position: relative;
   background: white;
   border-radius: 20px;
   padding: 48px;
@@ -50,8 +50,8 @@ button {
 
 .back-arrow {
   position: absolute;
-  top: 56px;
-  left: 42px;
+  top: 16px;
+  left: 16px;
 
   font-size: 32px;
   color: #4d96f6;
@@ -100,49 +100,48 @@ button {
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 550px) {
   .login-container {
-    margin-top: 24px;
-    margin-bottom: 24px;
-    position: static;
-    transform: none;
+    padding: 12px 16px;
   }
 
   .login-card {
-    width: 280px !important;
-    height: 500px;
-    padding: 12px;
+    width: 300px;
+    padding: 24px;
   }
 
   .back-arrow {
-   position: static;
-   align-items: flex-start;
-   display: flex;
-   margin: 12px 0 0 12px;
+    position: static;
+    display: flex;
+    margin: 0 0 8px 0;
   }
 
-     h1 {
-    font-size: 28px !important;
-    margin-bottom: 0!important;
+  h1 {
+    font-size: 26px !important;
+    margin-bottom: 16px !important;
   }
 
-    .subtitle {
+  .subtitle {
     font-size: 14px;
-    margin-top: 12px;
-    margin-bottom:12px;
-    width: 260px;
+    margin-top: 8px;
+    margin-bottom: 12px;
   }
 
   .avatar-selection {
-    gap: 4px;
-  margin: 24px 0;
+    gap: 6px;
+    margin: 16px 0 24px 0;
+    flex-wrap: wrap;
   }
 
   .avatar-image {
-    height: 150px;
+    height: 140px;
   }
 
   .avatar-option {
-    height: 35px;
+    height: 40px;
+  }
+  
+  .buttons {
+    justify-content: center;
   }
 }

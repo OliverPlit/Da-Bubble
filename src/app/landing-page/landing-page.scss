@@ -1,6 +1,22 @@
+// Container für max-width 1440px
+body {
+  max-width: 1440px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 header {
   display: flex;
-  justify-content: end;
+  justify-content: space-between;
+  align-items: flex-start;
   padding: 32px 32px 0 32px;
   font-family: 'Nunito', sans-serif;
 }
@@ -9,9 +25,6 @@ header {
   display: flex;
   align-items: center;
   gap: 12px;
-  position: fixed;
-  top: 32px;
-  left: 32px;
   opacity: 0;
   transition: opacity 3s ease;
   animation: showHeaderLogo 0.1s ease forwards;
@@ -47,19 +60,23 @@ a:hover {
 }
 
 footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  margin: 48px auto;
+  padding: 24px 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 32px;
   font-family: 'Nunito', sans-serif;
+  box-sizing: border-box;
   a {
     text-decoration: none;
     color: #4d96f6;
+    white-space: nowrap;
   }
+}
+
+.footer-flex {
+  display: flex;
+  gap: 32px;
 }
 
 .intro-wrapper {
@@ -178,7 +195,7 @@ footer {
 
   100% {
     top: 8px;
-    left: 72px;
+    left: max(72px, calc(50vw - 720px + 72px));
     transform: translate(0, 0) scale(0.5833);
     color: black;
   }
@@ -207,29 +224,50 @@ footer {
   animation: none !important;
 }
 
+// Tablet/kleine Desktop-Auflösungen
+@media (max-width: 768px) {
+  header {
+    padding: 24px 24px 0 24px;
+  }
+
+  footer {
+    padding: 20px 24px;
+    gap: 24px;
+  }
+
+  .footer-flex {
+    gap: 24px;
+  }
+}
+
+// Mobile
 @media (max-width: 500px) {
+  header {
+    justify-content: center;
+    padding: 16px 16px 0 16px;
+  }
+
   .header-text {
     display: none;
   }
 
-  header {
-    justify-content: center;
-  }
-
   .header-logo {
-    position: relative;
-    top: 0;
-    left: 0;
     animation-delay: 3.5s !important;
   }
 
   .header-text-responsive {
     display: block;
+    text-align: center;
+    
+    p {
+      margin-bottom: 4px;
+    }
   }
 
   footer {
-    position: static;
     flex-direction: column;
+    padding: 16px;
+    gap: 12px;
 
     a {
       border: 1px solid #b4b4b4;
@@ -267,7 +305,7 @@ footer {
     }
 
     100% {
-      top: 22px;
+      top: 6px;
       left: 50.5%;
       transform: translate(-50%, 0) scale(0.777);
     }
