@@ -51,14 +51,8 @@ ngOnInit() {
   const storedUser = localStorage.getItem('currentUser');
   this.currentUserId = storedUser ? JSON.parse(storedUser).uid : '';
 
-  console.log('🔍 Initial members:', this.members); // DEBUG
-  console.log('🔍 channelId:', this.channelId); // DEBUG
-
-  // ⚠️ NUR subscriben, wenn channelId vorhanden ist
   if (this.channelId && this.currentUserId) {
     this.listenToChannelUpdates();
-  } else {
-    console.warn('⚠️ Kein channelId - verwende nur Input members');
   }
 
   this.stateSubscription = this.channelState.selectedChannel$.subscribe(channel => {
@@ -69,10 +63,7 @@ ngOnInit() {
 }
 
 renderMembers(): Member[] {
-  console.log('🎨 renderMembers aufgerufen, members:', this.members); // DEBUG
-  
   if (!this.members || this.members.length === 0) {
-    console.warn('⚠️ Keine members vorhanden!');
     return [];
   }
 

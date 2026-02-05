@@ -1,7 +1,7 @@
 import { Component, inject, } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Firestore, doc, updateDoc, getDocs, collection, writeBatch } from '@angular/fire/firestore';
+import { Firestore, doc, updateDoc, getDocs, collection, writeBatch, getDoc } from '@angular/fire/firestore';
 import { ChangeDetectorRef } from '@angular/core';
 import { FirebaseService } from '../../../../services/firebase';
 
@@ -40,15 +40,16 @@ export class EditProfile {
     const uid = this.data.uid;
     
     try {
-      const batch = writeBatch(this.firestore);
-      
+      // Update user document
       const userRef = doc(this.firestore, 'users', uid);
-      batch.update(userRef, { name: newName, avatar: this.userAvatar });
+      await updateDoc(userRef, { name: newName, avatar: this.userAvatar });
       
+      // Update directMessages document only if it exists
       const dmRef = doc(this.firestore, 'directMessages', uid);
-      batch.update(dmRef, { name: newName, avatar: this.userAvatar });
-      
-      await batch.commit();
+      const dmSnap = await getDoc(dmRef);
+      if (dmSnap.exists()) {
+        await updateDoc(dmRef, { name: newName, avatar: this.userAvatar });
+      }
       
       await this.updateNameInAllChannelMemberships(uid, newName);
 
