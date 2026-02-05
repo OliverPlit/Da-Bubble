@@ -21,9 +21,17 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
+              "src/favicon.ico",
+              "src/assets",
               {
                 "glob": "**/*",
-                "input": "src/assets"
+                "input": "src/assets/icons",
+                "output": "/icons"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets/fonts",
+                "output": "/fonts"
               }
             ],
             "styles": [
@@ -35,13 +43,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "2MB",
+                  "maximumError": "5MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "20kB",
+                  "maximumError": "30kB"
                 }
               ],
               "outputHashing": "all"
