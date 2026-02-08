@@ -15,6 +15,8 @@ import { Unsubscribe, Firestore, doc, docData, or } from '@angular/fire/firestor
 import { firstValueFrom } from 'rxjs';
 import { ChannelStateService } from '../../menu/channels/channel.service';
 import { AnchorOverlayService } from '../../../services/anchor-overlay.service';
+import { FirebaseService } from '../../../services/firebase';
+import { ChangeDetectorRef } from '@angular/core';
 
 type RootMessage = {
   messageId: string;
@@ -89,6 +91,8 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   private unsub: Unsubscribe | null = null;
   private channelState = inject(ChannelStateService);
   private anchorOverlaySvc = inject(AnchorOverlayService);
+  private firebaseSvc = inject(FirebaseService);
+  private cdr = inject(ChangeDetectorRef);
 
   private toAtMember = (m: any): AtMemberUser => {
     const uid = m?.uid ?? m?.id ?? '';
@@ -174,6 +178,21 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
       this.avatar = u.avatar;
     }
 
+    // Subscribe to profile changes
+    this.firebaseSvc.currentName$.subscribe(name => {
+      if (name && name !== this.name) {
+        this.name = name;
+        this.updateOwnMessagesProfile();
+      }
+    });
+
+    this.firebaseSvc.currentAvatar$.subscribe(avatar => {
+      if (avatar && avatar !== this.avatar) {
+        this.avatar = avatar;
+        this.updateOwnMessagesProfile();
+      }
+    });
+
     this.threadStateSvc.ctx$.subscribe(ctx => {
       this.replies = [];
       this.unsub?.();
@@ -238,6 +257,21 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   };
 
   ngOnDestroy() { this.unsub?.(); }
+
+  private updateOwnMessagesProfile() {
+    // Update root message if it's ours
+    if (this.root && this.root.isYou) {
+      this.root = { ...this.root, username: this.name, avatar: this.avatar };
+    }
+    // Update all own replies
+    this.replies = this.replies.map(r => {
+      if (r.isYou) {
+        return { ...r, username: this.name, avatar: this.avatar };
+      }
+      return r;
+    });
+    this.cdr.detectChanges();
+  }
 
   getEmojiSrc(emojiId: EmojiId | string) {
     return this.emojiSvc.src(emojiId);

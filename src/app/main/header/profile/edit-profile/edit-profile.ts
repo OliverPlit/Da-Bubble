@@ -54,6 +54,7 @@ export class EditProfile {
       await this.updateNameInAllChannelMemberships(uid, newName);
 
       this.firebase.setName(newName);
+      this.firebase.setAvatar(this.userAvatar);
       this.cd.detectChanges();
       this.dialogRef.close({ name: newName, avatar: this.userAvatar });
       

@@ -21,6 +21,8 @@ export class FirebaseService {
     private firestore = inject(Firestore);
 private nameSource = new BehaviorSubject<string>('');
   currentName$ = this.nameSource.asObservable();
+  private avatarSource = new BehaviorSubject<string>('');
+  currentAvatar$ = this.avatarSource.asObservable();
   membersSignal = signal<Member[]>([]);
     private currentViewSubject = new BehaviorSubject<HeaderView>('default');
   currentView$ = this.currentViewSubject.asObservable();
@@ -53,6 +55,14 @@ private nameSource = new BehaviorSubject<string>('');
 
  setName(name: string) {
     this.nameSource.next(name);
+  }
+
+  setAvatar(avatar: string) {
+    this.avatarSource.next(avatar);
+  }
+
+  get currentAvatarValue(): string {
+    return this.avatarSource.getValue();
   }
   
 

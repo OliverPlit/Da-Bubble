@@ -84,6 +84,7 @@ export class Header {
   async ngOnInit() {
     await this.loadUser();
     this.updateName();
+    this.updateAvatar();
 
     this.viewSubscription = this.firebase.currentView$.subscribe(view => {
       this.currentView = view;
@@ -135,6 +136,15 @@ export class Header {
     this.firebase.currentName$.subscribe((name) => {
       if (name) {
         this.userName = name;
+        this.cd.detectChanges();
+      }
+    });
+  }
+
+  updateAvatar() {
+    this.firebase.currentAvatar$.subscribe((avatar) => {
+      if (avatar) {
+        this.userAvatar = avatar;
         this.cd.detectChanges();
       }
     });
