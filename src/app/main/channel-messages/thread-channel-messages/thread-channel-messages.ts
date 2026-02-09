@@ -94,7 +94,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   private dateUtilsSvc = inject(DateUtilsService);
   private cdr = inject(ChangeDetectorRef);
   private anchorOverlaySvc = inject(AnchorOverlayService);
-  
+
   // NEU: userAvatar und userName für Updates
   userAvatar = '';
   userName = '';
@@ -177,7 +177,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   messagesView: Message[] = [];
 
   timeOf = (x: any) => this.dateUtilsSvc.timeOf(x);
-  
+
   constructor(private firebaseService: FirebaseService) { }
 
   async ngOnInit() {
@@ -207,7 +207,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       this.avatar = u.avatar;
       this.userName = u.name;
       this.userAvatar = u.avatar;
-      
+
       // Initial in FirebaseService setzen
       this.firebaseService.setName(u.name);
       this.firebaseService.setAvatar(u.avatar);
@@ -283,12 +283,17 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   }
 
   private mapDocToMessage(d: MessageDoc & { id: string }): Message {
+    const isYou = d.author.uid === this.uid;
+
+    const currentName = (this.userName || this.name || d.author.username || '').trim();
+    const currentAvatar = (this.userAvatar || this.avatar || d.author.avatar || '').trim();
+
     return {
       messageId: d.id,
       uid: d.author.uid,
-      username: d.author.username,
-      avatar: d.author.avatar,
-      isYou: d.author.uid === this.uid,
+      username: isYou ? currentName : d.author.username,
+      avatar: isYou ? currentAvatar : d.author.avatar,
+      isYou,
       createdAt: (d.createdAt as any) ?? new Date(),
       text: d.text,
       reactions: (d.reactions ?? []).map(r => {
@@ -297,11 +302,14 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
           userId: u.userId,
           username: u.username
         }));
+
+        const normalizedUsers = this.normalizeReactionUsers(reactionUsers);
+
         return {
           emojiId,
           emojiCount: Number(r.emojiCount ?? reactionUsers.length ?? 0),
-          youReacted: reactionUsers.some(u => u.userId === this.uid),
-          reactionUsers
+          youReacted: normalizedUsers.some(u => u.userId === this.uid),
+          reactionUsers: normalizedUsers,
         };
       }),
       repliesCount: d.repliesCount ?? 0,
@@ -333,10 +341,10 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
 
       await this.messageStoreSvc.sendChannelMessage(this.uid, this.channelId, {
         text,
-        author: { 
-          uid: this.uid, 
-          username: currentName, 
-          avatar: currentAvatar 
+        author: {
+          uid: this.uid,
+          username: currentName,
+          avatar: currentAvatar
         },
       });
 
@@ -448,6 +456,46 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       this.draft = (this.draft || '').trimEnd() + (this.draft ? ' ' : '') + mention + ' ';
     });
   }
+
+
+
+
+
+
+
+  private get currentDisplayName(): string {
+    return (this.userName || this.name || '').trim();
+  }
+
+  private normalizeReactionUsers(users: ReactionUser[]): ReactionUser[] {
+    const me = this.currentDisplayName;
+    if (!me || !this.uid) return users;
+
+    return users.map(u =>
+      u.userId === this.uid
+        ? { ...u, username: me }
+        : u
+    );
+  }
+
+  private normalizeMessageReactions(m: Message): Message {
+    if (!m?.reactions?.length) return m;
+
+    return {
+      ...m,
+      reactions: m.reactions.map(r => ({
+        ...r,
+        reactionUsers: this.normalizeReactionUsers(r.reactionUsers ?? []),
+        youReacted: (r.reactionUsers ?? []).some(u => u.userId === this.uid),
+      })),
+    };
+  }
+
+
+
+
+
+
 
   showReactionPanel(m: Message, reaction: Reaction, event: MouseEvent) {
     const element = event.currentTarget as HTMLElement;

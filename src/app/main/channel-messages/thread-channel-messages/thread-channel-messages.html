@@ -8,17 +8,17 @@
         <article class="message" *ngIf="!m.timeSeparator" [class.you]="m.isYou" #messageRef
             (mouseenter)="cancelEditMessagePanelHide(m)" (mouseleave)="scheduleEditMessagePanelHide(m)">
 
-        <div class="avatar" [class.you]="m.isYou" 
-     [style.background-image]="'url(' + ((m.isYou ? userAvatar : m.avatar) | avatarUrl) + ')'">
-    <span *ngIf="!m.avatar && !m.isYou"></span>
+            <div class="avatar" [class.you]="m.isYou"
+                [style.background-image]="'url(' + ((m.isYou ? userAvatar : m.avatar) | avatarUrl) + ')'">
+                <span *ngIf="!m.avatar && !m.isYou"></span>
 
-    <span class="status-dot"
-        [ngClass]="presence.userStatusMap()[m.uid] === 'online' ? 'online' : 'offline'"></span>
-</div>
+                <span class="status-dot"
+                    [ngClass]="presence.userStatusMap()[m.uid] === 'online' ? 'online' : 'offline'"></span>
+            </div>
 
             <div class="message-body" [class.you]="m.isYou">
                 <div class="meta" [class.you]="m.isYou">
-                    <strong>{{ m.username }}</strong>
+                    <strong>{{ m.isYou ? userName : m.username }}</strong>
                     <time>{{ m.createdAt | timeOf }}</time>
                 </div>
 
