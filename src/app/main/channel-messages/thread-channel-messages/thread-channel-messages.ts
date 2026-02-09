@@ -23,7 +23,6 @@ import { firstValueFrom } from 'rxjs';
 import { AnchorOverlayService } from '../../../services/anchor-overlay.service';
 import { FirebaseService } from '../../../services/firebase';
 
-
 type Message = {
   messageId: string;
   uid: string;
@@ -95,12 +94,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   private dateUtilsSvc = inject(DateUtilsService);
   private cdr = inject(ChangeDetectorRef);
   private anchorOverlaySvc = inject(AnchorOverlayService);
- userName: string = '';
-  userEmail: string = '';
-  userAvatar = '';
-  userUid = '';
 
-  
   private toAtMember = (m: any): AtMemberUser => {
     const uid = (m?.uid ?? m?.id ?? '').toString();
     return {
@@ -181,40 +175,22 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   timeOf = (x: any) => this.dateUtilsSvc.timeOf(x);
  constructor(private firebaseService: FirebaseService) { }
 
- async ngOnInit() {
-  this.firebaseService.currentName$.subscribe((name) => {
-    if (name) {
-      this.userName = name; 
-      this.name = name;     
-      this.cdr.detectChanges();
-    }
-  });
+  async ngOnInit() {
 
-  this.firebaseService.currentAvatar$.subscribe((avatar) => {
-    if (avatar) {
-      this.userAvatar = avatar;
-      this.avatar = avatar;    
-      this.cdr.detectChanges();
+    await this.currentUserService.hydrateFromLocalStorage();
+    const u = this.currentUserService.getCurrentUser();
+    if (u) {
+      this.uid = u.uid;
+      this.name = u.name;
+      this.avatar = u.avatar;
     }
-  });
-  
-  await this.currentUserService.hydrateFromLocalStorage();
-  const u = this.currentUserService.getCurrentUser();
-  if (u) {
-    this.uid = u.uid;
-    this.name = u.name;
-    this.avatar = u.avatar;
-    this.userName = u.name;     
-    this.userAvatar = u.avatar; 
+
+    this.initializeSubscriptions();
   }
-
-  this.initializeSubscriptions();
-}
 
   ngOnChanges(changes: SimpleChanges) {
     
     if (changes['channelId'] && !changes['channelId'].firstChange) {
-      console.log('Channel gewechselt:', changes['channelId'].currentValue);
       this.restartSubscriptions();
     }
   }
@@ -227,7 +203,6 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   }
 
   private restartSubscriptions() {
-    console.log('Starte Subscriptions neu für Channel:', this.channelId);
     this.initializeSubscriptions();
   }
 

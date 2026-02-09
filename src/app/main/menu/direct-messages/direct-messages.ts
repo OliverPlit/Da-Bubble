@@ -58,13 +58,13 @@ export class DirectMessages {
         this.cdr.detectChanges();
       }
     });
- this.firebaseService.currentAvatar$.subscribe((avatar) => {
+
+    this.firebaseService.currentAvatar$.subscribe((avatar) => {
       if (avatar) {
         this.userAvatar = avatar;
         this.cdr.detectChanges();
       }
     });
-    
   }
 
   getStatus(uid: string): 'online' | 'offline' {

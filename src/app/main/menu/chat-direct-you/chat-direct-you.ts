@@ -168,13 +168,39 @@ this.firebaseService.currentName$.subscribe((name) => {
       this.userAvatar = u.avatar;
     }
 
+    // Subscribe to profile changes
+    this.firebaseService.currentName$.subscribe(name => {
+      if (name && name !== this.userName) {
+        this.userName = name;
+        this.updateOwnMessagesProfile();
+      }
+    });
+
+    this.firebaseService.currentAvatar$.subscribe(avatar => {
+      if (avatar && avatar !== this.userAvatar) {
+        this.userAvatar = avatar;
+        this.updateOwnMessagesProfile();
+      }
+    });
+
     this.initializeSubscriptions();
+  }
+
+  private updateOwnMessagesProfile() {
+    // Update all own messages with new name/avatar
+    this.messages = this.messages.map(m => {
+      if (m.uid === this.uid) {
+        return { ...m, username: this.userName, avatar: this.userAvatar };
+      }
+      return m;
+    });
+    this.rebuildMessagesView();
+    this.cdr.detectChanges();
   }
 
   ngOnChanges(changes: SimpleChanges) {
     // Reagiere auf Input-Änderungen
     if ((changes['channelId'] || changes['uid']) && !changes['channelId']?.firstChange && !changes['uid']?.firstChange) {
-      console.log('Self-DM Kontext gewechselt');
       this.restartSubscriptions();
     }
   }
@@ -189,7 +215,6 @@ this.firebaseService.currentName$.subscribe((name) => {
   }
 
   private restartSubscriptions() {
-    console.log('Starte Subscriptions neu für Self-DM');
     this.initializeSubscriptions();
   }
 

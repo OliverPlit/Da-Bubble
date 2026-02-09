@@ -21,6 +21,7 @@ import { DateUtilsService, DaySeparated, TimeOfPipe } from '../../../services/da
 import { LayoutService } from '../../../services/layout.service';
 import { firstValueFrom } from 'rxjs';
 import { AnchorOverlayService } from '../../../services/anchor-overlay.service';
+import { FirebaseService } from '../../../services/firebase';
 
 type Message = {
   messageId: string;
@@ -94,6 +95,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy, OnCh
   layout = inject(LayoutService);
   private directChatService = inject(DirectChatService);
   private anchorOverlaySvc = inject(AnchorOverlayService);
+  private firebaseSvc = inject(FirebaseService);
 
   goBack() {
     this.layout.showMenu();
@@ -146,13 +148,39 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy, OnCh
       this.userAvatar = u.avatar;
     }
 
+    // Subscribe to profile changes
+    this.firebaseSvc.currentName$.subscribe(name => {
+      if (name && name !== this.userName) {
+        this.userName = name;
+        this.updateOwnMessagesProfile();
+      }
+    });
+
+    this.firebaseSvc.currentAvatar$.subscribe(avatar => {
+      if (avatar && avatar !== this.userAvatar) {
+        this.userAvatar = avatar;
+        this.updateOwnMessagesProfile();
+      }
+    });
+
     this.initializeSubscriptions();
+  }
+
+  private updateOwnMessagesProfile() {
+    // Update all own messages with new name/avatar
+    this.messages = this.messages.map(m => {
+      if (m.uid === this.uid) {
+        return { ...m, username: this.userName, avatar: this.userAvatar };
+      }
+      return m;
+    });
+    this.rebuildMessagesView();
+    this.cdr.detectChanges();
   }
 
   ngOnChanges(changes: SimpleChanges) {
     // Reagiere auf chatUser-Änderungen (DM-Wechsel)
     if (changes['chatUser'] && !changes['chatUser'].firstChange) {
-      console.log('DM gewechselt:', changes['chatUser'].currentValue);
       this.restartSubscriptions();
     }
   }
@@ -187,7 +215,6 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy, OnCh
   }
 
   private restartSubscriptions() {
-    console.log('Starte Subscriptions neu für DM:', this.chatUser?.id);
     this.initializeSubscriptions();
   }
 

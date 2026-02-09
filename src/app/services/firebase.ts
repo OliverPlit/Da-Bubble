@@ -24,6 +24,8 @@ private avatarSource = new BehaviorSubject<string>('');
   currentAvatar$ = this.avatarSource.asObservable();
 
   currentName$ = this.nameSource.asObservable();
+  private avatarSource = new BehaviorSubject<string>('');
+  currentAvatar$ = this.avatarSource.asObservable();
   membersSignal = signal<Member[]>([]);
     private currentViewSubject = new BehaviorSubject<HeaderView>('default');
   currentView$ = this.currentViewSubject.asObservable();
@@ -58,11 +60,14 @@ private avatarSource = new BehaviorSubject<string>('');
     this.nameSource.next(name);
   }
 
-
-  setAvatar(avatar: string){
+  setAvatar(avatar: string) {
     this.avatarSource.next(avatar);
+  }
 
- }  
+  get currentAvatarValue(): string {
+    return this.avatarSource.getValue();
+  }
+  
 
    loadMembers(channelId: string) {
     const col = collection(this.firestore, `channels/${channelId}/members`);
