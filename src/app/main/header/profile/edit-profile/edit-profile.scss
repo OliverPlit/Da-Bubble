@@ -109,6 +109,17 @@ input {
     box-sizing: border-box; 
 }
 
+.error {
+    color: #d32f2f;
+    font-size: 12px;
+    margin-top: 4px;
+
+    p {
+        margin: 0;
+        padding: 0;
+    }
+}
+
 .button-cancel {
     width: 141px;
     height: 49px;
@@ -123,4 +134,7 @@ input {
     color: #444DF2;
     background-color: white;
 
+    &:hover {
+        cursor: pointer;
+    }
 }

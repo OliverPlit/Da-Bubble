@@ -10,26 +10,37 @@
     <div>
       <label for="name">Channel-Name</label>
       <input type="text" id="name" name="channelName" placeholder="z.B. Kooperationsprojekte" class="input-channel"
-        ngModel #channelName="ngModel" required minlength="3">
+        ngModel #channelName="ngModel" required minlength="3" (ngModelChange)="channelNameExists = false">
       <div class="error" *ngIf="channelName.invalid && channelName.touched">
-        <p *ngIf="channelName.errors?.['required']">Name ist erforderlich.</p>
+        <p *ngIf="channelName.errors?.['required']">
+          Name ist erforderlich.
+        </p>
+
         <p *ngIf="channelName.errors?.['minlength']">
-          Name muss mindestens {{ channelName.errors?.['minlength'].requiredLength }} Zeichen haben.
+          Name muss mindestens
+          {{ channelName.errors?.['minlength'].requiredLength }} Zeichen haben.
         </p>
       </div>
-      <label for="name" class="description">Beschreibung <p> (optional)</p></label>
-      <input type="text" id="description" name="description" 
-      placeholder="Dein Text hier" ngModel #description = "ngModel" required
-        minlength="5">
 
-<div class="error" *ngIf="description.invalid && description.touched">
-  <p *ngIf="description.errors?.['required']">Beschreibung ist erforderlich</p>
-  <p *ngIf="description.errors?.['minlength']">Beschreibung muss mehr als 5 Zeichen haben</p>
-</div>
+      <div class="error" *ngIf="channelNameExists">
+        <p>Ein Channel mit diesem Namen existiert bereits.</p>
+      </div>
+      <label for="name" class="description">Beschreibung <p> (optional)</p></label>
+      <input type="text" id="description" name="description" placeholder="Dein Text hier" ngModel #description="ngModel"
+        required minlength="5">
+    </div>
+
+    <div>
+      <div class="error" *ngIf="description.invalid && description.touched">
+        <p *ngIf="description.errors?.['required']">Beschreibung ist erforderlich</p>
+        <p *ngIf="description.errors?.['minlength']">Beschreibung muss mehr als 5 Zeichen haben</p>
+      </div>
     </div>
 
     <div class="add-button">
-      <button (click)="openDialogPeople(channelForm)" [disabled]="!channelForm.valid">Erstellen</button>
+      <button (click)="openDialogPeople(channelForm)" [disabled]="!channelForm.valid || channelNameExists">
+        Erstellen
+      </button>
     </div>
   </form>
 </div>

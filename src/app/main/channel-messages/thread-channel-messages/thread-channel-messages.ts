@@ -94,6 +94,10 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   private dateUtilsSvc = inject(DateUtilsService);
   private cdr = inject(ChangeDetectorRef);
   private anchorOverlaySvc = inject(AnchorOverlayService);
+  
+  // NEU: userAvatar und userName für Updates
+  userAvatar = '';
+  userName = '';
 
   private toAtMember = (m: any): AtMemberUser => {
     const uid = (m?.uid ?? m?.id ?? '').toString();
@@ -173,23 +177,46 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   messagesView: Message[] = [];
 
   timeOf = (x: any) => this.dateUtilsSvc.timeOf(x);
- constructor(private firebaseService: FirebaseService) { }
+  
+  constructor(private firebaseService: FirebaseService) { }
 
   async ngOnInit() {
+    // Name und Avatar Subscriptions - WICHTIG: Vor hydrateFromLocalStorage
+    this.firebaseService.currentName$.subscribe((name) => {
+      if (name) {
+        this.userName = name;
+        this.name = name; // Auch name aktualisieren für Kompatibilität
+        this.cdr.detectChanges();
+      }
+    });
 
+    this.firebaseService.currentAvatar$.subscribe((avatar) => {
+      if (avatar) {
+        this.userAvatar = avatar;
+        this.avatar = avatar; // Auch avatar aktualisieren für Kompatibilität
+        this.cdr.detectChanges();
+      }
+    });
+
+    // Current User laden
     await this.currentUserService.hydrateFromLocalStorage();
     const u = this.currentUserService.getCurrentUser();
     if (u) {
       this.uid = u.uid;
       this.name = u.name;
       this.avatar = u.avatar;
+      this.userName = u.name;
+      this.userAvatar = u.avatar;
+      
+      // Initial in FirebaseService setzen
+      this.firebaseService.setName(u.name);
+      this.firebaseService.setAvatar(u.avatar);
     }
 
     this.initializeSubscriptions();
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    
     if (changes['channelId'] && !changes['channelId'].firstChange) {
       this.restartSubscriptions();
     }
@@ -212,7 +239,6 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     this.channelSubscription?.unsubscribe();
     this.channelSubscription = null;
 
-    // Messages zurücksetzen
     this.messages = [];
     this.messagesView = [];
   }
@@ -225,11 +251,9 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       `users/${this.uid}/memberships/${this.channelId}`
     );
 
-    // 🔥 LIVE-SUBSCRIPTION: Automatische Updates bei Änderungen
     this.channelSubscription = docData(membershipRef).subscribe((channelData: any) => {
       if (channelData) {
         this.channelName = channelData.name || this.channelName;
-        // Manuelle Change Detection triggern
         this.cdr.detectChanges();
       }
     });
@@ -243,7 +267,6 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       (docs) => {
         this.messages = docs.map(d => this.mapDocToMessage(d));
         this.rebuildMessagesView();
-        // Manuelle Change Detection triggern
         this.cdr.detectChanges();
         queueMicrotask(() => this.scrollToBottom());
       }
@@ -294,8 +317,9 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     this.isSending = true;
 
     try {
-      const u = this.currentUserService.getCurrentUser();
-      if (!u) return;
+      // WICHTIG: Verwende userName und userAvatar statt u.name und u.avatar
+      const currentName = this.userName || this.name;
+      const currentAvatar = this.userAvatar || this.avatar;
 
       if (this.editForId) {
         await this.messageStoreSvc.updateChannelMessage(
@@ -309,7 +333,11 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
 
       await this.messageStoreSvc.sendChannelMessage(this.uid, this.channelId, {
         text,
-        author: { uid: u.uid, username: u.name, avatar: u.avatar },
+        author: { 
+          uid: this.uid, 
+          username: currentName, 
+          avatar: currentAvatar 
+        },
       });
 
       this.draft = '';
@@ -322,7 +350,8 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
 
   async toggleReaction(m: any, emojiId: EmojiId) {
     if (!this.uid) return;
-    const you = { userId: this.uid, username: this.name };
+    // Verwende userName statt name
+    const you = { userId: this.uid, username: this.userName || this.name };
     await this.messageStoreSvc.toggleChannelReaction(this.uid, this.channelId, m.messageId, emojiId, you);
   }
 
@@ -436,7 +465,9 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
 
     let title = '';
     if (youReacted && reactedUsers.length > 0) {
-      const otherUsers = reactedUsers.filter((name) => name !== this.name);
+      // Verwende userName statt name
+      const currentName = this.userName || this.name;
+      const otherUsers = reactedUsers.filter((name) => name !== currentName);
       if (otherUsers.length > 0) {
         title = `${otherUsers.slice(0, 2).join(' und ')} und Du`;
       } else {

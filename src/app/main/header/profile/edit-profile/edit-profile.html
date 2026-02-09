@@ -55,16 +55,35 @@
         <img src="/img/direct-person.png" alt="">
         <h2>Vollständiger Name</h2>
     </div>
-    <form #channelForm="ngForm" (ngSubmit)="save(channelForm)">
-
-        <div ng>
-            <input type="text" [placeholder]="userName" name="nameInputEdit" [(ngModel)]="nameInput">
+    <form #profileForm="ngForm" (ngSubmit)="save(profileForm)">
+        <div>
+            <input 
+                type="text" 
+                [placeholder]="userName" 
+                name="nameInputEdit" 
+                [(ngModel)]="nameInput" 
+                #nameInputField="ngModel"
+                required 
+                minlength="3"
+            >
+            <div class="error" *ngIf="nameInputField.invalid && nameInputField.touched">
+                <p *ngIf="nameInputField.errors?.['required']">
+                    Name ist erforderlich.
+                </p>
+                <p *ngIf="nameInputField.errors?.['minlength']">
+                    Name muss mindestens {{ nameInputField.errors?.['minlength'].requiredLength }} Zeichen haben.
+                </p>
+            </div>
         </div>
         <div class="edit-buttons">
-            <button class="button-cancel" (click)="close()">Abbrechen</button>
-            <button type="button" (click)="save(channelForm)">Speichern</button>
-
+            <button type="button" class="button-cancel" (click)="close()">Abbrechen</button>
+            <button 
+                type="button" 
+                (click)="save(profileForm)" 
+                [disabled]="!profileForm.valid"
+            >
+                Speichern
+            </button>
         </div>
     </form>
-
 </div>

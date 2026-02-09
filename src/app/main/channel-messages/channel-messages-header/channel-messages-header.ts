@@ -67,12 +67,8 @@ ngOnInit() {
 }
 
 renderMembers(): Member[] {
-  console.log('🎨 renderMembers aufgerufen, members:', this.members); // DEBUG
   
-  if (!this.members || this.members.length === 0) {
-    console.warn('⚠️ Keine members vorhanden!');
-    return [];
-  }
+
 
   return [...this.members]
     .map(m => ({

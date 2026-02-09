@@ -84,7 +84,6 @@ export class Profile {
         name: this.userName,
         avatar: this.userAvatar,
         uid: JSON.parse(localStorage.getItem('currentUser') || '{}').uid,
-        avatar: this.userAvatar,
       },
     });
 

@@ -7,7 +7,7 @@ import { AddPeople } from './add-people/add-people';
 import { MatDialog } from '@angular/material/dialog';
 import { FormsModule, NgForm } from '@angular/forms';
 import { FirebaseService } from '../../../services/firebase';
-import { Firestore, collection, collectionData, doc, setDoc, getDoc } from '@angular/fire/firestore';
+import { Firestore, collection, collectionData, doc, setDoc, getDoc, getDocs, query } from '@angular/fire/firestore';
 import { ChannelStateService } from '../../menu/channels/channel.service';
 
 
@@ -24,6 +24,7 @@ export class AddChannel {
   private dialog = inject(MatDialog);
   firestore: Firestore = inject(Firestore);
   memberships: any[] = [];
+channelNameExists = false;
 
   constructor(private channelState: ChannelStateService) { }
   dialogRef = inject(MatDialogRef<AddChannel>);
@@ -53,7 +54,17 @@ export class AddChannel {
     if (!userSnap.exists()) return;
 
     const userData = userSnap.data();
-    const membershipsRef = collection(userRef, 'memberships');
+const membershipsRef = collection(userRef, 'memberships');
+
+const membershipsSnap = await getDocs(query(membershipsRef));
+const channelExists = membershipsSnap.docs.some(doc =>
+  doc.data()['name']?.toLowerCase() === name.toLowerCase()
+);
+
+if (channelExists) {
+  this.channelNameExists = true;
+  return;
+}
     const membershipDocRef = doc(membershipsRef);
     const channelId = membershipDocRef.id;
 

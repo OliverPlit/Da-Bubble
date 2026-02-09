@@ -4,6 +4,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { Firestore, doc, updateDoc, getDocs, collection, writeBatch, getDoc } from '@angular/fire/firestore';
 import { ChangeDetectorRef } from '@angular/core';
 import { FirebaseService } from '../../../../services/firebase';
+import { CommonModule } from '@angular/common';
 
 
 
@@ -12,7 +13,7 @@ import { FirebaseService } from '../../../../services/firebase';
 
 @Component({
   selector: 'app-edit-profile',
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './edit-profile.html',
   styleUrls: ['./edit-profile.scss', 'edit-profile.responsive.scss'],
 })
@@ -23,7 +24,6 @@ export class EditProfile {
 userName = this.data.name;
 userAvatar = this.data.avatar;
   nameInput: string = this.data.name;
-  userAvatar: string = this.data.avatar;
   dialogRef = inject(MatDialogRef<EditProfile>);
 
 
@@ -36,23 +36,31 @@ userAvatar = this.data.avatar;
   }
 
 
-  
+
+    isNameValid(): boolean {
+    return !!this.nameInput && this.nameInput.trim().length >= 3;
+  }
+
   close() {
     this.dialogRef.close();
   }
 
-  async save(channelForm: NgForm) {
+ async save(form: NgForm) {
+    if (form.invalid) {
+      form.control.markAllAsTouched();
+      return;
+    }
+
     const newName = this.nameInput.trim();
-    if (!newName) return;
+    
+    if (!newName || newName.length < 3) return;
 
     const uid = this.data.uid;
     
     try {
-      // Update user document
       const userRef = doc(this.firestore, 'users', uid);
       await updateDoc(userRef, { name: newName, avatar: this.userAvatar });
       
-      // Update directMessages document only if it exists
       const dmRef = doc(this.firestore, 'directMessages', uid);
       const dmSnap = await getDoc(dmRef);
       if (dmSnap.exists()) {

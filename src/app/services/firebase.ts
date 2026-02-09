@@ -24,8 +24,7 @@ private avatarSource = new BehaviorSubject<string>('');
   currentAvatar$ = this.avatarSource.asObservable();
 
   currentName$ = this.nameSource.asObservable();
-  private avatarSource = new BehaviorSubject<string>('');
-  currentAvatar$ = this.avatarSource.asObservable();
+  
   membersSignal = signal<Member[]>([]);
     private currentViewSubject = new BehaviorSubject<HeaderView>('default');
   currentView$ = this.currentViewSubject.asObservable();
