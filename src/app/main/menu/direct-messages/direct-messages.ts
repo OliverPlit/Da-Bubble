@@ -93,6 +93,7 @@ export class DirectMessages {
         this.userName = data.name;
         this.userAvatar = data.avatar || 'avatar1.png';
         this.firebaseService.setName(this.userName);
+        this.firebaseService.setAvatar(this.userAvatar);
       }
       this.cdr.detectChanges();
     } catch (error) {

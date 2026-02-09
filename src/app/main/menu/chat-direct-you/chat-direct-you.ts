@@ -147,19 +147,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
 
   async ngOnInit() {
     this.directMessage$ = this.firebaseService.getCollection$('directMessages');
-this.firebaseService.currentName$.subscribe((name) => {
-      if (name) {
-        this.userName = name;
-        this.cdr.detectChanges();
-      }
-    });
-
-     this.firebaseService.currentAvatar$.subscribe((avatar) => {
-      if (avatar) {
-        this.userAvatar = avatar;
-        this.cdr.detectChanges();
-      }
-    });
+    
     await this.currentUserService.hydrateFromLocalStorage();
     const u = this.currentUserService.getCurrentUser();
     if (u) {
@@ -177,9 +165,12 @@ this.firebaseService.currentName$.subscribe((name) => {
     });
 
     this.firebaseService.currentAvatar$.subscribe(avatar => {
-      if (avatar && avatar !== this.userAvatar) {
-        this.userAvatar = avatar;
-        this.updateOwnMessagesProfile();
+      if (avatar) {
+        if (avatar !== this.userAvatar) {
+          this.userAvatar = avatar;
+          this.updateOwnMessagesProfile();
+        }
+        this.cdr.detectChanges();
       }
     });
 

@@ -143,6 +143,7 @@ export class Header {
 
       this.cd.detectChanges();
       this.firebase.setName(this.userName);
+      this.firebase.setAvatar(this.userAvatar);
     }
   }
 

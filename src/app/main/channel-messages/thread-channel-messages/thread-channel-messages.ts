@@ -181,23 +181,6 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   constructor(private firebaseService: FirebaseService) { }
 
   async ngOnInit() {
-    // Name und Avatar Subscriptions - WICHTIG: Vor hydrateFromLocalStorage
-    this.firebaseService.currentName$.subscribe((name) => {
-      if (name) {
-        this.userName = name;
-        this.name = name; // Auch name aktualisieren für Kompatibilität
-        this.cdr.detectChanges();
-      }
-    });
-
-    this.firebaseService.currentAvatar$.subscribe((avatar) => {
-      if (avatar) {
-        this.userAvatar = avatar;
-        this.avatar = avatar; // Auch avatar aktualisieren für Kompatibilität
-        this.cdr.detectChanges();
-      }
-    });
-
     // Current User laden
     await this.currentUserService.hydrateFromLocalStorage();
     const u = this.currentUserService.getCurrentUser();
@@ -213,7 +196,36 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
       this.firebaseService.setAvatar(u.avatar);
     }
 
+    // Name und Avatar Subscriptions - NACH hydrateFromLocalStorage
+    this.firebaseService.currentName$.subscribe((name) => {
+      if (name && name !== this.userName) {
+        this.userName = name;
+        this.name = name;
+        this.updateOwnMessagesProfile();
+      }
+    });
+
+    this.firebaseService.currentAvatar$.subscribe((avatar) => {
+      if (avatar && avatar !== this.userAvatar) {
+        this.userAvatar = avatar;
+        this.avatar = avatar;
+        this.updateOwnMessagesProfile();
+      }
+    });
+
     this.initializeSubscriptions();
+  }
+
+  private updateOwnMessagesProfile() {
+    // Update all own messages with new name/avatar
+    this.messages = this.messages.map(m => {
+      if (m.uid === this.uid) {
+        return { ...m, username: this.userName, avatar: this.userAvatar };
+      }
+      return m;
+    });
+    this.rebuildMessagesView();
+    this.cdr.detectChanges();
   }
 
   ngOnChanges(changes: SimpleChanges) {
