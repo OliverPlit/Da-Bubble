@@ -84,7 +84,20 @@ export class Profile {
         name: this.userName,
         avatar: this.userAvatar,
         uid: JSON.parse(localStorage.getItem('currentUser') || '{}').uid,
+        avatar: this.userAvatar,
       },
+    });
+
+    ref.afterClosed().subscribe((result) => {
+      if (result) {
+        if (result.name) {
+          this.userName = result.name;
+        }
+        if (result.avatar) {
+          this.userAvatar = result.avatar;
+        }
+        this.cd.detectChanges();
+      }
     });
   }
 

@@ -1,7 +1,7 @@
 import { Component, inject, } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Firestore, doc, updateDoc, getDocs, collection, writeBatch } from '@angular/fire/firestore';
+import { Firestore, doc, updateDoc, getDocs, collection, writeBatch, getDoc } from '@angular/fire/firestore';
 import { ChangeDetectorRef } from '@angular/core';
 import { FirebaseService } from '../../../../services/firebase';
 
@@ -23,12 +23,17 @@ export class EditProfile {
 userName = this.data.name;
 userAvatar = this.data.avatar;
   nameInput: string = this.data.name;
+  userAvatar: string = this.data.avatar;
   dialogRef = inject(MatDialogRef<EditProfile>);
 
 
 
   constructor(private cd: ChangeDetectorRef, private firebase: FirebaseService) { }
 
+  selectAvatar(avatar: string) {
+    this.userAvatar = avatar;
+    this.cd.detectChanges();
+  }
 
 
   
@@ -43,24 +48,25 @@ userAvatar = this.data.avatar;
     const uid = this.data.uid;
     
     try {
-      const batch = writeBatch(this.firestore);
-      
+      // Update user document
       const userRef = doc(this.firestore, 'users', uid);
-      batch.update(userRef, { name: newName });
+      await updateDoc(userRef, { name: newName, avatar: this.userAvatar });
       
+      // Update directMessages document only if it exists
       const dmRef = doc(this.firestore, 'directMessages', uid);
-      batch.update(dmRef, { name: newName });
-      
-      await batch.commit();
+      const dmSnap = await getDoc(dmRef);
+      if (dmSnap.exists()) {
+        await updateDoc(dmRef, { name: newName, avatar: this.userAvatar });
+      }
       
       await this.updateNameInAllChannelMemberships(uid, newName);
 
       this.firebase.setName(newName);
       this.cd.detectChanges();
-      this.dialogRef.close(newName);
+      this.dialogRef.close({ name: newName, avatar: this.userAvatar });
       
     } catch (error) {
-      console.error('❌ Fehler beim Speichern des Namens:', error);
+      console.error('❌ Fehler beim Speichern des Profils:', error);
     }
   }
 

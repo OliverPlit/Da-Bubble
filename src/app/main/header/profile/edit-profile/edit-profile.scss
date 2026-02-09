@@ -1,8 +1,7 @@
 .edit-profile {
-    height: 600px;
+    height: auto;
     width: 500px !important;
     max-width: 500px;
-    padding-top: 45px;
     box-sizing: border-box;
     font-family: 'Nunito';
     padding: 40px;
@@ -36,10 +35,42 @@
         width: 200px;
         height: 200px;
         border-radius: 500px;
+    }
+}
 
+.avatar-subtitle {
+    font-size: 16px;
+    font-weight: 400;
+    color: #333;
+    text-align: left;
+    margin-top: 20px;
+    margin-bottom: 8px;
+}
 
+.avatar-selection {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.avatar-option {
+    height: 50px;
+    width: 50px;
+    border-radius: 100px;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.selected {
+        padding: 4px;
+        background-color: rgb(210, 210, 210);
     }
 
+    &:hover {
+        padding: 4px;
+        background-color: rgb(210, 210, 210);
+    }
 }
 
 .edit-name {

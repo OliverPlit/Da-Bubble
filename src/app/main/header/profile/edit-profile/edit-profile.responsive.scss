@@ -4,7 +4,8 @@
         max-width: 360px;
         padding: 20px;
         box-sizing: border-box;
-        height: 600px;
+        height: auto;
+        min-height: 600px;
         padding-top: 45px;
         padding-right: 20px;
         padding-bottom: 45px;
@@ -26,8 +27,31 @@
         }
     }
 
+    .profile-img-div {
+        >img {
+            width: 140px;
+            height: 140px;
+        }
+    }
+
+    .avatar-subtitle {
+        margin-top: 12px;
+        font-size: 14px;
+    }
+
+    .avatar-selection {
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .avatar-option {
+        height: 40px;
+        width: 40px;
+    }
+
     .edit-name {
-        margin-top: 30px;
+        margin-top: 20px;
         >h2 {
 font-size: 18px;
         }

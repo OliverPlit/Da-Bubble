@@ -6,6 +6,51 @@
     <div class="profile-img-div">
         <img [src]="'/img/avatars/' + userAvatar" alt="">
     </div>
+    <p class="avatar-subtitle">Avatar wählen</p>
+    <div class="avatar-selection">
+        <img
+            src="/img/avatars/avatar1.png"
+            [class.selected]="userAvatar === 'avatar1.png'"
+            (click)="selectAvatar('avatar1.png')"
+            alt="Avatar 1"
+            class="avatar-option"
+        />
+        <img
+            src="/img/avatars/avatar2.png"
+            [class.selected]="userAvatar === 'avatar2.png'"
+            (click)="selectAvatar('avatar2.png')"
+            alt="Avatar 2"
+            class="avatar-option"
+        />
+        <img
+            src="/img/avatars/avatar3.png"
+            [class.selected]="userAvatar === 'avatar3.png'"
+            (click)="selectAvatar('avatar3.png')"
+            alt="Avatar 3"
+            class="avatar-option"
+        />
+        <img
+            src="/img/avatars/avatar4.png"
+            [class.selected]="userAvatar === 'avatar4.png'"
+            (click)="selectAvatar('avatar4.png')"
+            alt="Avatar 4"
+            class="avatar-option"
+        />
+        <img
+            src="/img/avatars/avatar5.png"
+            [class.selected]="userAvatar === 'avatar5.png'"
+            (click)="selectAvatar('avatar5.png')"
+            alt="Avatar 5"
+            class="avatar-option"
+        />
+        <img
+            src="/img/avatars/avatar6.png"
+            [class.selected]="userAvatar === 'avatar6.png'"
+            (click)="selectAvatar('avatar6.png')"
+            alt="Avatar 6"
+            class="avatar-option"
+        />
+    </div>
     <div class="edit-name">
         <img src="/img/direct-person.png" alt="">
         <h2>Vollständiger Name</h2>
