@@ -39,6 +39,7 @@ export class AddMembers {
 
   currentUserId = '';
   userName = '';
+  userAvatar = '';
   fullChannel: any = null;
 
   @Input() channel = '';
@@ -56,19 +57,44 @@ export class AddMembers {
   isSubmitting = signal(false);
   isLoading = signal(true);
 
-  constructor(private channelState: ChannelStateService) {}
+  constructor(private channelState: ChannelStateService) { }
 
   async ngOnInit() {
+    this.subscribeToNameChanges();
+    this.subscribeToAvatarChanges();
+
     const [_, users] = await Promise.all([
       this.loadCurrentUser(),
       this.loadAllUsers()
     ]);
+
     this.initDialogData();
     this.allMembers = users;
     this.members = users;
+
+    this.applyCurrentProfileToLists();
+
     this.isLoading.set(false);
     this.cd.detectChanges();
-    this.subscribeToNameChanges();
+  }
+
+  private applyCurrentProfileToLists() {
+    if (!this.currentUserId) return;
+
+    const n = this.firebaseService.currentNameValue;
+    const a = this.firebaseService.currentAvatarValue;
+
+    if (n) {
+      this.userName = n;
+      this.updateNames(this.existingMembers);
+      this.updateNames(this.selected);
+    }
+
+    if (a) {
+      this.patchAvatarInLists(a);
+      this.updateAvatars(this.existingMembers, a);
+      this.updateAvatars(this.selected, a);
+    }
   }
 
   private initDialogData() {
@@ -85,10 +111,12 @@ export class AddMembers {
     const u = JSON.parse(raw);
     this.currentUserId = u.uid || '';
     if (!this.currentUserId) return;
+
     const snap = await getDoc(doc(this.firestore, 'directMessages', this.currentUserId));
     if (!snap.exists()) return;
+
     this.userName = snap.data()['name'];
-    this.firebaseService.setName(this.userName);
+    this.userAvatar = snap.data()['avatar'];
   }
 
   private async loadAllUsers(): Promise<Member[]> {
@@ -116,6 +144,35 @@ export class AddMembers {
     sig.update((m: Member[]) =>
       m.map(x => x.uid === this.currentUserId
         ? { ...x, name: `${this.userName} (Du)` }
+        : x)
+    );
+  }
+
+  private subscribeToAvatarChanges() {
+    this.firebaseService.currentAvatar$.subscribe(a => {
+      if (!a || !this.currentUserId) return;
+      this.patchAvatarInLists(a);
+
+      this.updateAvatars(this.existingMembers, a);
+      this.updateAvatars(this.selected, a);
+      this.cd.detectChanges();
+    });
+  }
+
+  private patchAvatarInLists(avatar: string) {
+    this.members = this.members.map(m =>
+      m.uid === this.currentUserId ? { ...m, avatar } : m
+    );
+
+    this.allMembers = this.allMembers.map(m =>
+      m.uid === this.currentUserId ? { ...m, avatar } : m
+    );
+  }
+
+  private updateAvatars(sig: any, avatar: string) {
+    sig.update((m: Member[]) =>
+      m.map(x => x.uid === this.currentUserId
+        ? { ...x, avatar }
         : x)
     );
   }

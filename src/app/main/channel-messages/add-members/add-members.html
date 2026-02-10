@@ -36,7 +36,7 @@
             <div class="dropdown" *ngIf="showDropdown()">
                 <button class="option" *ngFor="let u of suggestions(); let i = index"
                     [class.active]="i === activeIndex()" (mousedown)="$event.preventDefault()" (click)="selectUser(u)">
-                    <img class="avatar" [src]="'/img/avatars/' + u.avatar" [alt]="u.name" />
+                    <img class="avatar" [src]="u.avatar ? ('/img/avatars/' + u.avatar) : ''" [alt]="u.name" />
                     <div class="meta">
                         <div class="row">
                             <span class="name">{{ u.name }}</span>
