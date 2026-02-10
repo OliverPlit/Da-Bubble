@@ -37,48 +37,48 @@ header {
 }
 
 .preview-members {
-        display: flex;
-        align-items: center;
-        flex-direction: row-reverse;
-        gap: 10px;
-        padding-top: 3px;
-        padding-right: 10px;
-        padding-bottom: 3px;
-        padding-left: 10px;
-        border-radius: 100px;
-        cursor: pointer;
+    display: flex;
+    align-items: center;
+    flex-direction: row-reverse;
+    gap: 10px;
+    padding-top: 3px;
+    padding-right: 10px;
+    padding-bottom: 3px;
+    padding-left: 10px;
+    border-radius: 100px;
+    cursor: pointer;
 
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-size: cover;
-            background-position: center;
-            border: 2px solid #FFFFFF;
-            display: grid;
-            place-items: center;
-            font-weight: 700;
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-size: cover;
+        background-position: center;
+        border: 2px solid #FFFFFF;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 12px;
+        margin-inline-end: -20px;
+
+        span {
             font-size: 12px;
-            margin-inline-end: -20px;
-
-            span {
-                font-size: 12px;
-            }
-        }
-
-        .counter {
-            order: -1;
-            margin-inline-start: 20px;
-            font-family: 'Nunito';
-            font-weight: 600;
-            font-size: 20px;
-        }
-
-        &:hover {
-            background: $hoverBg;
-            color: $primary;
         }
     }
+
+    .counter {
+        order: -1;
+        margin-inline-start: 20px;
+        font-family: 'Nunito';
+        font-weight: 600;
+        font-size: 20px;
+    }
+
+    &:hover {
+        background: $hoverBg;
+        color: $primary;
+    }
+}
 
 @media (max-width: 750px) {
     header {
@@ -103,7 +103,7 @@ header {
         min-width: 0;
         overflow: hidden;
 
-        > h2 {
+        >h2 {
             font-size: 16px;
             gap: 4px;
             white-space: nowrap;
@@ -145,7 +145,7 @@ header {
 
         .icon-box {
             padding: 4px;
-            
+
             img {
                 width: 20px;
                 height: 20px;
@@ -175,24 +175,33 @@ header {
         font-size: 24px;
     }
 
-    .default {
-        width: 10px !important;
-        height: 10px !important;
-    }
-
     .icon-box {
-        position: relative;
-        display: inline-block;
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
 
-        .icon {
+        img {
             display: block;
-            transition: opacity .12s ease;
+            grid-area: 1 / 1;
         }
 
         .hover {
-            position: absolute;
-            inset: 0;
             opacity: 0;
+        }
+
+        &:hover {
+            color: $primary;
+            background: $hoverBg;
+            cursor: pointer;
+
+            .hover {
+                opacity: 1;
+            }
+
+            .default {
+                opacity: 0;
+            }
         }
     }
 
@@ -223,8 +232,6 @@ header {
     align-items: center;
     gap: 10px;
     margin-right: 45px;
-
-   
 
     .icon-box {
         position: relative;

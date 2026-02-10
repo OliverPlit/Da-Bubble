@@ -67,16 +67,14 @@ ngOnInit() {
 }
 
 renderMembers(): Member[] {
-  
-
-
   return [...this.members]
     .map(m => ({
       ...m,
       avatar: m.avatar || '',
       name: m.name || 'Unbekannt'
     }))
-    .sort((a, b) => (a.isYou === b.isYou ? 0 : a.isYou ? -1 : 1));
+    .sort((a, b) => (a.isYou === b.isYou ? 0 : a.isYou ? -1 : 1))
+    .slice(0, 3);
 }
   private listenToChannelUpdates() {
     if (!this.currentUserId || !this.channelId) return;
