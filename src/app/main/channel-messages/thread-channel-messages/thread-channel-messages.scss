@@ -117,10 +117,33 @@ $hoverCard: #444df2;
       background-color: $hoverBg;
       padding: 15px;
 
+      ::ng-deep .mention {
+        color: $primary;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+
+        &:hover {
+          text-decoration: underline;
+          color: $hoverCard;
+        }
+      }
+
       &.you {
         border-radius: 30px 0 30px 30px;
         background-color: $hoverBgYou;
         color: $textYou;
+
+        ::ng-deep .mention {
+          color: $textYou;
+          font-weight: 700;
+
+          &:hover {
+            text-decoration: underline;
+            opacity: 0.9;
+          }
+        }
       }
     }
 
@@ -480,6 +503,8 @@ $hoverCard: #444df2;
     }
   }
 }
+
+
 
 // ========================================
 // RESPONSIVE STYLES

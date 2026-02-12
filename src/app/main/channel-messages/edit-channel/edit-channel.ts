@@ -8,6 +8,7 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ChannelStateService } from '../../menu/channels/channel.service';
+import { FirebaseService } from '../../../services/firebase';
 
 
 
@@ -28,19 +29,33 @@ export class EditChannel {
   channel: any;
   editedName = '';
   editedDescription = '';
+   userName: string = '';
+  userAvatar: string = '';
   showInputName = false;
   showInputDescription = false;
   closeName = true;
   closeDescription = true;
 
-  constructor( private cdr: ChangeDetectorRef, private channelState: ChannelStateService) { }
+  constructor( private cdr: ChangeDetectorRef, private channelState: ChannelStateService, private firebaseService: FirebaseService) { }
 
  
 ngOnInit() {
     this.channel = this.data.channel;
     this.editedName = this.channel.name || '';
     this.editedDescription = this.channel.description || '';
+ this.firebaseService.currentName$.subscribe((name) => {
+      if (name) {
+        this.userName = name;
+        this.cdr.detectChanges();
+      }
+    });
 
+    this.firebaseService.currentAvatar$.subscribe((avatar) => {
+      if (avatar) {
+        this.userAvatar = avatar;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
 

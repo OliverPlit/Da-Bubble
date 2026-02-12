@@ -179,14 +179,23 @@ export class AddMembers {
 
   suggestions = computed(() => {
     const q = this.query().trim().toLowerCase();
-    if (!q) return [];
     const ex = new Set([...this.existingMembers(), ...this.selected()].map(u => u.uid));
-    return this.members.filter(m => !ex.has(m.uid) && m.name.toLowerCase().includes(q)).slice(0, 6);
+    
+    if (!q) {
+      return this.members
+        .filter(m => !ex.has(m.uid))
+        .filter(m => m.uid !== this.currentUserId); 
+    }
+    
+    return this.members
+      .filter(m => !ex.has(m.uid) && m.name.toLowerCase().includes(q))
+      .filter(m => m.uid !== this.currentUserId)
+      .slice(0, 10); 
   });
 
-  showDropdown = computed(() =>
-    this.hasFocus() && this.query().trim() && this.suggestions().length > 0
-  );
+  showDropdown = computed(() => {
+    return this.hasFocus() && this.suggestions().length > 0;
+  });
 
   onKeyDown(e: KeyboardEvent) {
     const l = this.suggestions();
