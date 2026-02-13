@@ -1,3 +1,4 @@
+/*
 import { Component, ElementRef, HostListener, inject, AfterViewInit, ViewChild, Input, OnDestroy, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -480,15 +481,6 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
     };
   }
 
-  /*
-  async toggleReplyReaction(replyId: string, emojiId: string) {
-    const ctx = this.threadStateSvc.value;
-    if (!ctx) return;
-    const you: ReactionUserDoc = { userId: ctx.uid, username: ctx.root?.author?.username ?? '' };
-    await this.channelThreadsStoreSvc.toggleThreadReaction(ctx.uid, ctx.channelId, ctx.messageId, replyId, emojiId, you);
-  }
-  */
-
   clearReactionPanelHide() {
     if (this.hideTimer) {
       clearTimeout(this.hideTimer);
@@ -574,3 +566,5 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   }
 
 }
+
+*/

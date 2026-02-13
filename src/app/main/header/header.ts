@@ -505,6 +505,7 @@ export class Header {
       setTimeout(() => {
         this.layout.openRight();
         this.threadStateSvc.open({
+          kind: 'channel',
           uid: this.currentUid,
           channelId: messageData.channelId,
           channelName: messageData.channelName,

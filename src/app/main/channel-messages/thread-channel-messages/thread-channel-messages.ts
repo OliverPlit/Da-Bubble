@@ -589,6 +589,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     if (!this.uid || !this.channelId) return;
     this.layout.openRight();
     this.threadStateSvc.open({
+      kind: 'channel',
       uid: this.uid,
       channelId: this.channelId,
       channelName: this.channelName,
@@ -600,6 +601,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
         reactions: m.reactions?.map(r => ({
           emojiId: r.emojiId,
           emojiCount: r.emojiCount,
+          youReacted: r.youReacted,
           reactionUsers: r.reactionUsers.map(u => ({ userId: u.userId, username: u.username }))
         })) ?? [],
         isYou: m.isYou

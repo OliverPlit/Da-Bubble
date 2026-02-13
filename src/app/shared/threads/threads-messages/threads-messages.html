@@ -1,6 +1,5 @@
-<!--
 <div #scrollArea class="scroll-area">
-    <div class="thread-root" [class.you]="root.isYou" *ngIf="root as root">
+    <div class="thread-root" [class.you]="root?.isYou" *ngIf="root as root">
         <div class="avatar" [class.you]="root.isYou"
             [style.background-image]="'url(' + (root.avatar | avatarUrl) + ')'">
             <span *ngIf="!root.avatar"></span>
@@ -84,7 +83,7 @@
                     </div>
 
                     <div class="reactions" [class.you]="r.isYou" *ngIf="r.reactions.length">
-                        <div class="emoji-reactions" *ngIf="r.reactions.length">
+                        <div class="emoji-reactions">
                             <div class="reaction" *ngFor="let x of r.reactions" [class.active]="x.youReacted"
                                 (mouseenter)="showReactionPanel(r, x, $event)"
                                 (mouseleave)="scheduleReactionPanelHide()">
@@ -92,7 +91,7 @@
                                 <span class="count-emoji">{{ x.emojiCount }}</span>
                             </div>
 
-                            <span #emojiBtn class="icon-box" (click)="toggleEmojiFromReactions(r, $event)">
+                            <span class="icon-box" (click)="toggleEmojiFromReactions(r, $event)">
                                 <img class="default" src="/img/add_reaction.png" alt="">
                                 <img class="hover" src="/img/add_reaction_purple.png" alt="">
                             </span>
@@ -114,7 +113,7 @@
                 </div>
 
                 <div class="reaction-bar" [class.you]="r.isYou">
-                    <span #barEmojiBtn class="icon-box" (click)="toggleEmojiFromReactionBar(r, $event)">
+                    <span class="icon-box" (click)="toggleEmojiFromReactionBar(r, $event)">
                         <img class="default" src="/img/add_reaction.png" alt="">
                         <img class="hover" src="/img/add_reaction_purple.png" alt="">
                     </span>
@@ -162,4 +161,3 @@
         </div>
     </div>
 </footer>
--->

@@ -1,17 +1,15 @@
-/*
 import { Component, HostBinding, HostListener, inject, effect } from '@angular/core';
-import { ThreadsHeader } from "./threads-header/threads-header";
-import { MessadesThreads } from "./messages-threads/messades-threads";
 import { CommonModule } from '@angular/common';
+import { ThreadsHeader } from './threads-header/threads-header';
+import { ThreadsMessages } from './threads-messages/threads-messages';
 import { ThreadStateService } from '../../services/thread-state.service';
 import { LayoutService } from '../../services/layout.service';
-import { AddChannel } from "../menu/add-channel/add-channel";
 
 @Component({
   selector: 'app-threads',
-  imports: [ThreadsHeader, MessadesThreads, CommonModule, AddChannel],
+  imports: [CommonModule, ThreadsHeader, ThreadsMessages],
   templateUrl: './threads.html',
-  styleUrls: ['./threads.scss'],
+  styleUrl: './threads.scss',
 })
 export class Threads {
   private state = inject(ThreadStateService);
@@ -60,4 +58,3 @@ export class Threads {
     this.updateVisibility(!!this.state.value);
   }
 }
-*/

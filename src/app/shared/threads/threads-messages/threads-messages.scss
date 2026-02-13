@@ -1,0 +1,601 @@
+$primary: #535AF1;
+$placeholder: #686868;
+$hoverBg: #ECEEFE;
+$hoverBgYou: #797EF3;
+$line: #ADB0D9;
+$textYou: #FFFFFF;
+$hoverCard: #444DF2;
+
+:host {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 100%;
+    min-height: 0;
+}
+
+.scroll-area {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 0;
+    padding-top: 30px;
+}
+
+.messages {
+    overflow: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-right: 35px;
+    padding-left: 35px;
+}
+
+.replies-separator {
+    display: flex;
+    align-items: center;
+    padding-right: 20px;
+    padding-left: 20px;
+    gap: 20px;
+
+    >span {
+        padding-top: 5px;
+        padding-right: 15px;
+        padding-bottom: 5px;
+        padding-left: 15px;
+        font-family: 'Nunito';
+        font-weight: 400;
+        font-size: 18px;
+        color: $line;
+    }
+
+    &:after {
+        flex: 1;
+        content: '';
+        padding: 1px;
+        background-color: $line;
+    }
+}
+
+.thread-root,
+.reply {
+    position: relative;
+    display: flex;
+    gap: 20px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 40px;
+
+    .avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .status-dot {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-top: 56px;
+        margin-left: 58px;
+    }
+
+    .online {
+        background: #2ecc71;
+        box-shadow: 0 0 8px #2ecc71;
+    }
+
+    .message-body {
+        width: fit-content;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-family: 'Nunito';
+
+        .meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+
+            strong {
+                font-weight: 700;
+                font-size: 18px;
+            }
+
+            time {
+                font-weight: 400;
+                font-size: 14px;
+                color: #686868;
+            }
+
+            &.you {
+                flex-direction: row-reverse;
+            }
+        }
+
+        .text {
+            max-width: 200px;
+            border-radius: 0 30px 30px 30px;
+            background-color: $hoverBg;
+            padding: 15px;
+
+            &.you {
+                border-radius: 30px 0 30px 30px;
+                background-color: $hoverBgYou;
+                color: $textYou;
+            }
+        }
+
+        .emoji-reactions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reactions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+
+            .reaction {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                padding-top: 5px;
+                padding-right: 10px;
+                padding-bottom: 5px;
+                padding-left: 10px;
+                border-radius: 20px;
+                border: 1px solid $line;
+                cursor: pointer;
+
+                .emoji {
+                    width: 24px;
+                    height: 24px;
+                }
+
+                .count-emoji {
+                    font-family: 'Nunito';
+                    font-weight: 400;
+                    font-size: 16px;
+                }
+
+                &.active {
+                    background-color: #FFFFFF;
+                }
+            }
+
+            .icon-box {
+                width: 40px;
+                height: 40px;
+                border-radius: 20px;
+                display: grid;
+                place-items: center;
+                cursor: pointer;
+                background-color: $textYou;
+
+                .hover {
+                    position: absolute;
+                    opacity: 0;
+                }
+
+                &:hover {
+                    background-color: $hoverBg;
+
+                    .hover {
+                        opacity: 1;
+                    }
+
+                    .default {
+                        opacity: 0;
+                    }
+                }
+            }
+
+            &.you {
+                justify-content: end;
+            }
+        }
+    }
+
+    .reaction-panel {
+        position: absolute;
+        z-index: 10;
+        pointer-events: auto;
+        background: $hoverCard;
+        color: $textYou;
+        border-top-left-radius: 30px;
+        border-top-right-radius: 30px;
+        border-bottom-right-radius: 30px;
+
+        .panel-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: $textYou;
+            padding-top: 15px;
+            padding-right: 10px;
+            padding-bottom: 15px;
+            padding-left: 10px;
+            gap: 5px;
+
+            .emoji {
+                width: 30px;
+                height: 30px;
+            }
+
+            .panel-text {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                font-family: 'Nunito';
+                font-size: 16px;
+
+                .title {
+                    font-weight: 700;
+                    font-style: bold;
+                }
+
+                .subtitle {
+                    font-weight: 400;
+                    font-style: 'regular';
+                }
+            }
+        }
+    }
+
+    .reaction-bar {
+        position: absolute;
+        top: -24px;
+        right: 20px;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        width: auto;
+        height: 46px;
+        background-color: #FFFFFF;
+        border: 1px solid $line;
+        border-top-left-radius: 25px;
+        border-top-right-radius: 25px;
+        border-bottom-left-radius: 25px;
+        padding-top: 3px;
+        padding-right: 15px;
+        padding-bottom: 3px;
+        padding-left: 20px;
+        gap: 5px;
+        opacity: 0;
+
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+
+            .hover {
+                position: absolute;
+                opacity: 0;
+            }
+
+            &:hover {
+                background-color: $hoverBg;
+
+                .hover {
+                    opacity: 1;
+                }
+
+                .default {
+                    opacity: 0;
+                }
+            }
+        }
+
+        .d-none {
+            display: none;
+
+            &.you {
+                display: grid;
+            }
+        }
+
+        &.you {
+            right: auto;
+            left: 20px;
+        }
+    }
+
+    .edit-message-panel {
+        position: absolute;
+        top: 10px;
+        left: 120px;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        background-color: $textYou;
+        border-top-right-radius: 30px;
+        border-bottom-right-radius: 30px;
+        border-bottom-left-radius: 30px;
+        padding-top: 10px;
+        padding-right: 20px;
+        padding-bottom: 10px;
+        padding-left: 20px;
+        box-shadow: 0px 6px 14px 0px rgba(0, 0, 0, 0.2);
+
+        span {
+            background-color: $textYou;
+            border-radius: 100px;
+            padding-top: 10px;
+            padding-right: 20px;
+            padding-bottom: 10px;
+            padding-left: 20px;
+            font-family: 'Nunito';
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        &:hover {
+            span {
+                background-color: $hoverBg;
+                color: $primary;
+            }
+        }
+
+        &.you {
+            right: auto;
+        }
+    }
+
+    &.you {
+        flex-direction: row-reverse;
+    }
+
+    &:hover {
+        background-color: $hoverBg;
+        cursor: pointer;
+
+        .text {
+            background-color: #FFFFFF !important;
+
+            &.you {
+                background-color: $hoverBgYou !important;
+            }
+        }
+
+        .reaction-bar {
+            opacity: 1;
+        }
+    }
+}
+
+.replies {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.composer {
+    border: 1px solid $line;
+    border-radius: 20px;
+    margin: 35px;
+
+    .composer-input {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+        padding: 20px;
+
+        textarea {
+            resize: none;
+            border: none;
+            outline: none;
+            font-family: 'Nunito';
+            font-weight: 400;
+            font-size: 18px;
+
+            &::placeholder {
+                color: $placeholder;
+            }
+
+            &:focus {
+                border-color: $primary;
+                box-shadow: 0 0 0 3px rgba($primary, .12);
+                background: #fff;
+            }
+        }
+
+        .composer-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+
+            .d-flex {
+                display: flex;
+                gap: 5px;
+            }
+
+            .icon-box {
+                position: relative;
+                border-radius: 20px;
+                padding: 8px;
+                gap: 10px;
+                background-color: $hoverBg;
+                display: grid;
+                place-items: center;
+                cursor: pointer;
+
+                .hover1,
+                .hover2 {
+                    position: absolute;
+                    opacity: 0;
+                }
+
+                &:hover {
+
+                    .hover1,
+                    .hover2 {
+                        opacity: 1;
+                    }
+
+                    .default {
+                        opacity: 0;
+                    }
+                }
+            }
+
+            .send {
+                border: none;
+                cursor: pointer;
+                padding: 10px 18px;
+                border-radius: 12px;
+                background: $primary;
+                color: #fff;
+                font: 700 14px/1 'Nunito';
+            }
+        }
+    }
+}
+
+// ========================================
+// RESPONSIVE STYLES
+// ========================================
+@media (max-width: 950px) {
+    .scroll-area {
+        padding-top: 16px;
+        gap: 16px;
+    }
+
+    .messages {
+        padding: 12px;
+        padding-right: 12px;
+        padding-left: 12px;
+        gap: 16px;
+    }
+
+    .replies-separator {
+        padding-right: 12px;
+        padding-left: 12px;
+        gap: 12px;
+
+        >span {
+            padding: 4px 10px;
+            font-size: 14px;
+        }
+    }
+
+    .thread-root,
+    .reply {
+        gap: 12px;
+        padding: 8px 12px;
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+        }
+
+        .status-dot {
+            margin-top: 34px;
+            margin-left: 34px;
+            width: 10px;
+            height: 10px;
+        }
+
+        .message-body {
+            .meta {
+                gap: 10px;
+
+                strong {
+                    font-size: 16px;
+                }
+
+                time {
+                    font-size: 12px;
+                }
+            }
+
+            .text {
+                max-width: 100%;
+                padding: 12px;
+                font-size: 14px;
+                border-radius: 0 20px 20px 20px;
+
+                &.you {
+                    border-radius: 20px 0 20px 20px;
+                }
+            }
+
+            .reactions {
+                gap: 8px;
+                flex-wrap: wrap;
+
+                .reaction {
+                    padding: 3px 8px;
+                    gap: 6px;
+
+                    .emoji {
+                        width: 20px;
+                        height: 20px;
+                    }
+
+                    .count-emoji {
+                        font-size: 14px;
+                    }
+                }
+            }
+        }
+
+        .reaction-bar {
+            top: -20px;
+            right: 8px;
+            height: 38px;
+            padding: 2px 10px 2px 14px;
+            gap: 3px;
+
+            .icon-box {
+                width: 32px;
+                height: 32px;
+            }
+
+            &.you {
+                left: 8px;
+                right: auto;
+            }
+        }
+
+        .edit-message-panel {
+            left: 60px;
+            padding: 8px 12px;
+
+            span {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+    }
+
+    .composer {
+        margin: 12px;
+        border-radius: 16px;
+
+        .composer-input {
+            padding: 12px;
+            gap: 20px;
+
+            textarea {
+                font-size: 16px;
+            }
+
+            .composer-actions {
+                .icon-box {
+                    padding: 6px;
+                }
+            }
+        }
+    }
+}
