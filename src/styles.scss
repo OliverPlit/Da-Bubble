@@ -122,6 +122,17 @@ body {
   overflow: hidden;
 }
 
+@media (max-width: 950px) {
+  .edit-channel-dialog-panel .mat-mdc-dialog-surface {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    height: auto !important;
+    max-height: calc(100vh - 48px) !important;
+    overflow-y: auto;
+    border-radius: 20px !important;
+  }
+}
+
 .edit-members-dialog-panel .mat-mdc-dialog-surface {
   width: 415px !important;
     max-width: 415px !important;

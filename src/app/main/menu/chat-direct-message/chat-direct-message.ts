@@ -188,6 +188,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy, OnCh
     // Reagiere auf chatUser-Änderungen (DM-Wechsel)
     if (changes['chatUser'] && !changes['chatUser'].firstChange) {
       this.restartSubscriptions();
+      this.focusComposer();
     }
   }
 
@@ -211,6 +212,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy, OnCh
             this.chatUser = user;
             this.restartListening();
             this.cdr.detectChanges();
+            this.focusComposer();
           }
         });
     }
@@ -271,6 +273,7 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy, OnCh
   ngAfterViewInit() {
     this.rebuildMessagesView();
     queueMicrotask(() => this.scrollToBottom());
+    this.focusComposer();
   }
 
   ngOnDestroy() {
@@ -537,6 +540,11 @@ export class ChatDirectMessage implements OnInit, AfterViewInit, OnDestroy, OnCh
     this.draft = m.text;
     this.cdr.detectChanges();
     queueMicrotask(() => this.composerTextarea?.nativeElement.focus());
+  }
+
+  /** Fokus auf das Nachrichten-Eingabefeld beim Öffnen der Direktnachricht. */
+  private focusComposer() {
+    setTimeout(() => this.composerTextarea?.nativeElement?.focus(), 100);
   }
 
   @HostListener('document:keydown.escape') closeOnEsc() {

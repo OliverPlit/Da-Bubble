@@ -1,4 +1,3 @@
-/*
 import { Component, ElementRef, HostListener, inject, AfterViewInit, ViewChild, Input, OnDestroy, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,14 +5,15 @@ import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../../../shared/add-emojis/add-emojis';
 import { AtMembers } from '../../../shared/at-members/at-members';
 import type { User as AtMemberUser } from '../../../shared/at-members/at-members';
-import { CurrentUserService, CurrentUser, AvatarUrlPipe } from '../../../services/current-user.service';
+import { CurrentUserService, CurrentUser } from '../../../services/current-user.service';
 // import { MessagesStoreService, MessageDoc, ReactionUserDoc } from '../../../services/messages-store.service';
 import { MessageDoc, ReactionUserDoc } from '../../../services/messages/messages.types';
 import { ChannelThreadsStore } from '../../../services/messages/channel-threads.store';
 import { EmojiService, EmojiId } from '../../../services/emoji.service';
 import { PresenceService } from '../../../services/presence.service';
 import { ThreadStateService } from '../../../services/thread-state.service';
-import { DateUtilsService, DaySeparated, TimeOfPipe } from '../../../services/date-utils.service';
+import type { ChannelThreadContext } from '../../../services/thread-state.types';
+import { DateUtilsService, DaySeparated } from '../../../services/date-utils.service';
 import { Unsubscribe, Firestore, doc, docData, or } from '@angular/fire/firestore';
 import { firstValueFrom } from 'rxjs';
 import { ChannelStateService } from '../../menu/channels/channel.service';
@@ -69,12 +69,13 @@ function isEmojiId(x: unknown): x is EmojiId {
 
 @Component({
   selector: 'app-messades-threads',
-  imports: [CommonModule, FormsModule, AvatarUrlPipe, TimeOfPipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './messades-threads.html',
   styleUrls: ['./messades-threads.scss'],
 })
 export class MessadesThreads implements AfterViewInit, OnDestroy {
-  @ViewChild('scrollArea') scrollArea!: ElementRef<HTMLDivElement>
+  @ViewChild('scrollArea') scrollArea!: ElementRef<HTMLDivElement>;
+  @ViewChild('composerTextarea') composerTextarea!: ElementRef<HTMLTextAreaElement>;
 
   @Input() uid!: string;
   @Input() channelId!: string;
@@ -182,6 +183,9 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
       this.avatar = u.avatar;
     }
 
+    // Fokus auf Antwort-Eingabefeld beim Öffnen des Threads (verzögert, damit View bereit ist)
+    setTimeout(() => this.focusComposer(), 100);
+
     // Subscribe to profile changes
     this.firebaseSvc.currentName$.subscribe(name => {
       if (name && name !== this.name) {
@@ -201,7 +205,8 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
       this.replies = [];
       this.unsub?.();
       this.unsub = null;
-      if (!ctx) return;
+      if (!ctx || ctx.kind !== 'channel') return;
+      const chCtx = ctx as ChannelThreadContext;
 
       const createdAt = ctx.root?.createdAt instanceof Date
         ? ctx.root?.createdAt
@@ -228,8 +233,11 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
         reactions: rootReactions,
       };
 
+      this.cdr.detectChanges();
+      setTimeout(() => this.focusComposer(), 100);
+
       this.unsub = this.channelThreadsStoreSvc.listenThreadMessages(
-        ctx.uid, ctx.channelId, ctx.messageId,
+        chCtx.uid, chCtx.channelId, chCtx.messageId,
         (docs) => {
           this.replies = docs.map(d => {
             const users = (d.reactions ?? []).flatMap(r => r.reactionUsers ?? []);
@@ -261,6 +269,11 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   };
 
   ngOnDestroy() { this.unsub?.(); }
+
+  /** Fokus auf das Antwort-Eingabefeld beim Öffnen des Threads. */
+  private focusComposer() {
+    this.composerTextarea?.nativeElement?.focus();
+  }
 
   private updateOwnMessagesProfile() {
     if (this.root) {
@@ -306,7 +319,8 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
 
   async openAtMembers(trigger: HTMLElement) {
     const origin = this.threadStateSvc.value;
-    if (!origin) return;
+    if (!origin || origin.kind !== 'channel') return;
+    const chOrigin = origin as ChannelThreadContext;
     const members = await this.resolveMembersWithCtx(origin);
 
     this.anchorOverlaySvc.openAnchored(this.dialog, AtMembers, trigger, {
@@ -318,7 +332,7 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
       dialogConfig: {
         panelClass: 'at-members-dialog-panel',
         data: {
-          channelId: origin.channelId,
+          channelId: chOrigin.channelId,
           currentUserId: origin.uid,
           members
         }
@@ -332,7 +346,8 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   async sendMessage() {
     const ctx = this.threadStateSvc.value;
     const text = this.emojiSvc.normalizeShortcodes((this.draft ?? '').trim());
-    if (!ctx || !text) return;
+    if (!ctx || ctx.kind !== 'channel' || !text) return;
+    const chCtx = ctx as ChannelThreadContext;
 
     if (this.isSending) return;
     this.isSending = true;
@@ -340,7 +355,7 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
     try {
       if (this.editForId) {
         await this.channelThreadsStoreSvc
-          .updateThreadMessage(ctx.uid, ctx.channelId, ctx.messageId, this.editForId, text)
+          .updateThreadMessage(chCtx.uid, chCtx.channelId, chCtx.messageId, this.editForId, text)
           .then(() => {
             this.editForId = null;
             this.draft = '';
@@ -349,7 +364,7 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
       }
 
       const author = { uid: this.uid, username: this.name, avatar: this.avatar };
-      await this.channelThreadsStoreSvc.sendThreadReply(ctx.uid, ctx.channelId, ctx.messageId, { text, author });
+      await this.channelThreadsStoreSvc.sendThreadReply(chCtx.uid, chCtx.channelId, chCtx.messageId, { text, author });
       this.draft = '';
     } finally {
       this.isSending = false;
@@ -358,13 +373,14 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
 
   async toggleReaction(reply: Reply, emojiId: EmojiId) {
     const ctx = this.threadStateSvc.value;
-    if (!ctx || !this.uid) return;
+    if (!ctx || ctx.kind !== 'channel' || !this.uid) return;
+    const chCtx = ctx as ChannelThreadContext;
 
     const you: ReactionUserDoc = { userId: this.uid, username: this.name };
     await this.channelThreadsStoreSvc.toggleThreadReaction(
-      ctx.uid,
-      ctx.channelId,
-      ctx.messageId,
+      chCtx.uid,
+      chCtx.channelId,
+      chCtx.messageId,
       reply.threadMessageId,
       emojiId,
       you
@@ -566,5 +582,3 @@ export class MessadesThreads implements AfterViewInit, OnDestroy {
   }
 
 }
-
-*/

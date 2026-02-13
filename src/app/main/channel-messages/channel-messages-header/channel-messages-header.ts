@@ -170,12 +170,15 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
     };
 
     this.dialog.open(EditChannel, {
-      width: dlgW + 'px',
+      width: this.layout.isMobile() ? '100%' : dlgW + 'px',
+      maxWidth: this.layout.isMobile() ? '100vw' : 'none',
       panelClass: 'edit-channel-dialog-panel',
-      position: {
-        top: `${r.bottom + gap}px`,
-        left: `${-420 + dlgW}px`
-      },
+      ...(this.layout.isMobile() ? {} : {
+        position: {
+          top: `${r.bottom + gap}px`,
+          left: `${-420 + dlgW}px`
+        }
+      }),
       data: { channel: channelData }
     });
   }

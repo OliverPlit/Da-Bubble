@@ -1,14 +1,16 @@
 import { Component, inject, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { ChangeDetectorRef } from '@angular/core';
-import { Firestore, doc, updateDoc, collection, deleteDoc, getDoc } from '@angular/fire/firestore';
+import { Firestore, doc, updateDoc, deleteDoc, getDoc } from '@angular/fire/firestore';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ChannelStateService } from '../../menu/channels/channel.service';
 import { FirebaseService } from '../../../services/firebase';
+import { PresenceService } from '../../../services/presence.service';
+import { AddMembers } from '../add-members/add-members';
 
 
 
@@ -16,8 +18,8 @@ import { FirebaseService } from '../../../services/firebase';
 
 @Component({
   selector: 'app-edit-channel',
-    standalone: true,
-imports: [CommonModule, MatButtonModule, MatInputModule, FormsModule],
+  standalone: true,
+  imports: [CommonModule, MatButtonModule, MatInputModule, FormsModule],
   templateUrl: './edit-channel.html',
   styleUrl: './edit-channel.scss',
 })
@@ -36,7 +38,10 @@ export class EditChannel {
   closeName = true;
   closeDescription = true;
 
-  constructor( private cdr: ChangeDetectorRef, private channelState: ChannelStateService, private firebaseService: FirebaseService) { }
+  private dialog = inject(MatDialog);
+  public presence = inject(PresenceService);
+
+  constructor(private cdr: ChangeDetectorRef, private channelState: ChannelStateService, private firebaseService: FirebaseService) {}
 
  
 ngOnInit() {
@@ -61,6 +66,63 @@ ngOnInit() {
 
   close() {
     this.dialogRef.close();
+  }
+
+  private async refreshChannelMembers() {
+    const uid = this.getCurrentUserId();
+    if (!uid || !this.channel?.id) return;
+    const membershipRef = doc(this.firestore, `users/${uid}/memberships/${this.channel.id}`);
+    const snap = await getDoc(membershipRef);
+    if (snap.exists() && snap.data()?.['members']) {
+      const data = snap.data() as any;
+      this.channel = { ...this.channel, members: data.members };
+    }
+  }
+
+  private getCurrentUserId(): string {
+    const stored = localStorage.getItem('currentUser');
+    return stored ? JSON.parse(stored).uid : '';
+  }
+
+  isYou(m: { uid?: string; id?: string }): boolean {
+    const uid = m.uid || m.id;
+    return !!uid && uid === this.getCurrentUserId();
+  }
+
+  orderedMembers(): any[] {
+    const members = this.channel?.members || [];
+    const currentUid = this.getCurrentUserId();
+    return [...members].sort((a, b) => {
+      const aUid = a.uid || a.id;
+      const bUid = b.uid || b.id;
+      if (aUid === currentUid) return -1;
+      if (bUid === currentUid) return 1;
+      return 0;
+    });
+  }
+
+  openAddMembers() {
+    const membersForDialog = (this.channel?.members || []).map((m: any) => ({
+      uid: m.uid || m.id,
+      name: m.name,
+      avatar: m.avatar,
+      isYou: this.isYou(m)
+    }));
+
+    this.dialog.open(AddMembers, {
+      width: '514px',
+      maxWidth: '100vw',
+      panelClass: 'add-members-dialog-panel',
+      data: {
+        channelId: this.channel.id,
+        channelName: this.channel.name,
+        existingMembers: membersForDialog,
+        channelState: this.channelState
+      }
+    }).afterClosed().subscribe(async () => {
+      await this.refreshChannelMembers();
+      this.cdr.detectChanges();
+    });
   }
 
 

@@ -18,9 +18,19 @@
     margin: 0 auto;
     box-sizing: border-box;
     font-family: 'Nunito';
-
 }
 
+@media (max-width: 950px) {
+    .add-channel-main {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 0;
+        padding: 20px 16px 24px;
+        gap: 16px;
+        border-radius: 20px !important;
+    }
+}
 
 .add-channel-header {
     display: flex;
@@ -70,9 +80,192 @@
     padding-top: 24px;
     padding-left: 40px;
     padding: 20px;
-
+    margin-bottom: 20px;
 }
 
+.mitglieder-div {
+    width: 750px;
+    min-height: 120px;
+    border-radius: 20px;
+    border: 1px solid #ADB0D9;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+   
+
+    .mitglieder-title {
+        display: block;
+        margin-bottom: 16px;
+    }
+
+    .mitglieder-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .mitglieder-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        border-radius: 30px;
+        cursor: default;
+
+        &.you {
+            background-color: #ECEEFE;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+
+            .avatar-fallback {
+                font-weight: 700;
+                font-size: 16px;
+                color: #686868;
+            }
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+
+            &.online {
+                background: #2ecc71;
+                box-shadow: 0 0 6px #2ecc71;
+            }
+
+            &.offline {
+                background: #e74c3c;
+            }
+        }
+
+        .name {
+            font-family: 'Nunito';
+            font-weight: 400;
+            font-size: 18px;
+        }
+    }
+
+    .mitglieder-add {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 30px;
+        cursor: pointer;
+        margin-top: 4px;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: #ECEEFE;
+        }
+
+        .icon-box {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+
+            img {
+                width: 24px;
+                height: 24px;
+                display: block;
+                grid-area: 1 / 1;
+            }
+
+            .hover {
+                opacity: 0;
+            }
+        }
+
+        &:hover .icon-box .hover {
+            opacity: 1;
+        }
+
+        &:hover .icon-box .default {
+            opacity: 0;
+        }
+
+        span:last-child {
+            font-family: 'Nunito';
+            font-weight: 400;
+            font-size: 18px;
+        }
+    }
+}
+
+@media (max-width: 950px) {
+    .name-div {
+        width: 100%;
+        height: auto;
+        min-height: 64px;
+        top: 0;
+        left: 0;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .beschreibung-div {
+        width: 100%;
+        height: auto;
+        min-height: 80px;
+        padding: 16px;
+    }
+
+    .mitglieder-div {
+        width: 100%;
+        padding: 16px;
+        margin-bottom: 16px;
+
+        .mitglieder-row .avatar {
+            width: 36px;
+            height: 36px;
+        }
+
+        .mitglieder-row .name,
+        .mitglieder-add span:last-child {
+            font-size: 16px;
+        }
+    }
+
+    .add-channel-header > h2 {
+        font-size: 18px;
+    }
+
+    .add-button {
+        margin-top: 16px;
+
+        > button {
+            width: 100%;
+            font-size: 16px;
+        }
+    }
+
+    .name-header > p,
+    label {
+        font-size: 16px;
+    }
+
+    .created > p,
+    p {
+        font-size: 16px;
+    }
+}
 
 hr {
     margin-top: 30px

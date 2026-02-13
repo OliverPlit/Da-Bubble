@@ -234,6 +234,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['channelId'] && !changes['channelId'].firstChange) {
       this.restartSubscriptions();
+      this.focusComposer();
     }
   }
 
@@ -293,6 +294,7 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   ngAfterViewInit() {
     this.rebuildMessagesView();
     queueMicrotask(() => this.scrollToBottom());
+    this.focusComposer();
   }
 
   ngOnDestroy() {
@@ -628,6 +630,11 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
   cancelEditMessagePanelHide(_: Message) { this.clearEditMessagePanelHide(); }
   private clearEditMessagePanelHide() {
     if (this.editHideTimer) { clearTimeout(this.editHideTimer); this.editHideTimer = null; }
+  }
+
+  /** Fokus auf das Nachrichten-Eingabefeld (beim Öffnen des Channels / nach Wechsel). */
+  private focusComposer() {
+    setTimeout(() => this.composerTextarea?.nativeElement?.focus(), 0);
   }
 
   editMessage(m: Message, ev: MouseEvent) {

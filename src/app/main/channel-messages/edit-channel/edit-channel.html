@@ -67,6 +67,34 @@
     </div>
   </div>
 
+  <!-- Mitglieder-Sektion -->
+  <div class="mitglieder-div">
+    <label class="mitglieder-title">Mitglieder</label>
+    <ul class="mitglieder-list">
+      <li
+        class="mitglieder-row"
+        *ngFor="let m of orderedMembers()"
+        [class.you]="isYou(m)"
+      >
+        <div class="avatar" [style.background-image]="m.avatar ? 'url(/img/avatars/' + m.avatar + ')' : 'none'">
+          <span *ngIf="!m.avatar" class="avatar-fallback">{{ (m.name || '?').charAt(0) }}</span>
+        </div>
+        <span
+          class="status-dot"
+          [ngClass]="presence.userStatusMap()[m.uid || m.id] === 'online' ? 'online' : 'offline'"
+        ></span>
+        <span class="name">{{ m.name }}{{ isYou(m) ? ' (Du)' : '' }}</span>
+      </li>
+    </ul>
+    <div class="mitglieder-add" (click)="openAddMembers()">
+      <span class="icon-box">
+        <img class="default" src="/img/person_add.png" alt="">
+        <img class="hover" src="/img/person_add_purple.png" alt="">
+      </span>
+      <span>Mitglieder hinzufügen</span>
+    </div>
+  </div>
+
   <div class="add-button">
     <button (click)="leaveChannel()">Channel verlassen</button>
   </div>

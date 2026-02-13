@@ -202,6 +202,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
     // Reagiere auf Input-Änderungen
     if ((changes['channelId'] || changes['uid']) && !changes['channelId']?.firstChange && !changes['uid']?.firstChange) {
       this.restartSubscriptions();
+      this.focusComposer();
     }
   }
 
@@ -265,6 +266,7 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
   ngAfterViewInit() {
     this.rebuildMessagesView();
     queueMicrotask(() => this.scrollToBottom());
+    this.focusComposer();
   }
 
   ngOnDestroy() {
@@ -538,6 +540,11 @@ export class ChatDirectYou implements OnInit, AfterViewInit, OnDestroy, OnChange
 
   private clearEditMessagePanelHide() {
     if (this.editHideTimer) { clearTimeout(this.editHideTimer); this.editHideTimer = null; }
+  }
+
+  /** Fokus auf das Nachrichten-Eingabefeld beim Öffnen der Direktnachricht (mit sich selbst). */
+  private focusComposer() {
+    setTimeout(() => this.composerTextarea?.nativeElement?.focus(), 0);
   }
 
   editMessage(m: Message, ev: MouseEvent) {

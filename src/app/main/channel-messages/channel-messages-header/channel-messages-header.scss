@@ -96,6 +96,11 @@ header {
         align-items: center;
     }
 
+    .icon-2 {
+        width: 10px !important;
+        height: 7px !important;
+    }
+
     .channel-title {
         margin-left: 0px !important;
         padding: 4px 8px;
@@ -111,15 +116,20 @@ header {
             text-overflow: ellipsis;
         }
 
+        .icon-box {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
         .icon-box img {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
         }
 
         .icon-box.drop-down {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
         }
     }
 
@@ -128,19 +138,9 @@ header {
         gap: 4px;
         flex-shrink: 0;
 
+        /* User-Avatare auf Mobile ausblenden */
         .preview-members {
-            padding: 2px 4px;
-
-            .avatar {
-                width: 28px;
-                height: 28px;
-                margin-inline-end: -14px;
-            }
-
-            .counter {
-                font-size: 14px;
-                margin-inline-start: 14px;
-            }
+            display: none !important;
         }
 
         .icon-box {
