@@ -1,4 +1,5 @@
 import { Component, inject, HostListener } from '@angular/core';
+import { NgZone } from '@angular/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { Profile } from './profile/profile';
 import { MatDialog } from '@angular/material/dialog';
@@ -48,6 +49,7 @@ export class Header {
   private router = inject(Router);
   private firestore = inject(Firestore);
   private cd = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
   private channelState = inject(ChannelStateService);
   private directChatService = inject(DirectChatService);
   private threadStateSvc = inject(ThreadStateService);
@@ -206,6 +208,7 @@ export class Header {
 
     this.isSearching = true;
     this.showSearchResults = true;
+    this.cd.detectChanges();
 
     try {
       let results: SearchResult[] = [];
@@ -217,17 +220,21 @@ export class Header {
         const searchTerm = query.substring(1).toLowerCase();
         results = await this.searchChannels(searchTerm);
       } else {
-        // Normale Textsuche: Durchsuche Nachrichten
         results = await this.searchMessages(query.toLowerCase());
       }
 
-      this.searchResults = results;
+      this.ngZone.run(() => {
+        this.searchResults = results;
+        this.isSearching = false;
+        this.cd.detectChanges();
+      });
     } catch (error) {
       console.error('Fehler bei der Suche:', error);
-      this.searchResults = [];
-    } finally {
-      this.isSearching = false;
-      this.cd.detectChanges();
+      this.ngZone.run(() => {
+        this.searchResults = [];
+        this.isSearching = false;
+        this.cd.detectChanges();
+      });
     }
   }
 
