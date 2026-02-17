@@ -11,6 +11,7 @@ import { ChannelStateService } from '../../menu/channels/channel.service';
 import { FirebaseService } from '../../../services/firebase';
 import { PresenceService } from '../../../services/presence.service';
 import { AddMembers } from '../add-members/add-members';
+import { GlobalChannelService } from '../../../services/global-channel-service';
 
 
 
@@ -41,6 +42,7 @@ export class EditChannel implements OnInit, AfterViewInit {
 
   private dialog = inject(MatDialog);
   public presence = inject(PresenceService);
+  private globalChannelService = inject(GlobalChannelService);
 
   constructor(private cdr: ChangeDetectorRef, private channelState: ChannelStateService, private firebaseService: FirebaseService) {
     this.dialogRef.afterOpened().subscribe(() => {
@@ -181,17 +183,20 @@ ngOnInit() {
   async saveEditName() {
     if (!this.editedName.trim()) return;
 
-    const storedUser = localStorage.getItem('currentUser');
-    if (!storedUser) return;
-
-    const uid = JSON.parse(storedUser).uid;
     const channelId = this.channel.id;
     const newName = this.editedName.trim();
 
     try {
-      await this.updateAllMembersChannelData(channelId, { name: newName });
+      await this.globalChannelService.updateGlobalChannel(channelId, {
+        name: newName,
+        description: this.channel.description ?? '',
+        createdBy: this.channel.createdBy ?? '',
+        members: this.channel.members ?? []
+      });
+      await this.globalChannelService.syncAllUserMemberships(channelId, this.channel.members ?? []);
       this.channel.name = newName;
-      this.channelState.selectChannel(this.channel);
+      this.channelState.updateSelectedChannel({ ...this.channel, name: newName });
+      this.channelState.invalidateChannelAndReloadIfSelected(channelId);
       this.showInputName = false;
       this.closeName = true;
       this.cdr.detectChanges();
@@ -202,17 +207,20 @@ ngOnInit() {
   }
 
   async saveEditDescription() {
-    const storedUser = localStorage.getItem('currentUser');
-    if (!storedUser) return;
-
-    const uid = JSON.parse(storedUser).uid;
     const channelId = this.channel.id;
     const newDescription = this.editedDescription.trim();
 
     try {
-      await this.updateAllMembersChannelData(channelId, { description: newDescription });
-
+      await this.globalChannelService.updateGlobalChannel(channelId, {
+        name: this.channel.name ?? '',
+        description: newDescription,
+        createdBy: this.channel.createdBy ?? '',
+        members: this.channel.members ?? []
+      });
+      await this.globalChannelService.syncAllUserMemberships(channelId, this.channel.members ?? []);
       this.channel.description = newDescription;
+      this.channelState.updateSelectedChannel({ ...this.channel, description: newDescription });
+      this.channelState.invalidateChannelAndReloadIfSelected(channelId);
       this.showInputDescription = false;
       this.closeDescription = true;
       this.cdr.detectChanges();

@@ -11,7 +11,7 @@
 
     <div class="header-menu-channels">
       <div (click)="toggleChannels()">
-        <img src="/img/arrow-drop-menu.png" alt="">
+        <img src="/img/arrow-drop-menu.png" alt="" class="arrow-icon" [class.arrow-collapsed]="!showChannels">
         <img src="/img/channel.png" alt="">
         <h3>Channels</h3>
       </div>
@@ -24,7 +24,7 @@
 
     <div class="header-menu-channels" (click)="toggleMessages()">
       <div>
-        <img src="/img/arrow-drop-menu.png" alt="">
+        <img src="/img/arrow-drop-menu.png" alt="" class="arrow-icon" [class.arrow-collapsed]="!showMessages">
         <img src="/img/direct-person.png" alt="">
         <h3>Direktnachrichten</h3>
       </div>
@@ -87,7 +87,7 @@
 
   <div class="header-menu-channels">
     <div (click)="toggleChannels()">
-      <img src="/img/arrow-drop-menu.png" alt="">
+      <img src="/img/arrow-drop-menu.png" alt="" class="arrow-icon" [class.arrow-collapsed]="!showChannels">
       <img src="/img/channel.png" alt="">
       <h3>Channels</h3>
     </div>
@@ -100,7 +100,7 @@
 
   <div class="header-menu-channels" (click)="toggleMessages()">
     <div>
-      <img src="/img/arrow-drop-menu.png" alt="">
+      <img src="/img/arrow-drop-menu.png" alt="" class="arrow-icon" [class.arrow-collapsed]="!showMessages">
       <img src="/img/direct-person.png" alt="">
       <h3>Direktnachrichten</h3>
     </div>

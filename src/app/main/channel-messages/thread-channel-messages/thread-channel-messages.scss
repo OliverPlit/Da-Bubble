@@ -432,6 +432,48 @@ $hoverCard: #444df2;
     gap: 40px;
     padding: 20px;
 
+    &.composer-input-wrap {
+      position: relative;
+    }
+
+    .tag-dropdown {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 100%;
+      margin-bottom: 8px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      max-height: 260px;
+      overflow-y: auto;
+      z-index: 50;
+    }
+
+    .tag-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-family: 'Nunito';
+      font-size: 14px;
+      &:hover,
+      &.selected {
+        background-color: $hoverBg;
+      }
+      .tag-icon {
+        color: $primary;
+        font-weight: 700;
+      }
+      .tag-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+    }
+
     textarea {
       resize: none;
       border: none;

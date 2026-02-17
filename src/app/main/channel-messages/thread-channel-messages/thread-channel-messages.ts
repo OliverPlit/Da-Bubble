@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AddEmojis } from '../../../shared/add-emojis/add-emojis';
 import { AtMembers } from '../../../shared/at-members/at-members';
 import type { User as AtMemberUser } from '../../../shared/at-members/at-members';
-import { Firestore, doc, docData, getDoc } from '@angular/fire/firestore';
+import { Firestore, doc, docData, getDoc, collection, getDocs, query, orderBy } from '@angular/fire/firestore';
 import { EmojiService, EmojiId } from '../../../services/emoji.service';
 import { PresenceService } from '../../../services/presence.service';
 // import { MessagesStoreService, MessageDoc, ReactionUserDoc } from '../../../services/messages-store.service';
@@ -158,6 +158,16 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     return this.getMembersFromMessages();
   }
 
+  /** Channels des Users für #-Tagging */
+  private async loadUserChannels(): Promise<{ id: string; name: string }[]> {
+    if (!this.uid) return [];
+    const userRef = doc(this.firestore, 'users', this.uid);
+    const membershipsRef = collection(userRef, 'memberships');
+    const q = query(membershipsRef, orderBy('name'));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, name: (d.data()['name'] || '').toString() })).filter(c => c.name);
+  }
+
   name = '';
   avatar = '';
 
@@ -175,6 +185,28 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     subtitle: '',
     messageId: '',
   };
+
+  /** # / @ Tag-Dropdown: beim Tippen von # oder @ */
+  tagDropdown: {
+    visible: boolean;
+    type: 'channel' | 'user';
+    query: string;
+    startIndex: number;
+    channels: { id: string; name: string }[];
+    members: AtMemberUser[];
+    selectedIndex: number;
+  } = {
+    visible: false,
+    type: 'channel',
+    query: '',
+    startIndex: 0,
+    channels: [],
+    members: [],
+    selectedIndex: 0,
+  };
+
+  /** Verhindert, dass nach Einfügen eines Tags das Dropdown durch (input) wieder aufgeht */
+  private tagJustApplied = false;
 
   messages: Message[] = [];
   messagesView: Message[] = [];
@@ -476,8 +508,101 @@ export class ThreadChannelMessages implements OnInit, AfterViewInit, OnDestroy, 
     });
   }
 
+  /** Prüft ob Cursor direkt nach # oder @ steht und öffnet ggf. Tag-Dropdown */
+  async onDraftInput() {
+    if (this.tagJustApplied) {
+      this.tagJustApplied = false;
+      this.cdr.detectChanges();
+      return;
+    }
+    const ta = this.composerTextarea?.nativeElement;
+    if (!ta) return;
+    const text = this.draft || '';
+    const pos = ta.selectionStart ?? text.length;
+    const before = text.substring(0, pos);
+    const match = before.match(/([#@])([^\s#@]*)$/);
+    if (!match) {
+      this.tagDropdown.visible = false;
+      this.cdr.detectChanges();
+      return;
+    }
+    const trigger = match[1];
+    const query = (match[2] || '').toLowerCase();
+    const startIndex = before.length - match[0].length;
+    this.tagDropdown.startIndex = startIndex;
+    this.tagDropdown.query = query;
+    this.tagDropdown.selectedIndex = 0;
+    if (trigger === '#') {
+      this.tagDropdown.type = 'channel';
+      const all = await this.loadUserChannels();
+      this.tagDropdown.channels = query
+        ? all.filter(c => c.name.toLowerCase().includes(query))
+        : all;
+      this.tagDropdown.members = [];
+      this.tagDropdown.visible = this.tagDropdown.channels.length > 0;
+    } else {
+      this.tagDropdown.type = 'user';
+      const all = await this.resolveMembers();
+      const q = query.trim();
+      this.tagDropdown.members = q
+        ? all.filter(u => (u.name || '').toLowerCase().includes(q))
+        : all;
+      this.tagDropdown.channels = [];
+      this.tagDropdown.visible = this.tagDropdown.members.length > 0;
+    }
+    this.cdr.detectChanges();
+  }
 
+  onDraftKeydown(event: KeyboardEvent) {
+    if (!this.tagDropdown.visible) return;
+    const isChannel = this.tagDropdown.type === 'channel';
+    const len = isChannel ? this.tagDropdown.channels.length : this.tagDropdown.members.length;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.tagDropdown.selectedIndex = (this.tagDropdown.selectedIndex + 1) % len;
+      this.cdr.detectChanges();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.tagDropdown.selectedIndex = (this.tagDropdown.selectedIndex - 1 + len) % len;
+      this.cdr.detectChanges();
+    } else if (event.key === 'Enter' && len > 0) {
+      event.preventDefault();
+      this.applyTagSelection(isChannel ? this.tagDropdown.channels[this.tagDropdown.selectedIndex]?.name : this.tagDropdown.members[this.tagDropdown.selectedIndex]?.name, isChannel);
+    } else if (event.key === 'Escape') {
+      this.tagDropdown.visible = false;
+      this.cdr.detectChanges();
+    }
+  }
 
+  applyTagSelection(label: string | undefined, isChannel: boolean) {
+    if (label == null) return;
+    this.tagJustApplied = true;
+    const ta = this.composerTextarea?.nativeElement;
+    const text = this.draft || '';
+    const prefix = this.tagDropdown.type === 'channel' ? '#' : '@';
+    const insert = prefix + label + ' ';
+    const start = this.tagDropdown.startIndex;
+    const end = ta ? ta.selectionStart : text.length;
+    this.draft = text.substring(0, start) + insert + text.substring(end);
+    this.tagDropdown.visible = false;
+    this.cdr.detectChanges();
+    queueMicrotask(() => {
+      if (ta) {
+        ta.focus();
+        const newPos = start + insert.length;
+        ta.setSelectionRange(newPos, newPos);
+      }
+    });
+  }
+
+  selectTagChannel(ch: { id: string; name: string }) {
+    this.applyTagSelection(ch.name, true);
+  }
+
+  selectTagMember(u: AtMemberUser) {
+    const name = (u.name || '').replace(/\s*\(Du\)\s*$/, '').trim();
+    this.applyTagSelection(name, false);
+  }
 
 
 

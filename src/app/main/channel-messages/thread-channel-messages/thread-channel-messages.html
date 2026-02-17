@@ -97,8 +97,23 @@
 </div>
 
 <footer class="composer">
-    <div class="composer-input">
-        <textarea #composerTextarea [(ngModel)]="draft" placeholder="Nachricht an #{{ channelName }}"></textarea>
+    <div class="composer-input composer-input-wrap">
+        <textarea #composerTextarea [(ngModel)]="draft" placeholder="Nachricht an #{{ channelName }}"
+            (input)="onDraftInput()" (keydown)="onDraftKeydown($event)"></textarea>
+        <div class="tag-dropdown" *ngIf="tagDropdown.visible">
+            <div class="tag-dropdown-item" *ngFor="let ch of tagDropdown.channels; let i = index"
+                [class.selected]="tagDropdown.type === 'channel' && i === tagDropdown.selectedIndex"
+                (click)="selectTagChannel(ch)">
+                <span class="tag-icon">#</span>
+                <span>{{ ch.name }}</span>
+            </div>
+            <div class="tag-dropdown-item" *ngFor="let u of tagDropdown.members; let i = index"
+                [class.selected]="tagDropdown.type === 'user' && i === tagDropdown.selectedIndex"
+                (click)="selectTagMember(u)">
+                <img class="tag-avatar" [src]="'/img/avatars/' + (u.avatar || 'avatar-0.png')" alt="">
+                <span>{{ u.name }}</span>
+            </div>
+        </div>
 
         <div class="composer-actions">
             <div class="d-flex">
