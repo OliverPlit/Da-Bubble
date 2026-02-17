@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Header } from './header/header';
 import { Menu } from './menu/menu';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +14,7 @@ import { ChatDirectYou } from '../main/menu/chat-direct-you/chat-direct-you';
 import { DirectChatService } from '../services/direct-chat-service';
 import { RouterOutlet } from '@angular/router';
 import { LayoutService } from '../services/layout.service';
+import { ChannelStateService } from './menu/channels/channel.service';
 
 @Component({
   selector: 'app-main',
@@ -33,7 +34,7 @@ import { LayoutService } from '../services/layout.service';
   templateUrl: './main.html',
   styleUrl: './main.scss',
 })
-export class Main {
+export class Main implements OnInit {
   showNewMessages = false;
   showNewMessagesChat = false;
   showNewMessagesYou = false;
@@ -43,8 +44,13 @@ export class Main {
   selectedChatUser: directMessageContact | null = null;
   activePanel: 'none' | 'chatYou' | 'chatDirect' | 'channel' = 'none';
   layout = inject(LayoutService);
+  private channelState = inject(ChannelStateService);
 
   constructor(private directChatService: DirectChatService) {}
+
+  ngOnInit() {
+    this.channelState.loadFirstAvailableChannel();
+  }
   showLeft = true;
   showRight = true;
 

@@ -14,6 +14,7 @@ import {
   signInWithPopup,
 } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
+import { GlobalChannelService } from '../../services/global-channel-service';
 
 @Component({
   selector: 'app-login',
@@ -39,7 +40,12 @@ export class Login {
 
   private emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  constructor(private router: Router, private auth: Auth, private firestore: Firestore) {}
+  constructor(
+    private router: Router,
+    private auth: Auth,
+    private firestore: Firestore,
+    private globalChannelService: GlobalChannelService
+  ) {}
 
   isValidEmail(email: string): boolean {
     return this.emailRegex.test(email);
@@ -117,12 +123,21 @@ async loginWithGoogle() {
   }
 }
 
-  guestLogin() {
+  async guestLogin() {
     const guestUser = {
       uid: 'guest',
       name: 'Guest',
       avatar: 'avatar1.png',
     };
+
+    const dmRef = doc(this.firestore, 'directMessages', 'guest');
+    await setDoc(dmRef, {
+      uid: 'guest',
+      name: 'Guest',
+      avatar: 'avatar1.png',
+      email: '',
+    });
+    await this.globalChannelService.ensureDefaultChannelAndAddUser('guest', 'Guest', 'avatar1.png', '');
 
     localStorage.setItem('currentUser', JSON.stringify(guestUser));
     this.router.navigate(['/main']);

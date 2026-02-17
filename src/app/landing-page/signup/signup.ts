@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
 import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 import { Auth, createUserWithEmailAndPassword } from '@angular/fire/auth';
+import { GlobalChannelService } from '../../services/global-channel-service';
 
 @Component({
   selector: 'app-signup',
@@ -14,7 +15,12 @@ import { Auth, createUserWithEmailAndPassword } from '@angular/fire/auth';
 })
 export class Signup {
 
-  constructor(private router: Router, private firestore: Firestore, private auth: Auth) { }
+  constructor(
+    private router: Router,
+    private firestore: Firestore,
+    private auth: Auth,
+    private globalChannelService: GlobalChannelService
+  ) { }
 
   text = '';
   email = '';
@@ -68,6 +74,13 @@ export class Signup {
         email: this.email,
         avatar: 'avatar1.png'
       });
+
+      await this.globalChannelService.ensureDefaultChannelAndAddUser(
+        uid,
+        this.text,
+        'avatar1.png',
+        this.email
+      );
 
       localStorage.setItem('currentUser', uid);
       localStorage.setItem('currentUserName', this.text);

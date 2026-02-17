@@ -1,6 +1,9 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { getDocs, query, limit, orderBy, collection, doc, Firestore, getDoc } from '@angular/fire/firestore';
+import { getDocs, query, orderBy, collection, doc, Firestore, getDoc } from '@angular/fire/firestore';
+
+/** Eindeutige ID des Standard-Channels „General“ – wird zuerst geöffnet, alle User sind automatisch drin. */
+export const DEFAULT_CHANNEL_ID = 'general';
 
 @Injectable({
   providedIn: 'root'
@@ -84,15 +87,17 @@ private firestore = inject(Firestore);  private _channels = signal<any[]>([]);
       const uid = JSON.parse(storedUser).uid;
       const userRef = doc(this.firestore, 'users', uid);
       const membershipsRef = collection(userRef, 'memberships');
-      const q = query(membershipsRef, orderBy('name'), limit(1));
+      const q = query(membershipsRef, orderBy('name'));
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
+        const docs = snapshot.docs;
+        const generalDoc = docs.find(d => d.id === DEFAULT_CHANNEL_ID);
+        const chosen = generalDoc ?? docs[0];
         const firstChannel = {
-          id: snapshot.docs[0].id,
-          ...snapshot.docs[0].data()
+          id: chosen.id,
+          ...chosen.data()
         };
-        
         const fullChannel = await this.loadFullChannel(firstChannel.id);
         this.selectChannel(fullChannel || firstChannel);
       } else {
@@ -105,5 +110,15 @@ private firestore = inject(Firestore);  private _channels = signal<any[]>([]);
 
   clearCache() {
     this.channelCache.clear();
+  }
+
+  /** Cache für einen Channel leeren und ggf. neu laden (z. B. nach General-Sync). */
+  async invalidateChannelAndReloadIfSelected(channelId: string): Promise<void> {
+    this.channelCache.delete(channelId);
+    const current = this.getCurrentChannel();
+    if (current?.id === channelId) {
+      const full = await this.loadFullChannel(channelId);
+      if (full) this.selectChannel(full);
+    }
   }
 }

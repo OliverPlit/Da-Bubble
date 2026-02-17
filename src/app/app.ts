@@ -18,8 +18,6 @@ export class App {
   ngOnInit() {
     try {
       const db = getFirestore(this.app);
-      console.log('✅ Firebase erfolgreich verbunden!');
-      console.log('Projekt-ID:', this.app.options.projectId);
     } catch (error) {
       console.error('❌ Fehler beim Verbinden mit Firebase:', error);
     }

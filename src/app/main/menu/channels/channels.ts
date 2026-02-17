@@ -4,7 +4,7 @@ import { Firestore, collection, doc, collectionData } from '@angular/fire/firest
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { AddChannel } from '../add-channel/add-channel';
-import { ChannelStateService } from './channel.service';
+import { ChannelStateService, DEFAULT_CHANNEL_ID } from './channel.service';
 import { LayoutService } from '../../../services/layout.service';
 
 @Component({
@@ -22,9 +22,9 @@ export class Channels implements OnInit {
   selectedChannelId: string = '';
 
   constructor(
-    private dialog: MatDialog, 
-    private cdr: ChangeDetectorRef, 
-    private channelState: ChannelStateService
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
+    private channelState: ChannelStateService,
   ) { }
 
   ngOnInit() {
@@ -54,14 +54,18 @@ export class Channels implements OnInit {
     const membershipsRef = collection(userRef, 'memberships');
 
     collectionData(membershipsRef, { idField: 'id' }).subscribe(async memberships => {
-      this.memberships = memberships;
-            this.preloadChannelData(memberships);
-      
+      this.memberships = [...memberships].sort((a, b) => {
+        if (a.id === DEFAULT_CHANNEL_ID) return -1;
+        if (b.id === DEFAULT_CHANNEL_ID) return 1;
+        return (a['name'] || '').localeCompare(b['name'] || '');
+      });
+      this.preloadChannelData(this.memberships);
+
       const currentChannel = this.channelState.getSelectedChannel();
 
-      if (memberships.length > 0 && !currentChannel) {
-        // Ersten Channel auswählen OHNE Menu zu schließen (automatische Auswahl)
-        this.selectChannelWithoutClosingMenu(memberships[0]);
+      if (this.memberships.length > 0 && !currentChannel) {
+        const generalOrFirst = this.memberships.find((m: any) => m.id === DEFAULT_CHANNEL_ID) ?? this.memberships[0];
+        this.selectChannelWithoutClosingMenu(generalOrFirst);
       }
       
       this.cdr.detectChanges();

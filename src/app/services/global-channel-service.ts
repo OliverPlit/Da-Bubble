@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc, collection, getDocs } from '@angular/fire/firestore';
+import { DEFAULT_CHANNEL_ID, ChannelStateService } from '../main/menu/channels/channel.service';
 
 type Member = {
   uid: string;
@@ -25,6 +26,7 @@ type Channel = {
 })
 export class GlobalChannelService {
   private firestore = inject(Firestore);
+  private channelState = inject(ChannelStateService);
 
   // -----------------------------------------------------
   // 1) Channel immer robust lesen (mit Fallbacks)
@@ -65,8 +67,6 @@ export class GlobalChannelService {
 
     const ref = doc(this.firestore, `channels/${channelId}`);
     await setDoc(ref, mergedData, { merge: true });
-
-    console.log('✅ Globaler Channel aktualisiert:', channelId);
   }
 
   // -----------------------------------------------------
@@ -99,7 +99,6 @@ export class GlobalChannelService {
       await this.syncUserMembership(member.uid, channelId, payload);
     }
 
-    console.log(`✅ ${updatedMembers.length} Memberships synchronisiert`);
   }
 
   // -----------------------------------------------------
@@ -145,8 +144,84 @@ export class GlobalChannelService {
 
     await this.syncAllUserMemberships(channelId, updatedMembers);
 
-    console.log(`✅ ${uniqueNewMembers.length} neue Members, ${updatedMembers.length} total`);
 
     return updatedMembers;
+  }
+
+  // -----------------------------------------------------
+  // 6) Standard-Channel „General“: anlegen falls nötig, neuen User immer hinzufügen
+  // -----------------------------------------------------
+  async ensureDefaultChannelAndAddUser(uid: string, name: string, avatar?: string, email?: string): Promise<void> {
+    const channelId = DEFAULT_CHANNEL_ID;
+    const channelRef = doc(this.firestore, `channels/${channelId}`);
+    const snap = await getDoc(channelRef);
+
+    const newMember: Member = {
+      uid,
+      name,
+      avatar: avatar || 'avatar-0.png',
+      email: email || ''
+    };
+
+    if (!snap.exists()) {
+      const dmRef = collection(this.firestore, 'directMessages');
+      const dmSnap = await getDocs(dmRef);
+      const members: Member[] = dmSnap.docs.map(d => {
+        const data = d.data();
+        return {
+          uid: d.id,
+          name: data['name'] ?? '',
+          avatar: data['avatar'] || 'avatar-0.png',
+          email: data['email'] || ''
+        };
+      });
+      if (members.every(m => m.uid !== uid)) {
+        members.push(newMember);
+      }
+      const channelData: Channel = {
+        id: channelId,
+        name: 'General',
+        description: 'Willkommen! Hier sind alle Nutzer.',
+        createdBy: name,
+        members,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      await setDoc(channelRef, channelData);
+      await this.syncAllUserMemberships(channelId, members);
+      return;
+    }
+
+    await this.addMembersToChannel(channelId, [newMember], {
+      name: 'General',
+      description: 'Willkommen! Hier sind alle Nutzer.',
+      createdBy: snap.data()['createdBy'] || name
+    });
+  }
+
+  /**
+   * General-Mitglieder an den aktuellen Stand von directMessages anpassen.
+   * Entfernt gelöschte User aus dem Channel. Einmal ausführen nach Aufräumen in Firebase.
+   */
+  async syncGeneralMembersFromDirectMessages(): Promise<void> {
+    const channelId = DEFAULT_CHANNEL_ID;
+    const global = await this.getGlobalChannel(channelId);
+    if (!global) return;
+
+    const dmRef = collection(this.firestore, 'directMessages');
+    const dmSnap = await getDocs(dmRef);
+    const members: Member[] = dmSnap.docs.map(d => {
+      const data = d.data();
+      return {
+        uid: d.id,
+        name: data['name'] ?? '',
+        avatar: data['avatar'] || 'avatar-0.png',
+        email: data['email'] ?? ''
+      };
+    });
+
+    await this.updateGlobalChannel(channelId, { members });
+    await this.syncAllUserMemberships(channelId, members);
+    await this.channelState.invalidateChannelAndReloadIfSelected(channelId);
   }
 }
