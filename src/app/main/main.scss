@@ -77,6 +77,9 @@ body {
 .side {
   overflow: hidden;
   min-width: 0; /* Grid-Kind darf schrumpfen, verhindert Übergangs-Bugs */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Keine width-Transition auf .side – die Spaltenbreite kommt vom Grid, nur .main-content transitiont */

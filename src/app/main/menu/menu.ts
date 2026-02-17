@@ -108,10 +108,11 @@ export class Menu {
       if (query.startsWith('@')) {
         const searchTerm = query.substring(1).toLowerCase();
         this.searchResults = await this.searchDirectMessages(searchTerm);
-      }
-      else if (query.startsWith('#')) {
+      } else if (query.startsWith('#')) {
         const searchTerm = query.substring(1).toLowerCase();
         this.searchResults = await this.searchChannels(searchTerm);
+      } else {
+        this.searchResults = [];
       }
     } catch (error) {
       console.error('Fehler bei der Suche:', error);

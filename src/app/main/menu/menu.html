@@ -38,15 +38,45 @@
 
 <!-- Mobile: Einfacher Container ohne Mat-Drawer -->
 <div *ngIf="isMobile" class="mobile-menu-container">
-  <input 
-    class="search"
-    type="text" 
-    placeholder="Gehe zu..."
-    [(ngModel)]="searchQuery"
-    (input)="onSearchInput()"
-    (focus)="showSearchResults = searchQuery.length > 0"
-  > 
-  
+  <div class="mobile-search-wrap">
+    <input 
+      class="search"
+      type="text" 
+      placeholder="Gehe zu... (# Channels, @ Personen)"
+      [(ngModel)]="searchQuery"
+      (input)="onSearchInput()"
+      (focus)="showSearchResults = searchQuery.length > 0"
+    >
+    <div class="search-results" *ngIf="showSearchResults">
+      <div class="search-loading" *ngIf="isSearching">
+        <p>Suche läuft...</p>
+      </div>
+      <div class="no-results" *ngIf="!isSearching && searchResults.length === 0">
+        <p>Keine Ergebnisse gefunden</p>
+        <small># für Channels oder @ für Personen</small>
+      </div>
+      <div class="results-list" *ngIf="!isSearching && searchResults.length > 0">
+        <div class="search-result-item" *ngFor="let result of searchResults" (click)="selectSearchResult(result)">
+          <div class="result-content" *ngIf="result.type === 'channel'">
+            <div class="result-icon channel-icon">#</div>
+            <div class="result-details">
+              <p class="result-title">{{ result.title }}</p>
+              <small class="result-subtitle">{{ result.subtitle }}</small>
+              <small class="result-meta" *ngIf="result.content">{{ result.content }}</small>
+            </div>
+          </div>
+          <div class="result-content" *ngIf="result.type === 'direct'">
+            <img class="result-avatar" [src]="'/img/avatars/' + (result.avatar || 'avatar-0.png')" alt="">
+            <div class="result-details">
+              <p class="result-title">{{ result.title }}</p>
+              <small class="result-subtitle">{{ result.subtitle }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="header-menu">
     <div>
       <img src="/img/logo-menu-devspace.png" alt="">

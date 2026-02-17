@@ -27,6 +27,7 @@
   padding: 16px;
   box-sizing: border-box;
   overflow-y: auto;
+  font-family: 'Nunito';
 }
 
 @media (max-width: 950px) {
@@ -98,6 +99,11 @@
     overflow-y: auto;
   }
 
+  .mobile-search-wrap {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
   // Suchfeld "Gehe zu..."
   .search {
     width: 100%;
@@ -106,7 +112,6 @@
     border-radius: 42px;
     border: 1px solid #adb0d9;
     padding: 12px 24px;
-    margin-bottom: 16px;
     font-size: 16px;
     font-family: 'Nunito', sans-serif;
     background-color: white;
@@ -126,6 +131,75 @@
     &:focus {
       border-color: #535af1;
       box-shadow: 0 0 0 2px rgba(83, 90, 241, 0.1);
+    }
+  }
+
+  .search-results {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 8px);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 100;
+
+    .search-loading {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+    }
+
+    .no-results {
+      padding: 24px 20px;
+      text-align: center;
+      color: #666;
+      p { margin: 0 0 8px 0; font-weight: 500; }
+      small { color: #999; }
+    }
+
+    .results-list { padding: 8px 0; }
+
+    .search-result-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      &:hover { background-color: #f5f5f5; }
+
+      .result-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+
+        .result-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          font-weight: bold;
+          flex-shrink: 0;
+          &.channel-icon { color: #535AF1; }
+        }
+
+        .result-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          object-fit: cover;
+          flex-shrink: 0;
+        }
+
+        .result-details {
+          flex: 1;
+          min-width: 0;
+          .result-title { margin: 0 0 4px 0; font-weight: 600; font-size: 14px; color: #333; }
+          .result-subtitle { display: block; font-size: 12px; color: #666; }
+        }
+      }
     }
   }
 
