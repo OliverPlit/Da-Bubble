@@ -1,4 +1,8 @@
-<div class="main-container" (click)="openChatYou()" [class.active]="isYouSelected">
+<div
+  class="main-container"
+  (click)="openChatYou()"
+  [class.active]="router.url.startsWith('/main/direct-you') && isYouSelected"
+>
   <img [src]="'/img/avatars/' + userAvatar" alt="Avatar" />
   <span class="status-dot online"></span>
   <p>{{ userName }} (Du)</p>
@@ -8,7 +12,7 @@
   class="main-container"
   *ngFor="let dm of directMessage$ | async"
   (click)="openChatDirectMessage(dm)"
-  [class.active]="selectedDmId === dm.id"
+  [class.active]="router.url.startsWith('/main/direct-message') && selectedDmId === dm.id"
 >
   <img [src]="'/img/avatars/' + dm.avatar" alt="" />
   <span

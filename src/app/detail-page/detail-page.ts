@@ -23,7 +23,6 @@ export class DetailPage implements OnInit {
 
     if (docSnap.exists()) {
       this.data = docSnap.data();
-      console.log('Firebase Data:', this.data);
     } else {
       console.log('Kein Dokument gefunden!');
     }

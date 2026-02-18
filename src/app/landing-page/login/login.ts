@@ -131,13 +131,18 @@ async loginWithGoogle() {
     };
 
     const dmRef = doc(this.firestore, 'directMessages', 'guest');
-    await setDoc(dmRef, {
+    // Fire-and-forget: Direktnachrichten-Doc im Hintergrund anlegen/aktualisieren
+    setDoc(dmRef, {
       uid: 'guest',
       name: 'Guest',
       avatar: 'avatar1.png',
       email: '',
-    });
-    await this.globalChannelService.ensureDefaultChannelAndAddUser('guest', 'Guest', 'avatar1.png', '');
+    }).catch((err) => console.error('Fehler beim Anlegen des Guest-DM-Dokuments:', err));
+
+    // Standard-Channel „General“ im Hintergrund sicherstellen und Guest hinzufügen
+    this.globalChannelService
+      .ensureDefaultChannelAndAddUser('guest', 'Guest', 'avatar1.png', '')
+      .catch((err) => console.error('Fehler beim Einrichten des Guest-Channels:', err));
 
     localStorage.setItem('currentUser', JSON.stringify(guestUser));
     this.router.navigate(['/main']);

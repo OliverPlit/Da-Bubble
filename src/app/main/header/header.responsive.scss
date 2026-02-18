@@ -23,8 +23,9 @@
     }
 
     .search {
-        margin-left: -40px;
-        width: 100;
+        margin-left: -20px;
+        width: 500px;
+        max-width: 900px;
     }
 }
 
@@ -51,7 +52,7 @@
 
 @media (max-width: 1180px) {
     .search {
-        width: 100%;
+        width: 400px;
     }
 }
 

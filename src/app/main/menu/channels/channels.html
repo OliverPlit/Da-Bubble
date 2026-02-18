@@ -1,10 +1,12 @@
 <section>
-  <div class="main-container" 
-       *ngFor="let membership of memberships" 
-       (click)="onChannelClick(membership)"
-       [class.active]="selectedChannelId === membership.id">
+  <div
+    class="main-container"
+    *ngFor="let membership of memberships"
+    (click)="onChannelClick(membership)"
+    [class.active]="router.url.startsWith('/main/channels') && selectedChannelId === membership.id"
+  >
     <img src="/img/tag-black.png" alt="">
-    <p>{{membership.name}}</p>
+    <p>{{ membership.name }}</p>
   </div>
 </section>
 

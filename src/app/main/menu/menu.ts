@@ -68,7 +68,6 @@ export class Menu {
   }
 
   onOpenNewMessage() {
-    console.log('Neue Nachricht')
     this.router.navigate(['/main/new-message']);   
 
   }
@@ -224,7 +223,6 @@ export class Menu {
         break;
 
       case 'message':
-        console.log('Navigiere zu Message:', result);
         break;
     }
   }
