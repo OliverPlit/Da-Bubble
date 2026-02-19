@@ -171,13 +171,12 @@ export class ChannelMessagesHeader implements OnInit, OnDestroy {
 
     this.dialog.open(EditChannel, {
       width: this.layout.isMobile() ? '100%' : dlgW + 'px',
-      maxWidth: this.layout.isMobile() ? '100vw' : 'none',
+      maxWidth: this.layout.isMobile() ? '100vw' : 'calc(100vw - 32px)',
       panelClass: 'edit-channel-dialog-panel',
       autoFocus: false,
       ...(this.layout.isMobile() ? {} : {
         position: {
-          top: `${r.bottom + gap}px`,
-          left: `${-420 + dlgW}px`
+          top: `${r.bottom + gap}px`
         }
       }),
       data: { channel: channelData }

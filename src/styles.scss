@@ -114,7 +114,7 @@ body {
 
 .edit-channel-dialog-panel .mat-mdc-dialog-surface {
   width: 872px !important;
-  max-width: 872px !important;
+  max-width: min(872px, calc(100vw - 32px)) !important;
   height: 616px;
   min-height: 616px;
   max-height: 90vh;
